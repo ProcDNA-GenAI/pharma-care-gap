@@ -2,15 +2,13 @@ import { Activity, MessageSquare } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { Button } from '@/components/ui/Button'
-import { Download, RefreshCw } from 'lucide-react'
+import { Download } from 'lucide-react'
 import type { RulePackage } from '@/lib/types'
 
 interface RuleHeaderProps {
   rulePackage: RulePackage
   isExporting: boolean
-  isRecalculating: boolean
   onExport: () => void
-  onGenerateUpdated: () => void
 }
 
 const STATUS_VARIANT = {
@@ -22,9 +20,7 @@ const STATUS_VARIANT = {
 export function RuleHeader({
   rulePackage,
   isExporting,
-  isRecalculating,
   onExport,
-  onGenerateUpdated,
 }: RuleHeaderProps) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -72,16 +68,6 @@ export function RuleHeader({
             iconLeft={<Download className="h-3.5 w-3.5" />}
           >
             Export
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            loading={isRecalculating}
-            onClick={onGenerateUpdated}
-            iconLeft={<RefreshCw className="h-3.5 w-3.5" />}
-            style={{ backgroundColor: '#004FBA' }}
-          >
-            Generate Updated Rules
           </Button>
         </div>
       </div>

@@ -18,9 +18,6 @@ export function ImpactSummaryCard({ impact, isLoading = false }: ImpactSummaryCa
       <div className="flex items-center gap-2">
         <Users className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
         <span className="text-xs font-semibold text-gray-900">Impact Summary</span>
-        {impact.isMock && (
-          <span className="text-[10px] font-medium" style={{ color: '#004FBA' }}></span>
-        )}
       </div>
 
       {/* Stats row */}

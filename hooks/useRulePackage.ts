@@ -28,16 +28,22 @@ export function useRulePackage(careGapId: string): UseRulePackageReturn {
     setIsLoading(true)
     setError(null)
 
-    getRulePackage(careGapId).then((result) => {
-      if (cancelled) return
-      if (result.success) {
-        setRulePackage(result.data)
-        setImpactSummary(result.data.impactSummary)
-      } else {
-        setError(result.error.message)
-      }
-      setIsLoading(false)
-    })
+    getRulePackage(careGapId)
+      .then((result) => {
+        if (cancelled) return
+        if (result.success) {
+          setRulePackage(result.data)
+          setImpactSummary(result.data.impactSummary)
+        } else {
+          setError(result.error.message)
+        }
+        setIsLoading(false)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Failed to load rule package')
+        setIsLoading(false)
+      })
 
     return () => { cancelled = true }
   }, [careGapId])

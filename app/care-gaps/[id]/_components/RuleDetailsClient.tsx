@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useTransition } from 'react'
 import { useRulePackage } from '@/hooks/useRulePackage'
 import { useParameterState } from '@/hooks/useParameterState'
 
@@ -18,7 +18,6 @@ import { SkeletonCard } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AlertTriangle } from 'lucide-react'
 import type { ParameterValues } from '@/lib/types'
-import { DEFAULT_PARAMETERS } from '@/hooks/useParameterState'
 
 interface RuleDetailsClientProps {
   careGapId: string
@@ -35,15 +34,13 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
   const {
     rulePackage,
     isLoading,
-    isRecalculating,
     isExporting,
     error,
     impactSummary,
-    recalculate,
     exportPackage,
   } = useRulePackage(careGapId)
 
-  const { parameters, diffs, setParameter } = useParameterState()
+  const { parameters, setParameter } = useParameterState()
 
   const sectionRefs = useRef<Record<TabKey, HTMLDivElement | null>>({
     summary: null, eligibility: null, exclusions: null,
@@ -102,9 +99,13 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
     [setParameter],
   )
 
-  const handleGenerate = useCallback(async () => {
-    await recalculate(parameters, DEFAULT_PARAMETERS, diffs)
-  }, [recalculate, parameters, diffs])
+  const [isGeneratingInsights, startInsightsTransition] = useTransition()
+
+  const handleGenerateInsights = useCallback(() => {
+    startInsightsTransition(async () => {
+      await new Promise((r) => setTimeout(r, 1500))
+    })
+  }, [])
 
   if (isLoading) {
     return (
@@ -140,9 +141,7 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
           <RuleHeader
             rulePackage={rulePackage}
             isExporting={isExporting}
-            isRecalculating={isRecalculating}
             onExport={exportPackage}
-            onGenerateUpdated={handleGenerate}
           />
         </div>
 
@@ -197,9 +196,10 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
         <ConfigurableParametersPanel
           parameters={parameters}
           onParameterChange={handleParameterChange}
-          onGenerate={handleGenerate}
-          isGenerating={isRecalculating}
+          isGenerating={false}
           impactSummary={impactSummary}
+          onGenerateInsights={handleGenerateInsights}
+          isGeneratingInsights={isGeneratingInsights}
         />
       </div>
     </div>

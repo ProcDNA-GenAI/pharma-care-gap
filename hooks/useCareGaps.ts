@@ -32,15 +32,21 @@ export function useCareGaps(): UseCareGapsReturn {
     setIsLoading(true)
     setError(null)
 
-    getCareGaps().then((result) => {
-      if (cancelled) return
-      if (result.success) {
-        setCareGaps(result.data)
-      } else {
-        setError(result.error.message)
-      }
-      setIsLoading(false)
-    })
+    getCareGaps()
+      .then((result) => {
+        if (cancelled) return
+        if (result.success) {
+          setCareGaps(result.data)
+        } else {
+          setError(result.error.message)
+        }
+        setIsLoading(false)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Failed to load care gaps')
+        setIsLoading(false)
+      })
 
     return () => { cancelled = true }
   }, [])
@@ -56,12 +62,13 @@ export function useCareGaps(): UseCareGapsReturn {
   }, [careGaps])
 
   const filteredCareGaps = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
     return careGaps.filter((gap) => {
       const matchesSearch =
-        searchQuery.trim() === '' ||
-        gap.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        gap.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        gap.therapyArea.toLowerCase().includes(searchQuery.toLowerCase())
+        q === '' ||
+        gap.title.toLowerCase().includes(q) ||
+        gap.description.toLowerCase().includes(q) ||
+        gap.therapyArea.toLowerCase().includes(q)
 
       const matchesArea =
         selectedTherapyArea === 'All' || gap.therapyArea === selectedTherapyArea

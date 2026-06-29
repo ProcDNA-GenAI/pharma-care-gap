@@ -1,20 +1,20 @@
 'use client'
 
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal, Sparkles } from 'lucide-react'
 import { ParameterField } from './ParameterField'
 import { ParameterToggleField } from './ParameterToggleField'
 import { ImpactSummaryCard } from './ImpactSummaryCard'
 import { Button } from '@/components/ui/Button'
-import { RefreshCw } from 'lucide-react'
 import type { ParameterValues, ImpactSummary } from '@/lib/types'
 import type { SelectOption } from '@/components/ui/Select'
 
 interface ConfigurableParametersPanelProps {
   parameters: ParameterValues
   onParameterChange: (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => void
-  onGenerate: () => void
   isGenerating: boolean
   impactSummary: ImpactSummary | null
+  onGenerateInsights: () => void
+  isGeneratingInsights: boolean
 }
 
 const AGE_OPTIONS: SelectOption[] = [18, 21, 25, 30].map((v) => ({ label: String(v), value: v }))
@@ -38,9 +38,10 @@ function GroupHeading({ children }: { children: string }) {
 export function ConfigurableParametersPanel({
   parameters,
   onParameterChange,
-  onGenerate,
   isGenerating,
   impactSummary,
+  onGenerateInsights,
+  isGeneratingInsights,
 }: ConfigurableParametersPanelProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -56,13 +57,13 @@ export function ConfigurableParametersPanel({
           <ParameterField label="Minimum Age" tooltip="Minimum patient age for eligibility"
             value={parameters.minimumAge} onChange={(v) => onParameterChange('minimumAge', v)}
             options={AGE_OPTIONS} unit="years" />
-          <ParameterField label="Disease Lookback Pe..." tooltip="Lookback window for IBD diagnosis confirmation"
+          <ParameterField label="Disease Lookback Period" tooltip="Lookback window for IBD diagnosis confirmation"
             value={parameters.diseaseLookbackPeriod} onChange={(v) => onParameterChange('diseaseLookbackPeriod', v)}
             options={LOOKBACK_OPTIONS} unit="months" />
-          <ParameterField label="Conventional Therapy..." tooltip="Minimum weeks on conventional therapy before biologic eligibility"
+          <ParameterField label="Conventional Therapy Duration" tooltip="Minimum weeks on conventional therapy before biologic eligibility"
             value={parameters.conventionalTherapyDuration} onChange={(v) => onParameterChange('conventionalTherapyDuration', v)}
             options={THERAPY_DURATION_OPTIONS} unit="weeks" />
-          <ParameterField label="Active Disease Wind..." tooltip="Days within which disease activity must be documented"
+          <ParameterField label="Active Disease Window" tooltip="Days within which disease activity must be documented"
             value={parameters.activeDiseaseWindow} onChange={(v) => onParameterChange('activeDiseaseWindow', v)}
             options={DISEASE_WINDOW_OPTIONS} unit="days" />
         </div>
@@ -104,24 +105,25 @@ export function ConfigurableParametersPanel({
             checked={parameters.excludeHistoryOfMalignancy} onChange={(v) => onParameterChange('excludeHistoryOfMalignancy', v)} />
         </div>
 
-        {/* Generate button */}
-        <Button
-          variant="primary"
-          size="md"
-          className="mt-4 w-full"
-          loading={isGenerating}
-          onClick={onGenerate}
-          iconLeft={<RefreshCw className="h-3.5 w-3.5" />}
-          style={{ backgroundColor: '#004FBA' }}
-        >
-          Generate Updated Rules
-        </Button>
       </div>
 
       {/* Impact Summary */}
       {impactSummary && (
         <ImpactSummaryCard impact={impactSummary} isLoading={isGenerating} />
       )}
+
+      {/* Generate Insights */}
+      <Button
+        variant="primary"
+        size="md"
+        className="w-full"
+        loading={isGeneratingInsights}
+        onClick={onGenerateInsights}
+        iconLeft={<Sparkles className="h-4 w-4" />}
+        style={{ backgroundColor: '#004FBA' }}
+      >
+        Generate Insights
+      </Button>
     </div>
   )
 }
