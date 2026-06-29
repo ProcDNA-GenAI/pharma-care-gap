@@ -4,143 +4,102 @@ export const MOCK_RULE_PACKAGE: RulePackage = {
   careGapId: 'ibd-biologic-initiation',
   careGapTitle: 'Biologic Therapy Initiation for Moderate to Severe IBD',
   careGapDescription:
-    'Identify patients with moderate to severe Crohn\'s Disease or Ulcerative Colitis who remain uncontrolled despite conventional therapy and have not initiated biologic therapy.',
-  status: 'Draft',
+    'Identify IBD patients with evidence of chronic or recurrent OCS overuse using a composite metric framework (M1–M7) per AbbVie Medical Affairs Care Gap Analytics Platform SOP.',
+  status: 'Active',
   guidelineVersion: 'ACG 2024',
   lastGenerated: 'May 20, 2025 10:32 AM',
   evidenceConfidence: 92,
 
+  // ── M1: IBD Cohort Identification (Denominator) ──────────────────────────
   clinicalSummary: {
-    text: 'According to ACG 2024 guidelines, patients with moderate to severe Crohn\'s Disease or Ulcerative Colitis who have inadequate response, loss of response, or intolerance to conventional therapy (e.g., aminosalicylates, corticosteroids, immunomodulators) should be considered for biologic therapy.',
+    text: '≥2 medical claims with K50.x or K51.x ICD-10 code, ≥30 days apart, within measurement period.',
     sources: [
+      'AbbVie Medical Affairs — Care Gap Analytics Platform SOP',
       'ACG Clinical Guideline: Ulcerative Colitis in Adults (2024)',
       'ACG Clinical Guideline: Crohn\'s Disease in Adults (2024)',
     ],
   },
 
+  // ── M2: Chronic/Prolonged OCS Use Rate ───────────────────────────────────
   eligibilityCriteria: [
     {
-      id: 'age',
-      label: 'Age ≥ 18 years',
+      id: 'm2-rule',
+      label: '>90 cumulative non-overlapping OCS days in 12 months',
       editable: true,
-    },
-    {
-      id: 'diagnosis',
-      label: 'Diagnosis of Crohn\'s Disease (ICD-10: K50.x) OR Ulcerative Colitis (ICD-10: K51.x)',
-      editable: false,
-    },
-    {
-      id: 'disease-severity',
-      label: 'Moderate to severe disease:',
-      editable: false,
       subItems: [
-        'Crohn\'s: Harvey-Bradshaw Index (HBI) ≥ 8 OR documented steroid dependence OR hospitalization/ED visit in last 12 months',
-        'UC: Partial Mayo Score ≥ 4 OR documented steroid dependence OR hospitalization/ED visit in last 12 months',
+        'Overlapping fills use STOCKPILE logic',
+        'Missing days supply uses MEDIAN_IMPUTE',
       ],
     },
-    {
-      id: 'conventional-therapy',
-      label: 'Received conventional therapy (5-ASA, corticosteroids, immunomodulators) for ≥ 8 weeks',
-      editable: true,
-    },
-    {
-      id: 'active-disease',
-      label: 'Active disease within last 90 days (elevated CRP, fecal calprotectin ≥ 250, or endoscopic/radiologic activity)',
-      editable: true,
-    },
   ],
 
+  // ── M3: High-Dose/Prolonged OCS Exposure Rate ────────────────────────────
   exclusionCriteria: [
     {
-      id: 'prior-biologic',
-      label: 'Prior use of any biologic therapy (anti-TNF, anti-integrin, anti-IL12/23, anti-IL23)',
+      id: 'm3-rule',
+      label: 'Prednisone-equivalent ≥10 mg/day for ≥60 consecutive days OR cumulative ≥600 mg; requires PRED_EQ_FACTOR conversion',
       editable: false,
-    },
-    {
-      id: 'colectomy',
-      label: 'History of colectomy with end ileostomy',
-      editable: false,
-    },
-    {
-      id: 'indeterminate-colitis',
-      label: 'Indeterminate colitis',
-      editable: false,
-    },
-    {
-      id: 'pregnancy',
-      label: 'Pregnancy or active pregnancy',
-      editable: true,
-    },
-    {
-      id: 'serious-infection',
-      label: 'Active serious infection (e.g., TB, hepatitis B/C, opportunistic infection)',
-      editable: true,
-    },
-    {
-      id: 'malignancy',
-      label: 'History of malignancy in past 5 years (excluding non-melanoma skin cancer)',
-      editable: true,
     },
   ],
 
+  // ── M4: Repeat OCS Course Rate ────────────────────────────────────────────
   temporalRules: [
-    { rule: 'Diagnosis Lookback', value: '24 months', editable: true },
-    { rule: 'Conventional Therapy Duration', value: '≥ 8 weeks', editable: true },
-    { rule: 'Active Disease Window', value: 'Within 90 days', editable: true },
-    { rule: 'Continuous Enrollment', value: '≥ 12 months (6 months pre + 6 months post index)', editable: true },
+    {
+      rule: 'Primary Business Rule',
+      value: '>1 distinct OCS course in 12 months; new course defined by ≥30-day gap between fills',
+      editable: true,
+    },
   ],
 
+  // ── M5: Steroid Taper-Failure/Dependence Rate — Data Requirements used as carrier ──
   dataRequirements: [
-    { type: 'Diagnosis', codesets: ['ICD-10'], required: true },
-    { type: 'Procedure', codesets: ['HCPCS', 'CPT'], required: true },
-    { type: 'Medication', codesets: ['NDC', 'RxNorm'], required: true },
-    { type: 'Laboratory', codesets: ['LOINC'], required: true },
-    { type: 'Enrollment', codesets: [], required: true },
+    {
+      type: 'Diagnosis',
+      codesets: ['ICD-10'],
+      required: true,
+    },
+    {
+      type: 'Medication',
+      codesets: ['NDC', 'RxNorm'],
+      required: true,
+    },
+    {
+      type: 'Procedure',
+      codesets: ['HCPCS', 'CPT'],
+      required: true,
+    },
+    {
+      type: 'Laboratory',
+      codesets: ['LOINC'],
+      required: true,
+    },
+    {
+      type: 'Enrollment',
+      codesets: [],
+      required: true,
+    },
   ],
 
+  // ── M6: Post-Discontinuation Relapse Rate ────────────────────────────────
   evidenceMapping: [
     {
-      rule: 'Moderate-to-severe disease definition',
-      source: 'ACG Clinical Guideline 2024',
-      recommendation: 'Section 3.2 — Disease Activity Assessment',
+      rule: 'Primary Business Rule',
+      source: 'AbbVie Medical Affairs SOP 2024',
+      recommendation: 'New IBD-related medical claim (inpatient, ED, or outpatient escalation) within 3 months of last OCS fill end date',
       evidenceGrade: 'A',
-    },
-    {
-      rule: 'Conventional therapy failure (≥ 8 weeks)',
-      source: 'ACG Clinical Guideline 2024',
-      recommendation: 'Recommendation 5 — Steroid-dependent/refractory disease',
-      evidenceGrade: 'A',
-    },
-    {
-      rule: 'Biologic initiation threshold',
-      source: 'ACG Clinical Guideline 2024',
-      recommendation: 'Recommendation 7 — Biologic therapy in moderate-severe IBD',
-      evidenceGrade: 'A',
-    },
-    {
-      rule: 'Active disease window (90 days)',
-      source: 'ECCO Guideline 2024',
-      recommendation: 'Section 4 — Monitoring and biomarkers',
-      evidenceGrade: 'B',
     },
   ],
 
+  // ── M7: Composite OCS Overuse Flag (Primary KPI) ─────────────────────────
   ruleLogic: [
-    { condition: 'IBD Diagnosis (K50.x OR K51.x)', operator: 'AND' },
-    { condition: 'Age ≥ 18 years', operator: 'AND' },
-    { condition: 'Moderate-to-severe disease activity', operator: 'AND' },
-    { condition: 'Conventional therapy ≥ 8 weeks', operator: 'AND' },
-    { condition: 'Active disease within 90 days', operator: 'AND' },
-    { condition: 'No prior biologic therapy', operator: 'AND' },
-    { condition: 'No pregnancy', operator: 'AND' },
-    { condition: 'No active serious infection', operator: 'AND' },
-    { condition: 'No history of malignancy (5 years)', },
+    { condition: 'Patient flagged if ANY of M2, M3, M4, M5, or M6 criteria are met' },
+    { condition: 'Primary care gap indicator for aggregated reporting' },
   ],
 
   evidenceReferences: [
     {
-      source: 'ACG Clinical Guideline: Crohn\'s Disease in Adults',
-      recommendation: 'Recommendation 7',
+      source: 'AbbVie Medical Affairs — Care Gap Analytics Platform SOP',
+      recommendation: 'Metrics M1–M7 Framework',
       evidenceStrength: 'Strong',
       year: 2024,
     },
@@ -151,12 +110,8 @@ export const MOCK_RULE_PACKAGE: RulePackage = {
       year: 2024,
     },
     {
-      source: 'ECCO Guideline',
-      evidenceStrength: 'Strong',
-      year: 2024,
-    },
-    {
-      source: 'FDA Prescribing Information',
+      source: 'ACG Clinical Guideline: Crohn\'s Disease in Adults',
+      recommendation: 'Recommendation 7',
       evidenceStrength: 'Strong',
       year: 2024,
     },

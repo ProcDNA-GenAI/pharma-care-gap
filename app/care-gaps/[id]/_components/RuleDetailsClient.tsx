@@ -176,19 +176,6 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
             <RuleLogicCard steps={rulePackage.ruleLogic} />
           </div>
         </div>
-
-        {/* Footer + large bottom padding so any section can scroll to the top */}
-        <div className="shrink-0">
-          <div className="flex items-center gap-3 px-1 text-xs text-gray-400 pb-1">
-            <span>Last Generated: {rulePackage.lastGenerated}</span>
-            <span>|</span>
-            <span>Guideline: {rulePackage.guidelineVersion}</span>
-            <span>|</span>
-            <span>Version: 1.0</span>
-          </div>
-          {/* Spacer ensures even the last section can scroll to top of viewport */}
-          <div style={{ height: '60vh' }} aria-hidden="true" />
-        </div>
       </div>
 
       {/* ── Right panel ── */}

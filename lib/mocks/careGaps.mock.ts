@@ -7,7 +7,7 @@ export const MOCK_CARE_GAPS: CareGap[] = [
     description:
       'Identify patients with moderate to severe Crohn\'s Disease or Ulcerative Colitis who remain uncontrolled despite conventional therapy and have not initiated biologic therapy.',
     therapyArea: 'Gastroenterology',
-    status: 'Draft',
+    status: 'Active',
     guidelineVersion: 'ACG 2024',
     lastUpdated: '2025-05-20',
     evidenceConfidence: 92,

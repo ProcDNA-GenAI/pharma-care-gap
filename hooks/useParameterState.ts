@@ -4,43 +4,56 @@ import { useState, useCallback, useMemo } from 'react'
 import type { ParameterValues, ParameterDiff } from '@/lib/types'
 
 export const DEFAULT_PARAMETERS: ParameterValues = {
+  // M1 — Cohort
   minimumAge: 18,
-  diseaseLookbackPeriod: 24,
-  conventionalTherapyDuration: 8,
-  activeDiseaseWindow: 90,
-  crohnsDiseaseHBI: 8,
-  ulcerativeColitisPartialMayo: 4,
-  crpThreshold: 10,
-  fecalCalprotectinThreshold: 250,
-  continuousEnrollment: 12,
+  diseaseLookbackPeriod: 12,          // months rolling window
+  continuousEnrollment: 12,           // 6 pre + 6 post
+
+  // M2 — Chronic OCS threshold
+  conventionalTherapyDuration: 90,    // cumulative OCS days threshold
+
+  // M3 — High-dose thresholds
+  activeDiseaseWindow: 60,            // consecutive days at high dose
+  crpThreshold: 10,                   // prednisone-equivalent mg/day threshold
+  fecalCalprotectinThreshold: 600,    // cumulative mg threshold
+
+  // M4 — Repeat course
+  crohnsDiseaseHBI: 30,               // inter-course gap days (new course trigger)
+
+  // M5 — Taper failure
+  ulcerativeColitisPartialMayo: 3,    // months to achieve taper
+
+  // Exclusions
   excludePregnancy: true,
   excludeActiveSeriousInfection: true,
   excludeHistoryOfMalignancy: true,
 }
 
 const PARAMETER_LABELS: Record<keyof ParameterValues, string> = {
-  minimumAge: 'Minimum Age',
-  diseaseLookbackPeriod: 'Disease Lookback Period',
-  conventionalTherapyDuration: 'Conventional Therapy Duration',
-  activeDiseaseWindow: 'Active Disease Window',
-  crohnsDiseaseHBI: "Crohn's Disease (HBI)",
-  ulcerativeColitisPartialMayo: 'Ulcerative Colitis (Partial Mayo)',
-  crpThreshold: 'CRP',
-  fecalCalprotectinThreshold: 'Fecal Calprotectin',
-  continuousEnrollment: 'Continuous Enrollment',
-  excludePregnancy: 'Pregnancy',
-  excludeActiveSeriousInfection: 'Active Serious Infection',
-  excludeHistoryOfMalignancy: 'History of Malignancy (5 years)',
+  minimumAge:                    'Minimum Age',
+  diseaseLookbackPeriod:         'Measurement Window',
+  continuousEnrollment:          'Continuous Enrollment',
+  conventionalTherapyDuration:   'Cumulative OCS Days Threshold (M2)',
+  activeDiseaseWindow:           'High-Dose Consecutive Days (M3)',
+  crpThreshold:                  'Prednisone-Equivalent Threshold mg/day (M3)',
+  fecalCalprotectinThreshold:    'Cumulative OCS mg Threshold (M3)',
+  crohnsDiseaseHBI:              'Inter-Course Gap — New Course Trigger (M4)',
+  ulcerativeColitisPartialMayo:  'Taper Achievement Window (M5)',
+  excludePregnancy:              'Exclude Pregnancy',
+  excludeActiveSeriousInfection: 'Exclude Active Serious Infection',
+  excludeHistoryOfMalignancy:    'Exclude Active Malignancy / Chemotherapy',
 }
 
 const PARAMETER_UNITS: Partial<Record<keyof ParameterValues, string>> = {
-  minimumAge: 'years',
-  diseaseLookbackPeriod: 'months',
-  conventionalTherapyDuration: 'weeks',
-  activeDiseaseWindow: 'days',
-  crpThreshold: 'mg/L',
-  fecalCalprotectinThreshold: 'mcg/g',
-  continuousEnrollment: 'months',
+  minimumAge:                   'years',
+  diseaseLookbackPeriod:        'months',
+  continuousEnrollment:         'months',
+  conventionalTherapyDuration:  'days',
+  activeDiseaseWindow:          'days',
+  crpThreshold:                 'mg/day',
+  fecalCalprotectinThreshold:   'mg',
+  crohnsDiseaseHBI:             'days',
+  ulcerativeColitisPartialMayo: 'months',
 }
 
 interface UseParameterStateReturn {

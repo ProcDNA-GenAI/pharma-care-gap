@@ -1,6 +1,5 @@
-import { Clock } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import type { TemporalRule } from '@/lib/types'
 
 interface TemporalRulesTableProps {
@@ -9,31 +8,24 @@ interface TemporalRulesTableProps {
 
 export function TemporalRulesTable({ rules }: TemporalRulesTableProps) {
   return (
-    <Card padding="none">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Clock className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-gray-900">Temporal Rules</h2>
-        </div>
-        <Badge variant="info">{rules.length} rules</Badge>
+    <Card padding="sm">
+      <div className="flex items-center gap-2 mb-3">
+        <RefreshCw className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
+        <h2 className="text-sm font-semibold text-gray-900">Repeat OCS Course Rate</h2>
       </div>
 
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-t border-gray-100 bg-gray-50">
-            <th className="px-4 py-2 text-left font-medium text-gray-500">Rule</th>
-            <th className="px-4 py-2 text-left font-medium text-gray-500">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rules.map((rule, index) => (
-            <tr key={index} className="border-t border-gray-100 hover:bg-gray-50/60 transition-colors">
-              <td className="px-4 py-2 text-gray-700">{rule.rule}</td>
-              <td className="px-4 py-2 text-gray-900 font-medium">{rule.value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ul className="space-y-2.5">
+        {rules.map((rule, index) => (
+          <li key={index}>
+            <p className="text-xs text-gray-800 leading-relaxed">{rule.value}</p>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2.5">
+        <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-1">Rule Type</p>
+        <p className="text-xs text-emerald-800">Episode Count</p>
+      </div>
     </Card>
   )
 }
