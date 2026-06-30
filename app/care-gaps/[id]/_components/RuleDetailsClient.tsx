@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { useRulePackage } from '@/hooks/useRulePackage'
 import { useParameterState } from '@/hooks/useParameterState'
 
@@ -99,13 +100,15 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
     [setParameter],
   )
 
+  const router = useRouter()
   const [isGeneratingInsights, startInsightsTransition] = useTransition()
 
   const handleGenerateInsights = useCallback(() => {
     startInsightsTransition(async () => {
       await new Promise((r) => setTimeout(r, 1500))
+      router.push(`/care-gaps/${careGapId}/insights`)
     })
-  }, [])
+  }, [careGapId, router])
 
   if (isLoading) {
     return (
