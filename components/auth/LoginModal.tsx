@@ -10,6 +10,7 @@ export function LoginModal() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [navigating, setNavigating] = useState(false)
   const [showPw, setShowPw] = useState(false)
   const router = useRouter()
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -47,6 +48,7 @@ export function LoginModal() {
     setLoading(false)
     if (username === 'admin' && password === 'admin123') {
       setOpen(false)
+      setNavigating(true)
       router.push('/care-gaps')
     } else {
       setError('Invalid username or password.')
@@ -65,6 +67,17 @@ export function LoginModal() {
           <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
+
+      {/* Full-screen loader shown while navigating to /care-gaps */}
+      {navigating && (
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white">
+          <div className="flex flex-col items-center gap-5">
+            <Image src="/ProcDNA_Logo.svg" alt="ProcDNA" width={120} height={68} />
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#004FBA]/20 border-t-[#004FBA]" />
+            <p className="text-sm font-medium text-gray-500">Loading platform…</p>
+          </div>
+        </div>
+      )}
 
       {/* Modal backdrop */}
       {open && (
