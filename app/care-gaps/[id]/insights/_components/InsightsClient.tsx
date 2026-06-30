@@ -87,9 +87,10 @@ const DEMOGRAPHIC_COLUMNS: Column<DemographicAgg>[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function sortRows<T extends Record<string, unknown>>(rows: T[], key: string, dir: 'asc' | 'desc'): T[] {
+function sortRows<T extends object>(rows: T[], key: string, dir: 'asc' | 'desc'): T[] {
   return [...rows].sort((a, b) => {
-    const av = a[key] ?? 0; const bv = b[key] ?? 0
+    const av = (a as Record<string, unknown>)[key] ?? 0
+    const bv = (b as Record<string, unknown>)[key] ?? 0
     const cmp = typeof av === 'number' && typeof bv === 'number'
       ? av - bv : String(av).localeCompare(String(bv))
     return dir === 'asc' ? cmp : -cmp
