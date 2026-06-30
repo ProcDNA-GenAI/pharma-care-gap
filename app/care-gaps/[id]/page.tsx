@@ -11,7 +11,7 @@ export default function RuleDetailsPage({ params }: PageProps) {
       <AppHeader
         breadcrumbs={[
           { label: 'Care Gap Rule Authoring', href: '/care-gaps' },
-          { label: 'Rule Details' },
+          { label: 'Care Gap Rule Summary' },
         ]}
       />
       {/* h-screen minus header (h-16 = 64px) */}

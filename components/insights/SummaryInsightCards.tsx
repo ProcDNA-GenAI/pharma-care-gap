@@ -125,7 +125,7 @@ export function SummaryInsightCards({ insights }: Props) {
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">HCPs Flagged</span>
           </div>
           <div>
-            <p className="text-2xl font-bold text-gray-900 tabular-nums">{flaggedHcpCount} <span className="text-sm font-normal text-gray-400">/ {totalHcpCount}</span></p>
+            <p className="text-sm font-bold text-gray-900 tabular-nums">{flaggedHcpCount.toLocaleString()} <span className="font-normal text-gray-400">/ {totalHcpCount.toLocaleString()}</span></p>
             <p className="text-[10px] text-gray-400 mt-0.5">NPIs with M7 rate ≥ 20%</p>
           </div>
           <div className="flex items-center justify-between">

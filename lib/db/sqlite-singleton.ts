@@ -31,7 +31,7 @@ let _initPromise: Promise<SqlJsStatic> | null = null
 
 function injectScript(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (window.initSqlJs) { resolve(); return }
+    if (typeof window.initSqlJs !== 'undefined') { resolve(); return }
     const existing = document.querySelector(`script[src*="sql-wasm.js"]`)
     if (existing) {
       existing.addEventListener('load', () => resolve())

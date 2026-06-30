@@ -9,9 +9,12 @@ interface EvidenceMappingCardProps {
 export function EvidenceMappingCard({ mappings }: EvidenceMappingCardProps) {
   return (
     <Card padding="sm">
-      <div className="flex items-center gap-2 mb-3">
-        <TrendingDown className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
-        <h2 className="text-sm font-semibold text-gray-900">Post-Discontinuation Relapse Rate</h2>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <TrendingDown className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-gray-900">Evidence Mapping</h2>
+        </div>
+        <span className="shrink-0 text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">M6 — Post-Discontinuation Relapse Rate</span>
       </div>
 
       <ul className="space-y-2.5">

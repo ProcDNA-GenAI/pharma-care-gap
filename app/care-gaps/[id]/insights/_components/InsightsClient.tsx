@@ -45,7 +45,8 @@ const HCP_COLUMNS: Column<HcpAgg>[] = [
   )},
   { key: 'account',       label: 'Account',       sortable: true,  render: (r) => r.account },
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsUse',        label: 'OCS Use',       sortable: true, align: 'right', render: (r) => r.ocsUse.toLocaleString() },
+  { key: 'ocsOveruse',    label: '# Patient with OCS use',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
   { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
   { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
@@ -62,14 +63,8 @@ const ACCOUNT_COLUMNS: Column<AccountAgg>[] = [
   { key: 'territory',     label: 'Territory',     sortable: true,  render: (r) => r.territory },
   { key: 'topSpecialty',  label: 'Top Specialty', render: (r) => r.topSpecialty },
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsUse',        label: 'OCS Use',       sortable: true, align: 'right', render: (r) => r.ocsUse.toLocaleString() },
-  { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
-  { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
-  { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
-  { key: 'taperFailure',  label: 'Taper Failure', sortable: true, align: 'right', render: (r) => r.taperFailure.toLocaleString() },
-  { key: 'relapse',       label: 'Post-Disc. Relapse', sortable: true, align: 'right', render: (r) => r.relapse.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'Identified as Overuser of OCS due to any of the 5 metrics', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'Overuse Rate',  sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'ocsOveruse',    label: '# Patient with OCS use',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
@@ -79,14 +74,8 @@ const TERRITORY_COLUMNS: Column<TerritoryAgg>[] = [
   { key: 'region',        label: 'Region',       sortable: true,  render: (r) => r.region },
   { key: 'hcpCount',      label: 'HCPs',         sortable: true, align: 'right', render: (r) => r.hcpCount.toLocaleString() },
   { key: 'totalPatients', label: 'Total Pts',    sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsUse',        label: 'OCS Use',      sortable: true, align: 'right', render: (r) => r.ocsUse.toLocaleString() },
-  { key: 'chronicOcs',    label: 'Chronic OCS',  sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
-  { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
-  { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
-  { key: 'taperFailure',  label: 'Taper Failure', sortable: true, align: 'right', render: (r) => r.taperFailure.toLocaleString() },
-  { key: 'relapse',       label: 'Post-Disc. Relapse', sortable: true, align: 'right', render: (r) => r.relapse.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'Identified as Overuser of OCS due to any of the 5 metrics', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'Overuse Rate', sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'ocsOveruse',    label: '# Patient with OCS use',   sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',      sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'risk',          label: 'Risk',         align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
@@ -94,7 +83,8 @@ const DEMOGRAPHIC_COLUMNS: Column<DemographicAgg>[] = [
   { key: 'ageBand',       label: 'Age Band',      sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.ageBand}</span> },
   { key: 'gender',        label: 'Gender',        sortable: true,  render: (r) => r.gender },
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsUse',        label: 'OCS Use',       sortable: true, align: 'right', render: (r) => r.ocsUse.toLocaleString() },
+  { key: 'ocsOveruse',    label: '# Patient with OCS use',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
   { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
   { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
@@ -107,9 +97,10 @@ const DEMOGRAPHIC_COLUMNS: Column<DemographicAgg>[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function sortRows<T extends Record<string, unknown>>(rows: T[], key: string, dir: 'asc' | 'desc'): T[] {
+function sortRows<T extends object>(rows: T[], key: string, dir: 'asc' | 'desc'): T[] {
   return [...rows].sort((a, b) => {
-    const av = a[key] ?? 0; const bv = b[key] ?? 0
+    const av = (a as Record<string, unknown>)[key] ?? 0
+    const bv = (b as Record<string, unknown>)[key] ?? 0
     const cmp = typeof av === 'number' && typeof bv === 'number'
       ? av - bv : String(av).localeCompare(String(bv))
     return dir === 'asc' ? cmp : -cmp
@@ -301,7 +292,7 @@ export function InsightsClient() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-900">Care Gap Summary &amp; Insights</h1>
+            <h1 className="text-xl font-bold text-gray-900">Care Gap Insights</h1>
             <StatusPill status={status} label={statusLabel} />
             {hasRealData && rowCount > 0 && (
               <span className="text-[10px] text-gray-400">
@@ -470,7 +461,8 @@ export function InsightsClient() {
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-[#004FBA]" />
-                <span className="text-xs font-semibold text-gray-900">Adjust Parameters</span>
+                <span className="text-xs font-semibold text-gray-900">Configurable Parameters</span>
+                <span className="text-xs text-gray-400">(Select Values to analyze Care Gap)</span>
               </div>
               <div className="flex items-center gap-2">
                 {status === 'computing' && (
@@ -490,6 +482,7 @@ export function InsightsClient() {
                 parameters={parameters}
                 onParameterChange={handleParameterChange}
                 hideActions={true}
+                hideHeader={true}
               />
             </div>
           </div>
