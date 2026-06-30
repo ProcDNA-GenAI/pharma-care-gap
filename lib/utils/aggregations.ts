@@ -106,8 +106,13 @@ export function aggregateByTerritory(rows: PatientRow[]): TerritoryAgg[] {
     const hcpCount   = new Set(pts.map((p) => p.NPI)).size
     return {
       territory, region: pts[0].Region, totalPatients: total,
-      ocsOveruse, m7Rate: rate(ocsOveruse, total),
-      chronicOcs: pts.filter((p) => p.M3 > M3_THRESHOLD).length,
+      ocsUse:       pts.filter((p) => p.M3 > 0).length,
+      chronicOcs:   pts.filter((p) => p.M3 > M3_THRESHOLD).length,
+      highDose:     pts.filter((p) => p.M7 > 0).length,
+      ocsOveruse,   m7Rate: rate(ocsOveruse, total),
+      repeatCourse: pts.filter((p) => p.M4 > M4_THRESHOLD).length,
+      taperFailure: pts.filter((p) => p.M5 > M5_THRESHOLD).length,
+      relapse:      pts.filter((p) => p.M6 > 0 && p.M6 <= M6_THRESHOLD).length,
       hcpCount,
     }
   })
@@ -125,9 +130,13 @@ export function aggregateByDemographic(rows: PatientRow[]): DemographicAgg[] {
     const ocsOveruse = pts.filter((p) => p.M7 > M7_THRESHOLD).length
     return {
       ageBand, gender, totalPatients: total,
-      ocsOveruse, m7Rate: rate(ocsOveruse, total),
+      ocsUse:        pts.filter((p) => p.M3 > 0).length,
       chronicOcs:    pts.filter((p) => p.M3 > M3_THRESHOLD).length,
+      highDose:      pts.filter((p) => p.M7 > 0).length,
+      ocsOveruse,    m7Rate: rate(ocsOveruse, total),
       repeatCourse:  pts.filter((p) => p.M4 > M4_THRESHOLD).length,
+      taperFailure:  pts.filter((p) => p.M5 > M5_THRESHOLD).length,
+      relapse:       pts.filter((p) => p.M6 > 0 && p.M6 <= M6_THRESHOLD).length,
     }
   })
 }
