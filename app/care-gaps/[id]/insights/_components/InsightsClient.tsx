@@ -88,8 +88,6 @@ const DEMOGRAPHIC_COLUMNS: Column<DemographicAgg>[] = [
   { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
   { key: 'taperFailure',  label: 'Taper Failure', sortable: true, align: 'right', render: (r) => r.taperFailure.toLocaleString() },
   { key: 'relapse',       label: 'Post-Disc. Relapse', sortable: true, align: 'right', render: (r) => r.relapse.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'Identified as Overuser of OCS due to any of the 5 metrics', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'Overuse Rate',  sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
