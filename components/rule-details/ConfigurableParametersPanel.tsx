@@ -13,6 +13,8 @@ interface ConfigurableParametersPanelProps {
   isGeneratingInsights?: boolean
   /** When true, hides the Generate Insights button (e.g. when used inline on the Insights page) */
   hideActions?: boolean
+  /** When true, hides the "Configurable Parameters" panel heading (use when parent already has a title) */
+  hideHeader?: boolean
 }
 
 // M1 — IBD Cohort
@@ -52,16 +54,19 @@ export function ConfigurableParametersPanel({
   onGenerateInsights,
   isGeneratingInsights = false,
   hideActions = false,
+  hideHeader = false,
 }: ConfigurableParametersPanelProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-xl border border-gray-200 bg-white p-4">
 
         {/* Panel header */}
-        <div className="flex items-center gap-2 mb-3">
-          <SlidersHorizontal className="h-3.5 w-3.5" style={{ color: '#004FBA' }} aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-gray-900">Configurable Parameters</h2>
-        </div>
+        {!hideHeader && (
+          <div className="flex items-center gap-2 mb-3">
+            <SlidersHorizontal className="h-3.5 w-3.5" style={{ color: '#004FBA' }} aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-gray-900">Configurable Parameters</h2>
+          </div>
+        )}
 
         {/* M1 — IBD Cohort */}
         <GroupHeading>IBD Cohort (Denominator)</GroupHeading>

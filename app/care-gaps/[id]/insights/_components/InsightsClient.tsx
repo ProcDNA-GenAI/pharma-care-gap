@@ -470,6 +470,7 @@ export function InsightsClient() {
                 parameters={parameters}
                 onParameterChange={handleParameterChange}
                 hideActions={true}
+                hideHeader={true}
               />
             </div>
           </div>

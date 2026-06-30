@@ -1,9 +1,126 @@
 'use client'
 
-import { useState, useRef, useCallback, DragEvent } from 'react'
+import { useState, useRef, useCallback, useEffect, DragEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { UploadCloud, FileText, Link2, X, CheckCircle2, Loader2, ArrowRight, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+
+const PROCESSING_STEPS = [
+  { label: 'Parsing clinical document',      duration: 1000 },
+  { label: 'Extracting evidence guidelines',  duration: 1200 },
+  { label: 'Identifying care gap criteria',   duration: 1000 },
+  { label: 'Mapping eligibility rules',       duration: 1300 },
+  { label: 'Generating rule logic',           duration: 1300 },
+  { label: 'Finalizing rule package',         duration: 600 },
+]
+
+function ProcessingLoader() {
+  const [completedCount, setCompletedCount] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    let stepIndex = 0
+    function runNext() {
+      if (stepIndex >= PROCESSING_STEPS.length) return
+      const delay = PROCESSING_STEPS[stepIndex].duration
+      setTimeout(() => {
+        setCompletedCount(stepIndex + 1)
+        stepIndex++
+        setActiveIndex(stepIndex)
+        runNext()
+      }, delay)
+    }
+    runNext()
+  }, [])
+
+  const pct = Math.round((completedCount / PROCESSING_STEPS.length) * 100)
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white px-8">
+      <div className="w-full max-w-2xl">
+
+        {/* Title */}
+        <div className="mb-10 text-center">
+          <p className="text-2xl font-bold text-gray-900">Generating Rules using AI</p>
+          <p className="mt-1.5 text-sm text-gray-400">Analyzing your clinical guidelines…</p>
+        </div>
+
+        {/* Horizontal stepper */}
+        <div className="relative flex items-start justify-between">
+
+          {/* Connector track (behind the circles) */}
+          <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 z-0" style={{ left: '2.5rem', right: '2.5rem' }}>
+            {/* Filled portion — green to match checkmarks */}
+            <div
+              className="h-full transition-all duration-700 ease-out"
+              style={{
+                width: completedCount === 0 ? '0%' : `${((completedCount - 1) / (PROCESSING_STEPS.length - 1)) * 100}%`,
+                background: '#10b981',
+              }}
+            />
+          </div>
+
+          {PROCESSING_STEPS.map((step, i) => {
+            const isDone   = i < completedCount
+            const isActive = i === activeIndex && !isDone
+
+            return (
+              <div key={i} className="relative z-10 flex flex-col items-center gap-2.5" style={{ width: `${100 / PROCESSING_STEPS.length}%` }}>
+                {/* Circle */}
+                <div className={cn(
+                  'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300',
+                  isDone
+                    ? 'bg-emerald-500 border-emerald-500'
+                    : isActive
+                    ? 'bg-white border-[#004FBA]'
+                    : 'bg-white border-gray-200',
+                )}>
+                  {isDone ? (
+                    <svg className="w-5 h-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : isActive ? (
+                    <div className="w-4 h-4 rounded-full border-2 border-[#004FBA]/30 border-t-[#004FBA] animate-spin" />
+                  ) : (
+                    <span className="text-xs font-bold text-gray-300">{i + 1}</span>
+                  )}
+                </div>
+
+                {/* Label */}
+                <span className={cn(
+                  'text-[11px] font-medium text-center leading-tight px-1 transition-colors duration-300',
+                  isDone   ? 'text-gray-700' :
+                  isActive ? 'text-[#004FBA] font-semibold' :
+                             'text-gray-300',
+                )}>
+                  {step.label}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Progress bar + percentage */}
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400 font-medium">Overall Progress</span>
+            <span className="text-xs font-bold text-[#004FBA]">{pct}%</span>
+          </div>
+          <div className="h-2.5 w-full rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: `${pct}%`,
+                background: 'linear-gradient(90deg, #004FBA 0%, #2563eb 100%)',
+              }}
+            />
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
 
 const ACCEPTED_EXTS = ['.txt', '.doc', '.docx', '.pdf', '.ppt', '.pptx']
 const ACCEPTED_MIME = [
@@ -93,29 +210,19 @@ export function CareGapUploadClient() {
     if (processing) return
     if (!validateLink(link)) return
     setProcessing(true)
-    await new Promise((r) => setTimeout(r, 1800))
+    await new Promise((r) => setTimeout(r, 800))
     setDone(true)
-    await new Promise((r) => setTimeout(r, 500))
+    await new Promise((r) => setTimeout(r, 300))
     setGenerating(true)
-    await new Promise((r) => setTimeout(r, 2500))
+    // Total duration of all steps + small buffer before navigating
+    const totalDuration = PROCESSING_STEPS.reduce((s, p) => s + p.duration, 0) + 600
+    await new Promise((r) => setTimeout(r, totalDuration))
     router.push(`/care-gaps/${TARGET_ID}`)
   }
 
   /* ── render ── */
   if (generating) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative flex items-center justify-center">
-            <div className="h-16 w-16 rounded-full border-4 border-[#004FBA]/20 border-t-[#004FBA] animate-spin" />
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-semibold text-gray-900">Generating Rules using AI</p>
-            <p className="mt-1 text-sm text-gray-400">Analyzing your clinical guidelines…</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <ProcessingLoader />
   }
 
   return (
