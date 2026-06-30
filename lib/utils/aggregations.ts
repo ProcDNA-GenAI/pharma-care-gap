@@ -81,12 +81,16 @@ export function aggregateByAccount(rows: PatientRow[]): AccountAgg[] {
     pts.forEach((p) => specCount.set(p.Specialty, (specCount.get(p.Specialty) ?? 0) + 1))
     const topSpecialty = [...specCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
     return {
-      account, territory: pts[0].Territory, region: pts[0].Region, total,
-      ocsOveruse, m7Rate: rate(ocsOveruse, total),
-      chronicOcs: pts.filter((p) => p.M3 > M3_THRESHOLD).length,
-      repeatCourse: pts.filter((p) => p.M4 > M4_THRESHOLD).length,
-      topSpecialty,
+      account, territory: pts[0].Territory, region: pts[0].Region,
       totalPatients: total,
+      ocsUse:        pts.filter((p) => p.M3 > 0).length,
+      chronicOcs:    pts.filter((p) => p.M3 > M3_THRESHOLD).length,
+      highDose:      pts.filter((p) => p.M7 > 0).length,
+      ocsOveruse,    m7Rate: rate(ocsOveruse, total),
+      repeatCourse:  pts.filter((p) => p.M4 > M4_THRESHOLD).length,
+      taperFailure:  pts.filter((p) => p.M5 > M5_THRESHOLD).length,
+      relapse:       pts.filter((p) => p.M6 > 0 && p.M6 <= M6_THRESHOLD).length,
+      topSpecialty,
     }
   })
 }
