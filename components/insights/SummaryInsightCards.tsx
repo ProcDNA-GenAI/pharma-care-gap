@@ -66,7 +66,7 @@ export function SummaryInsightCards({ insights }: Props) {
           </div>
           <div>
             <p className="text-sm font-bold text-gray-900">{highestRiskHcp.name}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">NPI: {highestRiskHcp.npi} · {highestRiskHcp.specialty}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">{highestRiskHcp.specialty}</p>
           </div>
           <div className="flex items-center justify-between">
             <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">

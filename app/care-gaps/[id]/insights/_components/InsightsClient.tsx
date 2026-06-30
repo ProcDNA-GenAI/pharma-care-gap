@@ -37,10 +37,10 @@ const UNAVAILABLE_TABS = new Set(['payer', 'temporal'])
 
 const HCP_COLUMNS: Column<HcpAgg>[] = [
   { key: 'rank',          label: '#',             align: 'center',  render: (_, i) => <span className="text-gray-400">{i + 1}</span> },
-  { key: 'name',          label: 'HCP',           sortable: true,   render: (r) => (
+  { key: 'name',          label: 'NPI',           sortable: true,   render: (r) => (
     <div>
       <p className="font-semibold text-gray-900">{r.name}</p>
-      <p className="text-[10px] text-gray-400">NPI: {r.npi} · {r.specialty}</p>
+      <p className="text-[10px] text-gray-400">{r.specialty}</p>
     </div>
   )},
   { key: 'account',       label: 'Account',       sortable: true,  render: (r) => r.account },

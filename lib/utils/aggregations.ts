@@ -50,7 +50,7 @@ export function aggregateByHcp(rows: PatientRow[]): HcpAgg[] {
     const ocsOveruse   = pts.filter((p) => p.M7 > M7_THRESHOLD).length
     return {
       npi,
-      name:         `NPI ${npi}`,
+      name:         npi,
       specialty:    pts[0].Specialty,
       account:      pts[0].Account,
       territory:    pts[0].Territory,

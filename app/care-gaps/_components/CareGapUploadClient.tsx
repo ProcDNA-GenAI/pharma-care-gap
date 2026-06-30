@@ -58,6 +58,7 @@ export function CareGapUploadClient() {
   const [linkError, setLinkError] = useState('')
   const [processing, setProcessing] = useState(false)
   const [done, setDone] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   /* ── helpers ── */
   function validateLink(val: string): boolean {
@@ -95,10 +96,28 @@ export function CareGapUploadClient() {
     await new Promise((r) => setTimeout(r, 1800))
     setDone(true)
     await new Promise((r) => setTimeout(r, 500))
+    setGenerating(true)
+    await new Promise((r) => setTimeout(r, 2500))
     router.push(`/care-gaps/${TARGET_ID}`)
   }
 
   /* ── render ── */
+  if (generating) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative flex items-center justify-center">
+            <div className="h-16 w-16 rounded-full border-4 border-[#004FBA]/20 border-t-[#004FBA] animate-spin" />
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-semibold text-gray-900">Generating Rules using AI</p>
+            <p className="mt-1 text-sm text-gray-400">Analyzing your clinical guidelines…</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full max-w-xl">
 

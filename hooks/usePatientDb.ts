@@ -111,7 +111,7 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
           const hcpRaw = toObjects(db.exec(HCP_AGG_SQL))
           setHcpRows(hcpRaw.map((r) => ({
             npi:          s(r.npi),
-            name:         `NPI ${s(r.npi)}`,
+            name:         s(r.npi),
             specialty:    s(r.specialty),
             account:      s(r.account),
             territory:    s(r.territory),
