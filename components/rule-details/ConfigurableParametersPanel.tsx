@@ -2,7 +2,6 @@
 
 import { SlidersHorizontal, Sparkles } from 'lucide-react'
 import { ParameterField } from './ParameterField'
-import { ParameterToggleField } from './ParameterToggleField'
 import { ImpactSummaryCard } from './ImpactSummaryCard'
 import { Button } from '@/components/ui/Button'
 import type { ParameterValues, ImpactSummary } from '@/lib/types'
@@ -17,24 +16,28 @@ interface ConfigurableParametersPanelProps {
   isGeneratingInsights: boolean
 }
 
-// M1 — Cohort
-const AGE_OPTIONS: SelectOption[]         = [18, 21, 25, 30].map((v) => ({ label: String(v), value: v }))
-const ENROLLMENT_OPTIONS: SelectOption[]  = [6, 12, 18, 24].map((v) => ({ label: String(v), value: v }))
-const WINDOW_OPTIONS: SelectOption[]      = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
+// M1 — IBD Cohort
+const MEASUREMENT_OPTIONS: SelectOption[]  = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
+const IBD_CLAIMS_OPTIONS: SelectOption[]   = [1, 2, 3].map((v) => ({ label: String(v), value: v }))
+const IBD_GAP_OPTIONS: SelectOption[]      = [14, 30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
 
 // M2 — Chronic OCS
-const OCS_DAYS_OPTIONS: SelectOption[]    = [60, 75, 90, 120, 180].map((v) => ({ label: String(v), value: v }))
+const OCS_DAYS_OPTIONS: SelectOption[]     = [60, 75, 90, 120, 180].map((v) => ({ label: String(v), value: v }))
 
-// M3 — High-dose
-const CONSEC_DAYS_OPTIONS: SelectOption[] = [30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
-const PRED_MG_OPTIONS: SelectOption[]     = [5, 7.5, 10, 15, 20].map((v) => ({ label: String(v), value: v }))
-const CUM_MG_OPTIONS: SelectOption[]      = [300, 450, 600, 900].map((v) => ({ label: String(v), value: v }))
+// M3 — High-dose OCS
+const CONSEC_DAYS_OPTIONS: SelectOption[]  = [30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
+const PRED_MG_OPTIONS: SelectOption[]      = [5, 7.5, 10, 15, 20].map((v) => ({ label: String(v), value: v }))
+const CUM_MG_OPTIONS: SelectOption[]       = [300, 450, 600, 900].map((v) => ({ label: String(v), value: v }))
 
 // M4 — Repeat course
-const GAP_OPTIONS: SelectOption[]         = [14, 21, 30, 45, 60].map((v) => ({ label: String(v), value: v }))
+const GAP_OPTIONS: SelectOption[]          = [14, 21, 30, 45, 60].map((v) => ({ label: String(v), value: v }))
 
 // M5 — Taper failure
 const TAPER_WINDOW_OPTIONS: SelectOption[] = [1, 2, 3, 4, 6].map((v) => ({ label: String(v), value: v }))
+const TAPER_DOSE_OPTIONS: SelectOption[]   = [5, 7.5, 10, 15].map((v) => ({ label: String(v), value: v }))
+
+// M6 — Relapse
+const RELAPSE_OPTIONS: SelectOption[]      = [1, 2, 3, 4, 6].map((v) => ({ label: String(v), value: v }))
 
 function GroupHeading({ children }: { children: string }) {
   return (
@@ -62,72 +65,71 @@ export function ConfigurableParametersPanel({
           <h2 className="text-sm font-semibold text-gray-900">Configurable Parameters</h2>
         </div>
 
-        {/* M1 — IBD Cohort Identification */}
+        {/* M1 — IBD Cohort */}
         <GroupHeading>IBD Cohort (Denominator)</GroupHeading>
         <div className="divide-y divide-gray-100">
           <ParameterField
-            label="Minimum Age"
-            tooltip="Minimum patient age at index date"
-            value={parameters.minimumAge}
-            onChange={(v) => onParameterChange('minimumAge', v)}
-            options={AGE_OPTIONS}
-            unit="years"
-          />
-          <ParameterField
             label="Measurement Window"
             tooltip="Rolling measurement period for OCS accumulation"
-            value={parameters.diseaseLookbackPeriod}
-            onChange={(v) => onParameterChange('diseaseLookbackPeriod', v)}
-            options={WINDOW_OPTIONS}
+            value={parameters.measurementMonths}
+            onChange={(v) => onParameterChange('measurementMonths', v)}
+            options={MEASUREMENT_OPTIONS}
             unit="months"
           />
           <ParameterField
-            label="Continuous Enrollment"
-            tooltip="Required continuous health plan enrollment (6 mo pre + 6 mo post index)"
-            value={parameters.continuousEnrollment}
-            onChange={(v) => onParameterChange('continuousEnrollment', v)}
-            options={ENROLLMENT_OPTIONS}
-            unit="months"
+            label="Minimum IBD Claims"
+            tooltip="Minimum number of IBD diagnosis claims required to confirm cohort membership"
+            value={parameters.ibdMinClaims}
+            onChange={(v) => onParameterChange('ibdMinClaims', v)}
+            options={IBD_CLAIMS_OPTIONS}
+          />
+          <ParameterField
+            label="Min Gap Between Claims"
+            tooltip="Minimum days between IBD claims to count as separate encounters"
+            value={parameters.ibdGapDays}
+            onChange={(v) => onParameterChange('ibdGapDays', v)}
+            options={IBD_GAP_OPTIONS}
+            unit="days"
           />
         </div>
 
-        {/* M2 — Chronic/Prolonged OCS Use */}
+        {/* M2 — Chronic OCS Use */}
         <GroupHeading>Chronic OCS Use</GroupHeading>
         <div className="divide-y divide-gray-100">
           <ParameterField
             label="Cumulative OCS Days Threshold"
-            tooltip="Cumulative non-overlapping OCS days in 12 months (STOCKPILE logic)"
-            value={parameters.conventionalTherapyDuration}
-            onChange={(v) => onParameterChange('conventionalTherapyDuration', v)}
+            tooltip="Cumulative non-overlapping OCS days in measurement window (STOCKPILE logic)"
+            value={parameters.ocsDurationThreshold}
+            onChange={(v) => onParameterChange('ocsDurationThreshold', v)}
             options={OCS_DAYS_OPTIONS}
             unit="days"
           />
         </div>
 
-        {/* M3 — High-Dose/Prolonged OCS Exposure */}
+        {/* M3 — High-Dose OCS Exposure */}
         <GroupHeading>High-Dose OCS Exposure</GroupHeading>
         <div className="divide-y divide-gray-100">
           <ParameterField
             label="Consecutive Days at High Dose"
-            tooltip="Consecutive days at or above prednisone-equivalent threshold (PRED_EQ_FACTOR)"
-            value={parameters.activeDiseaseWindow}
-            onChange={(v) => onParameterChange('activeDiseaseWindow', v)}
+            tooltip="Consecutive days at or above the prednisone-equivalent threshold"
+            value={parameters.highDoseDurationDays}
+            onChange={(v) => onParameterChange('highDoseDurationDays', v)}
             options={CONSEC_DAYS_OPTIONS}
             unit="days"
           />
           <ParameterField
             label="Prednisone-Equivalent Threshold"
             tooltip="Daily prednisone-equivalent dose threshold (mg/day)"
-            value={parameters.crpThreshold}
-            onChange={(v) => onParameterChange('crpThreshold', v)}
+            value={parameters.highDoseMg}
+            onChange={(v) => onParameterChange('highDoseMg', v)}
             options={PRED_MG_OPTIONS}
             unit="mg/day"
           />
           <ParameterField
             label="Cumulative OCS mg Threshold"
             tooltip="Total cumulative prednisone-equivalent mg threshold"
-            value={parameters.fecalCalprotectinThreshold}
-            onChange={(v) => onParameterChange('fecalCalprotectinThreshold', v)}
+            value={parameters.highDoseCumulativeMg}
+            onChange={(v) => onParameterChange('highDoseCumulativeMg', v)}
             options={CUM_MG_OPTIONS}
             unit="mg"
           />
@@ -138,47 +140,45 @@ export function ConfigurableParametersPanel({
         <div className="divide-y divide-gray-100">
           <ParameterField
             label="Inter-Course Gap (New Course Trigger)"
-            tooltip="Minimum gap between last fill end date and next fill start date to define a new course"
-            value={parameters.crohnsDiseaseHBI}
-            onChange={(v) => onParameterChange('crohnsDiseaseHBI', v)}
+            tooltip="Minimum gap between last fill end date and next fill start to define a new course"
+            value={parameters.courseGapDays}
+            onChange={(v) => onParameterChange('courseGapDays', v)}
             options={GAP_OPTIONS}
             unit="days"
           />
         </div>
 
-        {/* M5 — Taper Failure/Dependence */}
+        {/* M5 — Steroid Taper Failure */}
         <GroupHeading>Steroid Taper Failure</GroupHeading>
         <div className="divide-y divide-gray-100">
           <ParameterField
             label="Taper Achievement Window"
-            tooltip="Months within which OCS must be reduced below 10 mg/day to avoid taper-failure flag"
-            value={parameters.ulcerativeColitisPartialMayo}
-            onChange={(v) => onParameterChange('ulcerativeColitisPartialMayo', v)}
+            tooltip="Months within which OCS must be reduced below taper dose threshold"
+            value={parameters.taperFailMonths}
+            onChange={(v) => onParameterChange('taperFailMonths', v)}
             options={TAPER_WINDOW_OPTIONS}
             unit="months"
           />
+          <ParameterField
+            label="Taper Dose Threshold"
+            tooltip="Daily dose (mg/day) below which tapering is considered achieved"
+            value={parameters.taperDoseThresholdMg}
+            onChange={(v) => onParameterChange('taperDoseThresholdMg', v)}
+            options={TAPER_DOSE_OPTIONS}
+            unit="mg/day"
+          />
         </div>
 
-        {/* Exclusions */}
-        <GroupHeading>Exclusions</GroupHeading>
+        {/* M6 — Post-Discontinuation Relapse */}
+        <GroupHeading>Post-Discontinuation Relapse</GroupHeading>
         <div className="divide-y divide-gray-100">
-          <ParameterToggleField
-            label="Exclude Pregnancy"
-            tooltip="Exclude patients with pregnancy during measurement period"
-            checked={parameters.excludePregnancy}
-            onChange={(v) => onParameterChange('excludePregnancy', v)}
-          />
-          <ParameterToggleField
-            label="Exclude Active Serious Infection"
-            tooltip="Exclude patients with active TB, hepatitis B/C, or opportunistic infection"
-            checked={parameters.excludeActiveSeriousInfection}
-            onChange={(v) => onParameterChange('excludeActiveSeriousInfection', v)}
-          />
-          <ParameterToggleField
-            label="Exclude Active Malignancy"
-            tooltip="Exclude patients with active malignancy or chemotherapy within 12 months"
-            checked={parameters.excludeHistoryOfMalignancy}
-            onChange={(v) => onParameterChange('excludeHistoryOfMalignancy', v)}
+          <ParameterField
+            label="Relapse Window"
+            tooltip="Months after OCS discontinuation within which a relapse (new OCS course) is flagged"
+            value={parameters.relapseWindowMonths}
+            onChange={(v) => onParameterChange('relapseWindowMonths', v)}
+            options={RELAPSE_OPTIONS}
+            unit="months"
           />
         </div>
 

@@ -4,56 +4,63 @@ import { useState, useCallback, useMemo } from 'react'
 import type { ParameterValues, ParameterDiff } from '@/lib/types'
 
 export const DEFAULT_PARAMETERS: ParameterValues = {
-  // M1 — Cohort
-  minimumAge: 18,
-  diseaseLookbackPeriod: 12,          // months rolling window
-  continuousEnrollment: 12,           // 6 pre + 6 post
+  // M1 — IBD Cohort
+  measurementMonths:      12,
+  ibdMinClaims:           2,
+  ibdGapDays:             30,
 
-  // M2 — Chronic OCS threshold
-  conventionalTherapyDuration: 90,    // cumulative OCS days threshold
+  // M2 — Chronic OCS
+  ocsDurationThreshold:   90,
 
-  // M3 — High-dose thresholds
-  activeDiseaseWindow: 60,            // consecutive days at high dose
-  crpThreshold: 10,                   // prednisone-equivalent mg/day threshold
-  fecalCalprotectinThreshold: 600,    // cumulative mg threshold
+  // M3 — High-Dose OCS
+  highDoseDurationDays:   60,
+  highDoseMg:             10,
+  highDoseCumulativeMg:   600,
 
-  // M4 — Repeat course
-  crohnsDiseaseHBI: 30,               // inter-course gap days (new course trigger)
+  // M4 — Repeat Course
+  courseGapDays:          30,
 
-  // M5 — Taper failure
-  ulcerativeColitisPartialMayo: 3,    // months to achieve taper
+  // M5 — Taper Failure
+  taperFailMonths:        3,
+  taperDoseThresholdMg:   10,
 
-  // Exclusions
-  excludePregnancy: true,
-  excludeActiveSeriousInfection: true,
-  excludeHistoryOfMalignancy: true,
+  // M6 — Post-Discontinuation Relapse
+  relapseWindowMonths:    3,
+
+  // M8/M9 — Hidden
+  transitionWindowDays:   90,
+  boneAssessYears:        2,
 }
 
 const PARAMETER_LABELS: Record<keyof ParameterValues, string> = {
-  minimumAge:                    'Minimum Age',
-  diseaseLookbackPeriod:         'Measurement Window',
-  continuousEnrollment:          'Continuous Enrollment',
-  conventionalTherapyDuration:   'Cumulative OCS Days Threshold (M2)',
-  activeDiseaseWindow:           'High-Dose Consecutive Days (M3)',
-  crpThreshold:                  'Prednisone-Equivalent Threshold mg/day (M3)',
-  fecalCalprotectinThreshold:    'Cumulative OCS mg Threshold (M3)',
-  crohnsDiseaseHBI:              'Inter-Course Gap — New Course Trigger (M4)',
-  ulcerativeColitisPartialMayo:  'Taper Achievement Window (M5)',
-  excludePregnancy:              'Exclude Pregnancy',
-  excludeActiveSeriousInfection: 'Exclude Active Serious Infection',
-  excludeHistoryOfMalignancy:    'Exclude Active Malignancy / Chemotherapy',
+  measurementMonths:      'Measurement Window',
+  ibdMinClaims:           'Minimum IBD Claims',
+  ibdGapDays:             'Min Gap Between Claims',
+  ocsDurationThreshold:   'Cumulative OCS Days Threshold',
+  highDoseDurationDays:   'Consecutive Days at High Dose',
+  highDoseMg:             'Prednisone-Equivalent Threshold',
+  highDoseCumulativeMg:   'Cumulative OCS mg Threshold',
+  courseGapDays:          'Inter-Course Gap',
+  taperFailMonths:        'Taper Achievement Window',
+  taperDoseThresholdMg:   'Taper Dose Threshold',
+  relapseWindowMonths:    'Relapse Window',
+  transitionWindowDays:   'Transition Window',
+  boneAssessYears:        'Bone Assessment Lookback',
 }
 
 const PARAMETER_UNITS: Partial<Record<keyof ParameterValues, string>> = {
-  minimumAge:                   'years',
-  diseaseLookbackPeriod:        'months',
-  continuousEnrollment:         'months',
-  conventionalTherapyDuration:  'days',
-  activeDiseaseWindow:          'days',
-  crpThreshold:                 'mg/day',
-  fecalCalprotectinThreshold:   'mg',
-  crohnsDiseaseHBI:             'days',
-  ulcerativeColitisPartialMayo: 'months',
+  measurementMonths:      'months',
+  ibdGapDays:             'days',
+  ocsDurationThreshold:   'days',
+  highDoseDurationDays:   'days',
+  highDoseMg:             'mg/day',
+  highDoseCumulativeMg:   'mg',
+  courseGapDays:          'days',
+  taperFailMonths:        'months',
+  taperDoseThresholdMg:   'mg/day',
+  relapseWindowMonths:    'months',
+  transitionWindowDays:   'days',
+  boneAssessYears:        'years',
 }
 
 interface UseParameterStateReturn {
