@@ -4,6 +4,7 @@ import { useState, useRef, DragEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { UploadCloud, FileText, ArrowRight, ChevronLeft, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { ProcessingLoader } from './CareGapUploadClient'
 
 const TARGET_ID = 'ibd-biologic-initiation'
 
@@ -434,22 +435,12 @@ export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
     if (step < 4) { setStep((s) => s + 1); return }
     onSubmit?.(fd)
     setGenerating(true)
-    await new Promise((r) => setTimeout(r, 3000))
+    await new Promise((r) => setTimeout(r, 9600))
     router.push(`/care-gaps/${TARGET_ID}`)
   }
 
   if (generating) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-6">
-          <div className="h-16 w-16 rounded-full border-4 border-[#004FBA]/20 border-t-[#004FBA] animate-spin" />
-          <div className="text-center">
-            <p className="text-lg font-semibold text-gray-900">Generating Rules using AI</p>
-            <p className="mt-1 text-sm text-gray-400">Analyzing your clinical guidelines…</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <ProcessingLoader />
   }
 
   return (

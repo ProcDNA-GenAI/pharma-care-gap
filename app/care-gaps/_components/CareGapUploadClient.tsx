@@ -78,7 +78,7 @@ const TAG_COLORS: Record<string, string> = {
 // Each entry in the live feed: which TABLE_ROWS index to show, and its state
 type FeedEntry = { rowIdx: number; done: boolean; reading: boolean }
 
-function ProcessingLoader() {
+export function ProcessingLoader() {
   const [completedCount, setCompletedCount] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
   // feed: the last WINDOW_SIZE slots shown in the table

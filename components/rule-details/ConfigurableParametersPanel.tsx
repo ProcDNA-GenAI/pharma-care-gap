@@ -65,6 +65,7 @@ export function ConfigurableParametersPanel({
           <div className="flex items-center gap-2 mb-3">
             <SlidersHorizontal className="h-3.5 w-3.5" style={{ color: '#004FBA' }} aria-hidden="true" />
             <h2 className="text-sm font-semibold text-gray-900">Configurable Parameters</h2>
+            <span className="text-xs text-gray-400">(Select Values to analyze Care Gap)</span>
           </div>
         )}
 
@@ -198,7 +199,7 @@ export function ConfigurableParametersPanel({
           iconLeft={<Sparkles className="h-4 w-4" />}
           style={{ backgroundColor: '#004FBA' }}
         >
-          Generate Insights
+          Generate Care Gap Insights 
         </Button>
       )}
     </div>

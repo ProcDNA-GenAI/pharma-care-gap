@@ -11,8 +11,8 @@ export default function InsightsPage({ params }: PageProps) {
       <AppHeader
         breadcrumbs={[
           { label: 'Care Gap Rule Authoring', href: '/care-gaps' },
-          { label: 'Rule Details', href: `/care-gaps/${params.id}` },
-          { label: 'Care Gap Summary & Insights' },
+          { label: 'Care Gap Rule Summary', href: `/care-gaps/${params.id}` },
+          { label: 'Care Gap Insights' },
         ]}
       />
       <main className="flex-1 px-5 py-5 max-w-screen-2xl mx-auto w-full">

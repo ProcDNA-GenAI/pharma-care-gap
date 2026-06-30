@@ -22,7 +22,7 @@ export function Tooltip({ content, children, className }: TooltipProps) {
     >
       {children}
       {visible && (
-        <span className="absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2.5 py-1 text-xs text-white shadow-lg">
+        <span className="absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 w-max max-w-[220px] whitespace-normal rounded-md bg-gray-900 px-2.5 py-1.5 text-xs text-white shadow-lg leading-relaxed">
           {content}
           <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
         </span>
