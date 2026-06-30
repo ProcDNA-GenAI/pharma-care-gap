@@ -469,8 +469,6 @@ export function InsightsClient() {
               <ConfigurableParametersPanel
                 parameters={parameters}
                 onParameterChange={handleParameterChange}
-                isGenerating={false}
-                impactSummary={null}
                 hideActions={true}
               />
             </div>

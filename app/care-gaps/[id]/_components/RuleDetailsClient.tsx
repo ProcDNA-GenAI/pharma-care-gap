@@ -189,8 +189,6 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
         <ConfigurableParametersPanel
           parameters={parameters}
           onParameterChange={handleParameterChange}
-          isGenerating={false}
-          impactSummary={impactSummary}
           onGenerateInsights={handleGenerateInsights}
           isGeneratingInsights={isGeneratingInsights}
         />

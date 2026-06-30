@@ -2,16 +2,13 @@
 
 import { SlidersHorizontal, Sparkles } from 'lucide-react'
 import { ParameterField } from './ParameterField'
-import { ImpactSummaryCard } from './ImpactSummaryCard'
 import { Button } from '@/components/ui/Button'
-import type { ParameterValues, ImpactSummary } from '@/lib/types'
+import type { ParameterValues } from '@/lib/types'
 import type { SelectOption } from '@/components/ui/Select'
 
 interface ConfigurableParametersPanelProps {
   parameters: ParameterValues
   onParameterChange: (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => void
-  isGenerating: boolean
-  impactSummary: ImpactSummary | null
   onGenerateInsights?: () => void
   isGeneratingInsights?: boolean
   /** When true, hides the Generate Insights button (e.g. when used inline on the Insights page) */
@@ -52,8 +49,6 @@ function GroupHeading({ children }: { children: string }) {
 export function ConfigurableParametersPanel({
   parameters,
   onParameterChange,
-  isGenerating,
-  impactSummary,
   onGenerateInsights,
   isGeneratingInsights = false,
   hideActions = false,
@@ -186,11 +181,6 @@ export function ConfigurableParametersPanel({
         </div>
 
       </div>
-
-      {/* Impact Summary */}
-      {impactSummary && (
-        <ImpactSummaryCard impact={impactSummary} isLoading={isGenerating} />
-      )}
 
       {/* Generate Insights */}
       {!hideActions && onGenerateInsights && (
