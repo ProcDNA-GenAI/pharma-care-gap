@@ -12,8 +12,10 @@ interface ConfigurableParametersPanelProps {
   onParameterChange: (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => void
   isGenerating: boolean
   impactSummary: ImpactSummary | null
-  onGenerateInsights: () => void
-  isGeneratingInsights: boolean
+  onGenerateInsights?: () => void
+  isGeneratingInsights?: boolean
+  /** When true, hides the Generate Insights button (e.g. when used inline on the Insights page) */
+  hideActions?: boolean
 }
 
 // M1 — IBD Cohort
@@ -53,7 +55,8 @@ export function ConfigurableParametersPanel({
   isGenerating,
   impactSummary,
   onGenerateInsights,
-  isGeneratingInsights,
+  isGeneratingInsights = false,
+  hideActions = false,
 }: ConfigurableParametersPanelProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -190,17 +193,19 @@ export function ConfigurableParametersPanel({
       )}
 
       {/* Generate Insights */}
-      <Button
-        variant="primary"
-        size="md"
-        className="w-full"
-        loading={isGeneratingInsights}
-        onClick={onGenerateInsights}
-        iconLeft={<Sparkles className="h-4 w-4" />}
-        style={{ backgroundColor: '#004FBA' }}
-      >
-        Generate Insights
-      </Button>
+      {!hideActions && onGenerateInsights && (
+        <Button
+          variant="primary"
+          size="md"
+          className="w-full"
+          loading={isGeneratingInsights}
+          onClick={onGenerateInsights}
+          iconLeft={<Sparkles className="h-4 w-4" />}
+          style={{ backgroundColor: '#004FBA' }}
+        >
+          Generate Insights
+        </Button>
+      )}
     </div>
   )
 }

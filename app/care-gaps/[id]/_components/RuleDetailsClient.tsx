@@ -106,9 +106,12 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
   const handleGenerateInsights = useCallback(() => {
     startInsightsTransition(async () => {
       await new Promise((r) => setTimeout(r, 1500))
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ruleParameters', JSON.stringify(parameters))
+      }
       router.push(`/care-gaps/${careGapId}/insights`)
     })
-  }, [careGapId, router])
+  }, [careGapId, router, parameters])
 
   if (isLoading) {
     return (
