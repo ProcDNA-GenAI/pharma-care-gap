@@ -45,8 +45,8 @@ const HCP_COLUMNS: Column<HcpAgg>[] = [
   )},
   { key: 'account',       label: 'Account',       sortable: true,  render: (r) => r.account },
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'M7 Overuse',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'M7 Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'ocsOveruse',    label: 'Identified as Overuser of OCS due to any of the 5 metrics',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
   { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
@@ -58,8 +58,8 @@ const ACCOUNT_COLUMNS: Column<AccountAgg>[] = [
   { key: 'territory',     label: 'Territory',     sortable: true,  render: (r) => r.territory },
   { key: 'topSpecialty',  label: 'Top Specialty', render: (r) => r.topSpecialty },
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'M7 Overuse',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'M7 Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'ocsOveruse',    label: 'Identified as Overuser of OCS due to any of the 5 metrics',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
@@ -69,8 +69,8 @@ const TERRITORY_COLUMNS: Column<TerritoryAgg>[] = [
   { key: 'region',        label: 'Region',       sortable: true,  render: (r) => r.region },
   { key: 'hcpCount',      label: 'HCPs',         sortable: true, align: 'right', render: (r) => r.hcpCount.toLocaleString() },
   { key: 'totalPatients', label: 'Total Pts',    sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'M7 Overuse',   sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'M7 Rate',      sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'ocsOveruse',    label: 'Identified as Overuser of OCS due to any of the 5 metrics',   sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',      sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'risk',          label: 'Risk',         align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
@@ -78,8 +78,8 @@ const DEMOGRAPHIC_COLUMNS: Column<DemographicAgg>[] = [
   { key: 'ageBand',       label: 'Age Band',      sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.ageBand}</span> },
   { key: 'gender',        label: 'Gender',        sortable: true,  render: (r) => r.gender },
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'M7 Overuse',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'M7 Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'ocsOveruse',    label: 'Identified as Overuser of OCS due to any of the 5 metrics',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
   { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
@@ -281,7 +281,7 @@ export function InsightsClient() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-900">Aggregated Insights</h1>
+            <h1 className="text-xl font-bold text-gray-900">Care Gap Summary &amp; Insights</h1>
             <StatusPill status={status} label={statusLabel} />
             {hasRealData && rowCount > 0 && (
               <span className="text-[10px] text-gray-400">
@@ -290,7 +290,7 @@ export function InsightsClient() {
             )}
           </div>
           <p className="mt-0.5 text-sm text-gray-500 max-w-2xl">
-            Patient-level M1–M7 flags recalculated in real time as parameters change.
+            A real-time view of overuse and care gap burden across the eligible IBD cohort — surfaced by HCP, geography, and patient demographics as parameters change.
             {!hasRealData && status !== 'loading' && ' Upload your own CSV/Excel to replace demo data.'}
           </p>
         </div>
@@ -340,32 +340,32 @@ export function InsightsClient() {
           caption={`${kpis.ocsUseRate}% of cohort`} badge={`${kpis.ocsUseRate}%`}
           variant="default" icon={<Activity className="h-4 w-4" />} />
         <KpiCard title="Patients with OCS Overuse" value={kpis.ocsOveruse}
-          caption={`${kpis.ocsOveruseRate}% of cohort · M7 composite flag`}
-          badge={`${kpis.ocsOveruseRate}%`} variant="highlight"
+          caption={`${kpis.ocsOveruseRate}% of cohort · composite overuse flag`}
+          variant="highlight"
           icon={<BarChart2 className="h-4 w-4" />} />
         <KpiCard title="Composite OCS Overuse Rate" value={`${kpis.m7Rate}%`}
-          caption="M7 = OR of M2–M6 flags" badge="Primary KPI" variant="success"
+          caption="Share of cohort meeting any overuse criterion" badge="Primary KPI" variant="success"
           icon={<TrendingUp className="h-4 w-4" />} />
       </div>
 
       {/* ── Secondary KPI Row ── */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <KpiCard size="secondary" title="Chronic OCS (M2)" value={kpis.chronicOcs}
-          caption={`${kpis.chronicOcsRate}% · cumul ≥ ${parameters.ocsDurationThreshold} days`}
+        <KpiCard size="secondary" title="Chronic OCS Use" value={kpis.chronicOcs}
+          caption={`Cumulative OCS days ≥ ${parameters.ocsDurationThreshold} within the measurement window`}
           badge={`${kpis.chronicOcsRate}%`} icon={<Clock className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="High-Dose OCS (M3)" value={kpis.highDose}
-          caption={`${kpis.highDoseRate}% · ≥ ${parameters.highDoseDurationDays} consec. days`}
+        <KpiCard size="secondary" title="High-Dose OCS" value={kpis.highDose}
+          caption={`≥ ${parameters.highDoseDurationDays} consecutive days on high-dose therapy`}
           badge={`${kpis.highDoseRate}%`} variant="warning"
           icon={<FlaskConical className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="Repeat Course (M4)" value={kpis.repeatCourse}
-          caption={`${kpis.repeatCourseRate}% · course count > 1`}
+        <KpiCard size="secondary" title="Repeat Course" value={kpis.repeatCourse}
+          caption="More than one distinct OCS course in the period"
           badge={`${kpis.repeatCourseRate}%`} icon={<Repeat2 className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="Taper Failure (M5)" value={kpis.taperFailure}
-          caption={`${kpis.taperFailureRate}% of OCS users · > ${parameters.taperFailMonths} mo`}
+        <KpiCard size="secondary" title="Taper Failure" value={kpis.taperFailure}
+          caption={`Returns to OCS within ${parameters.taperFailMonths} months of a prior course`}
           badge={`${kpis.taperFailureRate}%`} variant="warning"
           icon={<TrendingUp className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="Post-Disc. Relapse (M6)" value={kpis.relapse}
-          caption={`${kpis.relapseRate}% · ≤ ${parameters.relapseWindowMonths} mo window`}
+        <KpiCard size="secondary" title="Post-Discontinuation Relapse" value={kpis.relapse}
+          caption={`Relapse flagged within a ${parameters.relapseWindowMonths}-month post-discontinuation window`}
           badge={`${kpis.relapseRate}%`} icon={<RefreshCw className="h-3.5 w-3.5" />} />
       </div>
 

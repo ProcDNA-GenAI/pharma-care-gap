@@ -12,7 +12,7 @@ export default function InsightsPage({ params }: PageProps) {
         breadcrumbs={[
           { label: 'Care Gap Rule Authoring', href: '/care-gaps' },
           { label: 'Rule Details', href: `/care-gaps/${params.id}` },
-          { label: 'Aggregated Insights' },
+          { label: 'Care Gap Summary & Insights' },
         ]}
       />
       <main className="flex-1 px-5 py-5 max-w-screen-2xl mx-auto w-full">
