@@ -58,6 +58,7 @@ export function aggregateByHcp(rows: PatientRow[]): HcpAgg[] {
       totalPatients: total,
       ocsUse:        pts.filter((p) => p.M3 > 0).length,
       chronicOcs:    pts.filter((p) => p.M3 > M3_THRESHOLD).length,
+      highDose:      pts.filter((p) => p.M7 > 0).length,
       ocsOveruse,
       repeatCourse:  pts.filter((p) => p.M4 > M4_THRESHOLD).length,
       taperFailure:  pts.filter((p) => p.M5 > M5_THRESHOLD).length,
