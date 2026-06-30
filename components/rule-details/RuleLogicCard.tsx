@@ -9,9 +9,12 @@ interface RuleLogicCardProps {
 export function RuleLogicCard({ steps }: RuleLogicCardProps) {
   return (
     <Card padding="sm">
-      <div className="flex items-center gap-2 mb-3">
-        <Layers className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
-        <h2 className="text-sm font-semibold text-gray-900">Composite OCS Overuse Flag (Primary KPI)</h2>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <Layers className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-gray-900">Rule Logic</h2>
+        </div>
+        <span className="shrink-0 text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">M7 — Composite OCS Overuse Flag</span>
       </div>
 
       <ul className="space-y-2.5">

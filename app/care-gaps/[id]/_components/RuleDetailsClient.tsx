@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect, useTransition } from 'react'
+import { useState, useCallback, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRulePackage } from '@/hooks/useRulePackage'
 import { useParameterState } from '@/hooks/useParameterState'
@@ -30,68 +30,19 @@ const TAB_ORDER: TabKey[] = ['summary', 'eligibility', 'exclusions', 'temporal',
 
 export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('summary')
-  const scrollingByClick = useRef(false)
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const tabBarRef = useRef<HTMLDivElement>(null)
 
   const {
     rulePackage,
     isLoading,
     isExporting,
     error,
-    impactSummary,
     exportPackage,
   } = useRulePackage(careGapId)
 
   const { parameters, setParameter } = useParameterState()
-
-  const sectionRefs = useRef<Record<TabKey, HTMLDivElement | null>>({
-    summary: null, eligibility: null, exclusions: null,
-    temporal: null, data: null, evidence: null, logic: null,
-  })
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const tabBarRef = useRef<HTMLDivElement>(null)
-
-  // Scroll-spy: as user scrolls manually, highlight the tab whose section is at the top
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container || !rulePackage) return
-
-    function onScroll() {
-      if (scrollingByClick.current) return
-      const tabBarHeight = tabBarRef.current?.offsetHeight ?? 44
-      const containerTop = container!.getBoundingClientRect().top + tabBarHeight + 8
-
-      // Find the last section whose top edge is at or above the threshold
-      let current: TabKey = 'summary'
-      for (const key of TAB_ORDER) {
-        const el = sectionRefs.current[key]
-        if (!el) continue
-        const top = el.getBoundingClientRect().top
-        if (top <= containerTop) current = key
-      }
-      setActiveTab(current)
-    }
-
-    container.addEventListener('scroll', onScroll, { passive: true })
-    return () => container.removeEventListener('scroll', onScroll)
-  }, [rulePackage])
-
-  function handleTabChange(key: string) {
-    const tab = key as TabKey
-    setActiveTab(tab)
-    const target = sectionRefs.current[tab]
-    const container = scrollContainerRef.current
-    if (!target || !container) return
-
-    scrollingByClick.current = true
-
-    const tabBarHeight = tabBarRef.current?.offsetHeight ?? 44
-    const containerRect = container.getBoundingClientRect()
-    const targetRect = target.getBoundingClientRect()
-    const scrollTo = container.scrollTop + (targetRect.top - containerRect.top) - tabBarHeight - 8
-
-    container.scrollTo({ top: Math.max(0, scrollTo), behavior: 'smooth' })
-    setTimeout(() => { scrollingByClick.current = false }, 800)
-  }
 
   const handleParameterChange = useCallback(
     (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => {
@@ -112,6 +63,11 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
       router.push(`/care-gaps/${careGapId}/insights`)
     })
   }, [careGapId, router, parameters])
+
+  function handleTabChange(key: string) {
+    const tab = key as TabKey
+    setActiveTab(tab)
+  }
 
   if (isLoading) {
     return (
@@ -158,29 +114,19 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
           </div>
         </div>
 
-        {/* All sections always rendered */}
+        {/* Show active card and all cards after it */}
         <div className="space-y-3 shrink-0">
-          <div ref={(el) => { sectionRefs.current.summary = el }}>
-            <ClinicalSummaryCard clinicalSummary={rulePackage.clinicalSummary} />
-          </div>
-          <div ref={(el) => { sectionRefs.current.eligibility = el }}>
-            <EligibilityCriteriaCard criteria={rulePackage.eligibilityCriteria} />
-          </div>
-          <div ref={(el) => { sectionRefs.current.exclusions = el }}>
-            <ExclusionCriteriaCard criteria={rulePackage.exclusionCriteria} />
-          </div>
-          <div ref={(el) => { sectionRefs.current.temporal = el }}>
-            <TemporalRulesTable rules={rulePackage.temporalRules} />
-          </div>
-          <div ref={(el) => { sectionRefs.current.data = el }}>
-            <DataRequirementsCard requirements={rulePackage.dataRequirements} />
-          </div>
-          <div ref={(el) => { sectionRefs.current.evidence = el }}>
-            <EvidenceMappingCard mappings={rulePackage.evidenceMapping} />
-          </div>
-          <div ref={(el) => { sectionRefs.current.logic = el }}>
-            <RuleLogicCard steps={rulePackage.ruleLogic} />
-          </div>
+          {TAB_ORDER.slice(TAB_ORDER.indexOf(activeTab)).map((key) => (
+            <div key={key}>
+              {key === 'summary'     && <ClinicalSummaryCard clinicalSummary={rulePackage.clinicalSummary} />}
+              {key === 'eligibility' && <EligibilityCriteriaCard criteria={rulePackage.eligibilityCriteria} />}
+              {key === 'exclusions'  && <ExclusionCriteriaCard criteria={rulePackage.exclusionCriteria} />}
+              {key === 'temporal'    && <TemporalRulesTable rules={rulePackage.temporalRules} />}
+              {key === 'data'        && <DataRequirementsCard requirements={rulePackage.dataRequirements} />}
+              {key === 'evidence'    && <EvidenceMappingCard mappings={rulePackage.evidenceMapping} />}
+              {key === 'logic'       && <RuleLogicCard steps={rulePackage.ruleLogic} />}
+            </div>
+          ))}
         </div>
       </div>
 

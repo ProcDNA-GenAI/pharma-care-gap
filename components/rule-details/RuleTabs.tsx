@@ -4,13 +4,13 @@ import { Tabs } from '@/components/ui/Tabs'
 import type { TabItem } from '@/components/ui/Tabs'
 
 export const RULE_TABS: TabItem[] = [
-  { key: 'summary',      label: 'IBD Cohort Identification' },
-  { key: 'eligibility',  label: 'Chronic/Prolonged OCS Use' },
-  { key: 'exclusions',   label: 'High-Dose OCS Exposure' },
-  { key: 'temporal',     label: 'Repeat OCS Course' },
-  { key: 'data',         label: 'Steroid Taper Failure' },
-  { key: 'evidence',     label: 'Post-Discontinuation Relapse' },
-  { key: 'logic',        label: 'Composite OCS Overuse Flag' },
+  { key: 'summary',      label: 'Clinical Summary' },
+  { key: 'eligibility',  label: 'Eligibility Criteria' },
+  { key: 'exclusions',   label: 'Exclusion Criteria' },
+  { key: 'temporal',     label: 'Temporal Rules' },
+  { key: 'data',         label: 'Data Requirements' },
+  { key: 'evidence',     label: 'Evidence Mapping' },
+  { key: 'logic',        label: 'Rule Logic' },
 ]
 
 interface RuleTabsProps {
