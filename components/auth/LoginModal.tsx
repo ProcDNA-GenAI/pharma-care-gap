@@ -89,8 +89,10 @@ export function LoginModal() {
 
             {/* Modal header band */}
             <div className="bg-[#004FBA] px-8 pt-8 pb-7 text-center">
-              <div className="flex justify-center mb-4">
+              <div className="flex items-center justify-center gap-3 mb-4">
                 <Image src="/ProcDNA_Logo.svg" alt="ProcDNA" width={90} height={51} className="brightness-0 invert" />
+                <div className="h-6 w-px bg-white/20" aria-hidden="true" />
+                <Image src="/abbvie_logo.png" alt="AbbVie" width={64} height={41} />
               </div>
               <h2 className="text-lg font-semibold text-white">Welcome back</h2>
               <p className="mt-1 text-xs text-white/60">Sign in to access the platform</p>

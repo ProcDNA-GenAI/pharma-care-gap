@@ -7,15 +7,14 @@ interface PageProps {
 
 export default function RuleDetailsPage({ params }: PageProps) {
   return (
-    <div className="flex h-screen flex-col bg-gray-50 overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <AppHeader
         breadcrumbs={[
           { label: 'Care Gap Rule Authoring', href: '/care-gaps' },
-          { label: 'Care Gap Rule Summary' },
+          { label: 'Business Rules' },
         ]}
       />
-      {/* h-screen minus header (h-16 = 64px) */}
-      <main className="flex-1 overflow-hidden px-5 py-3 max-w-screen-2xl mx-auto w-full">
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 px-8 py-8">
         <RuleDetailsClient careGapId={params.id} />
       </main>
     </div>

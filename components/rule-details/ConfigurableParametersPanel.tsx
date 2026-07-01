@@ -3,6 +3,7 @@
 import { SlidersHorizontal, Sparkles } from 'lucide-react'
 import { ParameterField } from './ParameterField'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils/cn'
 import type { ParameterValues } from '@/lib/types'
 import type { SelectOption } from '@/components/ui/Select'
 
@@ -15,6 +16,8 @@ interface ConfigurableParametersPanelProps {
   hideActions?: boolean
   /** When true, hides the "Configurable Parameters" panel heading (use when parent already has a title) */
   hideHeader?: boolean
+  /** When true, drops the outer border/background/padding — use when nesting inside another card shell */
+  bare?: boolean
 }
 
 // M1 — IBD Cohort
@@ -40,7 +43,7 @@ const TAPER_DOSE_OPTIONS: SelectOption[]   = [5, 7.5, 10, 15].map((v) => ({ labe
 // M6 — Relapse
 const RELAPSE_OPTIONS: SelectOption[]      = [1, 2, 3, 4, 6].map((v) => ({ label: String(v), value: v }))
 
-function GroupHeading({ children }: { children: string }) {
+export function GroupHeading({ children }: { children: string }) {
   return (
     <p className="mt-4 mb-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
       {children}
@@ -55,10 +58,11 @@ export function ConfigurableParametersPanel({
   isGeneratingInsights = false,
   hideActions = false,
   hideHeader = false,
+  bare = false,
 }: ConfigurableParametersPanelProps) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className={cn(!bare && 'rounded-xl border border-gray-200 bg-white p-4')}>
 
         {/* Panel header */}
         {!hideHeader && (

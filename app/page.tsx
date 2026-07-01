@@ -25,7 +25,11 @@ export default function HomePage() {
 
       {/* Top bar */}
       <header className="relative z-10 flex items-center justify-between px-10 pt-8">
-        <Image src="/ProcDNA_Logo.svg" alt="ProcDNA" width={110} height={63} priority className="brightness-0 invert" />
+        <div className="flex items-center gap-3">
+          <Image src="/ProcDNA_Logo.svg" alt="ProcDNA" width={110} height={63} priority className="brightness-0 invert" />
+          <div className="h-8 w-px bg-white/20" aria-hidden="true" />
+          <Image src="/abbvie_logo.png" alt="AbbVie" width={80} height={52} />
+        </div>
         <span className="hidden sm:block text-xs text-white/40 tracking-widest uppercase font-medium">
           Clinical Intelligence Platform
         </span>

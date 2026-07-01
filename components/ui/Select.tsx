@@ -14,11 +14,13 @@ interface SelectProps {
   onChange: (value: string | number) => void
   className?: string
   ariaLabel?: string
+  /** Stretches the select to fill its container instead of the compact 64px default */
+  fullWidth?: boolean
 }
 
-export function Select({ options, value, onChange, className, ariaLabel }: SelectProps) {
+export function Select({ options, value, onChange, className, ariaLabel, fullWidth }: SelectProps) {
   return (
-    <div className={cn('relative inline-flex items-center', className)}>
+    <div className={cn('relative inline-flex items-center', fullWidth && 'flex w-full', className)}>
       <select
         aria-label={ariaLabel}
         value={value}
@@ -27,7 +29,10 @@ export function Select({ options, value, onChange, className, ariaLabel }: Selec
           const asNum = Number(raw)
           onChange(isNaN(asNum) ? raw : asNum)
         }}
-        className="appearance-none w-16 rounded-lg border border-gray-300 bg-white py-1 pl-2.5 pr-7 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer"
+        className={cn(
+          'appearance-none rounded-lg border border-gray-300 bg-white py-1 pl-2.5 pr-7 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer',
+          fullWidth ? 'w-full' : 'w-16',
+        )}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>

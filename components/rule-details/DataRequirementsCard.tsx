@@ -11,9 +11,10 @@ export function DataRequirementsCard({ requirements: _ }: DataRequirementsCardPr
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <Activity className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-gray-900">Data Requirements</h2>
+          <span className="shrink-0 text-[10px] font-bold text-[#004FBA] bg-[#004FBA]/10 px-1.5 py-0.5 rounded">M5</span>
+          <h2 className="text-sm font-semibold text-gray-900">Steroid Taper-Failure/Dependence Rate</h2>
         </div>
-        <span className="shrink-0 text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">M5 — Steroid Taper-Failure/Dependence Rate</span>
+        <span className="shrink-0 text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Data Requirements</span>
       </div>
 
       <p className="text-xs text-gray-800 leading-relaxed">

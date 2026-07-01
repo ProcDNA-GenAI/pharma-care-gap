@@ -12,7 +12,7 @@ export const MOCK_RULE_PACKAGE: RulePackage = {
 
   // ── M1: IBD Cohort Identification (Denominator) ──────────────────────────
   clinicalSummary: {
-    text: '≥2 medical claims with K50.x or K51.x ICD-10 code, ≥30 days apart, within measurement period.',
+    text: '≥ 2 medical claims with K50.x or K51.x (ICD-10 code), ≥30 days apart, within measurement period.',
     sources: [
       'AbbVie Medical Affairs — Care Gap Analytics Platform SOP',
       'ACG Clinical Guideline: Ulcerative Colitis in Adults (2024)',
@@ -92,7 +92,7 @@ export const MOCK_RULE_PACKAGE: RulePackage = {
 
   // ── M7: Composite OCS Overuse Flag (Primary KPI) ─────────────────────────
   ruleLogic: [
-    { condition: 'Patient flagged if ANY of M2, M3, M4, M5, or M6 criteria are met' },
+    { condition: 'A patient is flagged as an OCS overuser if they meet ANY of the above metrics.' },
     { condition: 'Primary care gap indicator for aggregated reporting' },
   ],
 

@@ -12,8 +12,10 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
     <header className="sticky top-0 z-40 flex h-16 w-full items-center border-b border-gray-100 bg-white px-6 shadow-sm">
 
       {/* Logo */}
-      <Link href="/" className="flex items-center shrink-0 mr-4">
+      <Link href="/" className="flex items-center gap-3 shrink-0 mr-4">
         <Image src="/ProcDNA_Logo.svg" alt="ProcDNA" width={80} height={46} priority className="py-1" />
+        <div className="h-6 w-px bg-gray-200" aria-hidden="true" />
+        <Image src="/abbvie_logo.png" alt="AbbVie" width={72} height={46} />
       </Link>
 
       {/* Vertical rule */}

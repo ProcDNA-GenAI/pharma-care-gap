@@ -1,18 +1,14 @@
 'use client'
 
-import { useCallback, useRef, useTransition } from 'react'
+import { useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRulePackage } from '@/hooks/useRulePackage'
 import { useParameterState } from '@/hooks/useParameterState'
 
-import { ClinicalSummaryCard } from '@/components/rule-details/ClinicalSummaryCard'
-import { EligibilityCriteriaCard } from '@/components/rule-details/EligibilityCriteriaCard'
-import { ExclusionCriteriaCard } from '@/components/rule-details/ExclusionCriteriaCard'
-import { TemporalRulesTable } from '@/components/rule-details/TemporalRulesTable'
-import { DataRequirementsCard } from '@/components/rule-details/DataRequirementsCard'
-import { EvidenceMappingCard } from '@/components/rule-details/EvidenceMappingCard'
-import { RuleLogicCard } from '@/components/rule-details/RuleLogicCard'
-import { ConfigurableParametersPanel } from '@/components/rule-details/ConfigurableParametersPanel'
+import { PageLayout } from '@/components/rule-details/PageLayout'
+import { BusinessRulesSection } from '@/components/rule-details/BusinessRulesSection'
+import { AdditionalCriteriaPanel } from '@/components/rule-details/AdditionalCriteriaPanel'
+import { GenerateInsightsButton } from '@/components/rule-details/GenerateInsightsButton'
 import { SkeletonCard } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AlertTriangle } from 'lucide-react'
@@ -22,11 +18,7 @@ interface RuleDetailsClientProps {
   careGapId: string
 }
 
-
 export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const tabBarRef = useRef<HTMLDivElement>(null)
-
   const {
     rulePackage,
     isLoading,
@@ -57,13 +49,12 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
 
   if (isLoading) {
     return (
-      <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-3 overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="space-y-4">
           <SkeletonCard className="h-24" />
-          <SkeletonCard className="h-10" />
           <SkeletonCard className="h-48" />
         </div>
-        <SkeletonCard className="h-full" />
+        <SkeletonCard className="h-96" />
       </div>
     )
   }
@@ -79,37 +70,20 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
   }
 
   return (
-    <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]" style={{ maxHeight: 'calc(100vh - 64px - 24px)' }}>
-
-      {/* ── Left panel ── */}
-      <div className="flex min-w-0 flex-col gap-3 overflow-y-auto pr-1 scrollbar-hide" ref={scrollContainerRef}>
-
-        {/* Section heading */}
-        <div className="rounded-xl border border-gray-200 bg-white px-5 py-3 shrink-0 sticky top-0 z-10 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-900">Business Rules</h2>
+    <PageLayout
+      left={<BusinessRulesSection rulePackage={rulePackage} />}
+      right={
+        <div className="space-y-6">
+          <AdditionalCriteriaPanel
+            parameters={parameters}
+            onParameterChange={handleParameterChange}
+          />
+          <GenerateInsightsButton
+            onClick={handleGenerateInsights}
+            loading={isGeneratingInsights}
+          />
         </div>
-
-        {/* All cards always visible */}
-        <div className="space-y-3 shrink-0">
-          <ClinicalSummaryCard clinicalSummary={rulePackage.clinicalSummary} />
-          <EligibilityCriteriaCard criteria={rulePackage.eligibilityCriteria} />
-          <ExclusionCriteriaCard criteria={rulePackage.exclusionCriteria} />
-          <TemporalRulesTable rules={rulePackage.temporalRules} />
-          <DataRequirementsCard requirements={rulePackage.dataRequirements} />
-          <EvidenceMappingCard mappings={rulePackage.evidenceMapping} />
-          <RuleLogicCard steps={rulePackage.ruleLogic} />
-        </div>
-      </div>
-
-      {/* ── Right panel ── */}
-      <div className="overflow-y-auto scrollbar-hide pb-2">
-        <ConfigurableParametersPanel
-          parameters={parameters}
-          onParameterChange={handleParameterChange}
-          onGenerateInsights={handleGenerateInsights}
-          isGeneratingInsights={isGeneratingInsights}
-        />
-      </div>
-    </div>
+      }
+    />
   )
 }

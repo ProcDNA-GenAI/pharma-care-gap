@@ -1,26 +1,20 @@
 'use client'
 
-import { useState, useRef, DragEvent } from 'react'
+import { useState, useRef, DragEvent, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { UploadCloud, FileText, ArrowRight, ChevronLeft, Link2 } from 'lucide-react'
+import {
+  UploadCloud, FileText, Link2, Plus, X,
+  Stethoscope, Database, FileSpreadsheet, BookOpen, LayoutGrid,
+  LucideIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { ProcessingLoader } from './CareGapUploadClient'
+import { ConfigurationCard } from './ConfigurationCard'
+import { ProgressHeader } from './ProgressHeader'
+import { SectionModal } from './SectionModal'
+import { GenerateButton } from './GenerateButton'
 
 const TARGET_ID = 'ibd-biologic-initiation'
-
-const STEPS = [
-  { title: 'Claims data',        subtitle: 'Step 1 of 5 — Select claims data sources' },
-  { title: 'Market definitions', subtitle: 'Step 2 of 5 — Define your target market' },
-  { title: 'Clinical context',   subtitle: 'Step 3 of 5 — Upload clinical guidelines and describe the care gap' },
-  { title: 'Evidence sources',   subtitle: 'Step 4 of 5 — Select supporting evidence sources' },
-  { title: 'Output granularity', subtitle: 'Step 5 of 5 — Define output dimensions' },
-]
-
-const EVIDENCE_CHIPS = [
-  { id: 'peer-reviewed',        label: 'Peer-reviewed journals' },
-  { id: 'clinical-guidelines',  label: 'Clinical guidelines' },
-  { id: 'internal-protocols',   label: 'Internal protocols' },
-]
 
 const CLAIMS_EXTS   = ['.csv', '.json', '.xlsx', '.pdf', '.docx', '.txt']
 const CLINICAL_EXTS = ['.pdf', '.docx', '.doc', '.ppt', '.pptx', '.txt']
@@ -34,8 +28,7 @@ interface FormData {
   marketDefinition:   string
   clinicalFile:       File | null
   careGapDescription: string
-  referenceUrl:       string
-  evidenceSources:    string[]
+  referenceLinks:     string[]
   outputGranularity:  string
 }
 
@@ -48,8 +41,7 @@ const INITIAL: FormData = {
   marketDefinition:   '',
   clinicalFile:       null,
   careGapDescription: '',
-  referenceUrl:       '',
-  evidenceSources:    [],
+  referenceLinks:     [''],
   outputGranularity:  '',
 }
 
@@ -57,39 +49,69 @@ export interface AnalysisWizardProps {
   onSubmit?: (data: FormData) => void
 }
 
+// ── Section registry ──────────────────────────────────────────────────────────
+
+type SectionId = 'clinical' | 'claims' | 'market' | 'evidence' | 'output'
+
+interface SectionDef {
+  id:          SectionId
+  icon:        LucideIcon
+  title:       string
+  description: string
+  required:    boolean
+  isComplete:  (fd: FormData, urlErrors: string[]) => boolean
+}
+
+const SECTIONS: SectionDef[] = [
+  {
+    id: 'clinical',
+    icon: Stethoscope,
+    title: 'Clinical Context',
+    description: 'Define disease area, objective and patient population',
+    required: true,
+    isComplete: (fd) => !!fd.clinicalFile || !!fd.careGapDescription.trim(),
+  },
+  {
+    id: 'claims',
+    icon: Database,
+    title: 'Claims Data Schema',
+    description: 'Upload or paste the claims data source schema',
+    required: true,
+    isComplete: (fd) => (fd.claimsMode === 'upload' ? !!fd.claimsFile : !!fd.claimsSchema.trim()),
+  },
+  {
+    id: 'market',
+    icon: FileSpreadsheet,
+    title: 'Market Definitions',
+    description: 'Define ICD/NDC codes and market field definitions',
+    required: true,
+    isComplete: (fd) => !!fd.marketDefinition.trim(),
+  },
+  {
+    id: 'evidence',
+    icon: BookOpen,
+    title: 'Evidence Sources',
+    description: 'Attach one or more guideline reference links',
+    required: false,
+    isComplete: (fd, urlErrors) =>
+      fd.referenceLinks.some((link) => link.trim() !== '') && !urlErrors.some(Boolean),
+  },
+  {
+    id: 'output',
+    icon: LayoutGrid,
+    title: 'Output Granularity',
+    description: 'Choose how results should be grouped and segmented',
+    required: true,
+    isComplete: (fd) => !!fd.outputGranularity.trim(),
+  },
+]
+
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
 const TEXTAREA_CLS =
   'w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-sm text-gray-900 ' +
   'placeholder:text-gray-400 focus:border-[#004FBA] focus:bg-white focus:outline-none ' +
   'focus:ring-2 focus:ring-[#004FBA]/15 resize-none'
-
-// ── Progress dots ─────────────────────────────────────────────────────────────
-
-function ProgressDots({ current, total }: { current: number; total: number }) {
-  return (
-    <div
-      className="flex items-center gap-1.5"
-      role="progressbar"
-      aria-valuenow={current + 1}
-      aria-valuemin={1}
-      aria-valuemax={total}
-      aria-label={`Step ${current + 1} of ${total}`}
-    >
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          className={cn(
-            'h-2 rounded-full transition-all duration-300',
-            i === current  ? 'w-6 bg-[#004FBA]'
-            : i < current  ? 'w-2 bg-[#004FBA]/40'
-                           : 'w-2 bg-gray-200',
-          )}
-        />
-      ))}
-    </div>
-  )
-}
 
 // ── File drop zone ────────────────────────────────────────────────────────────
 
@@ -191,7 +213,7 @@ function FileDropZone({
   )
 }
 
-// ── Step 1 — Claims data ──────────────────────────────────────────────────────
+// ── Section content — Claims data ─────────────────────────────────────────────
 
 function StepClaims({ fd, set }: { fd: FormData; set: SetFn }) {
   return (
@@ -246,7 +268,7 @@ function StepClaims({ fd, set }: { fd: FormData; set: SetFn }) {
   )
 }
 
-// ── Step 2 — Market definitions ───────────────────────────────────────────────
+// ── Section content — Dataset schema / market definitions ────────────────────
 
 function StepMarket({ fd, set }: { fd: FormData; set: SetFn }) {
   return (
@@ -269,7 +291,7 @@ function StepMarket({ fd, set }: { fd: FormData; set: SetFn }) {
   )
 }
 
-// ── Step 3 — Clinical context ─────────────────────────────────────────────────
+// ── Section content — Clinical context ────────────────────────────────────────
 
 function StepClinical({ fd, set }: { fd: FormData; set: SetFn }) {
   return (
@@ -304,77 +326,76 @@ function StepClinical({ fd, set }: { fd: FormData; set: SetFn }) {
   )
 }
 
-// ── Step 4 — Evidence sources ─────────────────────────────────────────────────
+// ── Section content — Evidence sources ────────────────────────────────────────
 
 function StepEvidence({
-  fd, set, toggleSource, urlError, validateUrl,
+  fd, urlErrors, updateLink, addLink, removeLink,
 }: {
-  fd:           FormData
-  set:          SetFn
-  toggleSource: (id: string) => void
-  urlError:     string
-  validateUrl:  (v: string) => boolean
+  fd:          FormData
+  urlErrors:   string[]
+  updateLink:  (index: number, value: string) => void
+  addLink:     () => void
+  removeLink:  (index: number) => void
 }) {
   return (
-    <div className="space-y-5">
-      <div>
-        <label htmlFor="ref-url" className="mb-1.5 block text-xs font-medium text-gray-600">
-          Reference URL <span className="font-normal text-gray-400">(optional)</span>
-        </label>
-        <div className="relative">
-          <Link2
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-            aria-hidden="true"
-          />
-          <input
-            id="ref-url"
-            type="url"
-            value={fd.referenceUrl}
-            onChange={(e) => { set('referenceUrl', e.target.value); validateUrl(e.target.value) }}
-            placeholder="https://guidelines.org/…"
-            className={cn(
-              'h-11 w-full rounded-xl border bg-gray-50 pl-10 pr-4 text-sm text-gray-900',
-              'placeholder:text-gray-400 transition focus:bg-white focus:outline-none focus:ring-2',
-              urlError
-                ? 'border-red-300 focus:border-red-400 focus:ring-red-400/20'
-                : 'border-gray-200 focus:border-[#004FBA] focus:ring-[#004FBA]/15',
+    <div>
+      <label className="mb-1.5 block text-xs font-medium text-gray-600">
+        Reference Links <span className="font-normal text-gray-400">(optional)</span>
+      </label>
+
+      <div className="space-y-2">
+        {fd.referenceLinks.map((link, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Link2
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                aria-hidden="true"
+              />
+              <input
+                type="url"
+                value={link}
+                onChange={(e) => updateLink(index, e.target.value)}
+                placeholder="https://guidelines.org/…"
+                className={cn(
+                  'h-11 w-full rounded-xl border bg-gray-50 pl-10 pr-4 text-sm text-gray-900',
+                  'placeholder:text-gray-400 transition focus:bg-white focus:outline-none focus:ring-2',
+                  urlErrors[index]
+                    ? 'border-red-300 focus:border-red-400 focus:ring-red-400/20'
+                    : 'border-gray-200 focus:border-[#004FBA] focus:ring-[#004FBA]/15',
+                )}
+              />
+            </div>
+            {fd.referenceLinks.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeLink(index)}
+                aria-label="Remove link"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA]"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
             )}
-          />
-        </div>
-        {urlError && <p className="mt-1 text-xs text-red-500">{urlError}</p>}
+          </div>
+        ))}
       </div>
 
-      <div>
-        <p className="mb-2 text-xs font-medium text-gray-600">Evidence sources</p>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Select evidence sources">
-          {EVIDENCE_CHIPS.map(({ id, label }) => {
-            const selected = fd.evidenceSources.includes(id)
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => toggleSource(id)}
-                className={cn(
-                  'rounded-full border px-4 py-1.5 text-xs font-medium transition-all',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] focus-visible:ring-offset-1',
-                  selected
-                    ? 'border-[#004FBA] bg-[#EEF3FF] text-[#004FBA]'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
-                )}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-        <p className="mt-2 text-xs text-gray-400">Select all that apply — you may choose none.</p>
-      </div>
+      {urlErrors.some(Boolean) && (
+        <p className="mt-1.5 text-xs text-red-500">Please enter valid URLs (e.g. https://…)</p>
+      )}
+
+      <button
+        type="button"
+        onClick={addLink}
+        className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#004FBA] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] rounded"
+      >
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        Add another link
+      </button>
     </div>
   )
 }
 
-// ── Step 5 — Output granularity ───────────────────────────────────────────────
+// ── Section content — Output granularity ──────────────────────────────────────
 
 function StepOutput({ fd, set }: { fd: FormData; set: SetFn }) {
   return (
@@ -401,38 +422,50 @@ function StepOutput({ fd, set }: { fd: FormData; set: SetFn }) {
 
 export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
   const router = useRouter()
-  const [step, setStep] = useState(0)
   const [fd, setFd] = useState<FormData>(INITIAL)
   const [generating, setGenerating] = useState(false)
-  const [urlError, setUrlError] = useState('')
+  const [urlErrors, setUrlErrors] = useState<string[]>([''])
+  const [activeSection, setActiveSection] = useState<SectionId | null>(null)
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setFd((prev) => ({ ...prev, [key]: value }))
   }
 
-  function toggleSource(id: string) {
-    set(
-      'evidenceSources',
-      fd.evidenceSources.includes(id)
-        ? fd.evidenceSources.filter((s) => s !== id)
-        : [...fd.evidenceSources, id],
-    )
+  function validateLink(index: number, val: string) {
+    setUrlErrors((prev) => {
+      const next = [...prev]
+      if (!val.trim()) { next[index] = ''; return next }
+      try { new URL(val.trim()); next[index] = '' }
+      catch { next[index] = 'Please enter a valid URL (e.g. https://…)' }
+      return next
+    })
   }
 
-  function validateUrl(val: string): boolean {
-    if (!val.trim()) { setUrlError(''); return true }
-    try { new URL(val.trim()); setUrlError(''); return true }
-    catch { setUrlError('Please enter a valid URL (e.g. https://…)'); return false }
+  function updateLink(index: number, value: string) {
+    setFd((prev) => {
+      const next = [...prev.referenceLinks]
+      next[index] = value
+      return { ...prev, referenceLinks: next }
+    })
+    validateLink(index, value)
   }
 
-  const isNextDisabled =
-    (step === 0 && (fd.claimsMode === 'upload' ? !fd.claimsFile : !fd.claimsSchema.trim())) ||
-    (step === 1 && !fd.marketDefinition.trim()) ||
-    (step === 4 && !fd.outputGranularity.trim()) ||
-    (step === 3 && !!urlError)
+  function addLink() {
+    setFd((prev) => ({ ...prev, referenceLinks: [...prev.referenceLinks, ''] }))
+    setUrlErrors((prev) => [...prev, ''])
+  }
 
-  async function handleNext() {
-    if (step < 4) { setStep((s) => s + 1); return }
+  function removeLink(index: number) {
+    setFd((prev) => ({ ...prev, referenceLinks: prev.referenceLinks.filter((_, i) => i !== index) }))
+    setUrlErrors((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const completion = SECTIONS.map((s) => s.isComplete(fd, urlErrors))
+  const completedCount = completion.filter(Boolean).length
+
+  const isSubmitDisabled = SECTIONS.some((s, i) => s.required && !completion[i])
+
+  async function handleSubmit() {
     onSubmit?.(fd)
     setGenerating(true)
     await new Promise((r) => setTimeout(r, 9600))
@@ -443,78 +476,72 @@ export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
     return <ProcessingLoader />
   }
 
+  const activeDef = SECTIONS.find((s) => s.id === activeSection) ?? null
+
+  function renderSectionContent(id: SectionId): ReactNode {
+    switch (id) {
+      case 'clinical': return <StepClinical fd={fd} set={set} />
+      case 'claims':   return <StepClaims fd={fd} set={set} />
+      case 'market':   return <StepMarket fd={fd} set={set} />
+      case 'evidence':
+        return (
+          <StepEvidence
+            fd={fd}
+            urlErrors={urlErrors}
+            updateLink={updateLink}
+            addLink={addLink}
+            removeLink={removeLink}
+          />
+        )
+      case 'output': return <StepOutput fd={fd} set={set} />
+    }
+  }
+
   return (
-    <div className="w-full max-w-xl">
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-
-        {/* Card header */}
-        <div className="flex items-start justify-between border-b border-gray-100 px-8 pt-7 pb-5">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-                New Analysis
-              </span>
-            </div>
-            <h1 className="text-lg font-bold text-gray-900">{STEPS[step].title}</h1>
-            <p className="mt-0.5 text-xs text-gray-400">{STEPS[step].subtitle}</p>
-          </div>
-          <ProgressDots current={step} total={5} />
-        </div>
-
-        {/* Step body */}
-        <div className="px-8 py-7">
-          {step === 0 && <StepClaims   fd={fd} set={set} />}
-          {step === 1 && <StepMarket   fd={fd} set={set} />}
-          {step === 2 && <StepClinical fd={fd} set={set} />}
-          {step === 3 && (
-            <StepEvidence
-              fd={fd} set={set}
-              toggleSource={toggleSource}
-              urlError={urlError}
-              validateUrl={validateUrl}
-            />
-          )}
-          {step === 4 && <StepOutput fd={fd} set={set} />}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center gap-3 border-t border-gray-100 px-8 py-5">
-          {step > 0 && (
-            <button
-              type="button"
-              onClick={() => setStep((s) => s - 1)}
-              className={cn(
-                'flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] rounded',
-              )}
-            >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-              Back
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={isNextDisabled}
-            className={cn(
-              'flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] focus-visible:ring-offset-2',
-              step === 0 ? 'w-full' : 'ml-auto px-6',
-              isNextDisabled
-                ? 'opacity-40 cursor-not-allowed'
-                : 'hover:opacity-90 hover:scale-[1.005] active:scale-[0.998]',
-            )}
-            style={{ backgroundColor: '#004FBA' }}
-          >
-            {step === 4 ? (
-              <>Analyze &amp; Generate Rules <ArrowRight className="h-4 w-4" aria-hidden="true" /></>
-            ) : (
-              <>Next <ArrowRight className="h-4 w-4" aria-hidden="true" /></>
-            )}
-          </button>
-        </div>
+    <div className="w-full max-w-3xl">
+      <div className="mb-7 text-center">
+        {/* <div className="mb-2 flex items-center justify-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+            New Analysis
+          </span>
+        </div> */}
+        <h1 className="text-xl font-bold text-gray-900">Care Gap Rule Authoring</h1>
+        <p className="mt-1 text-sm text-gray-400">Configure each section, then generate your rules</p>
       </div>
+
+      <ProgressHeader completed={completedCount} total={SECTIONS.length} />
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {SECTIONS.map((section, i) => (
+          <ConfigurationCard
+            key={section.id}
+            icon={section.icon}
+            title={section.title}
+            description={section.description}
+            completed={completion[i]}
+            required={section.required}
+            onClick={() => setActiveSection(section.id)}
+          />
+        ))}
+      </div>
+
+      <div className="mt-7">
+        <GenerateButton disabled={isSubmitDisabled} onClick={handleSubmit} />
+      </div>
+
+      {activeDef && (
+        <SectionModal
+          open
+          icon={activeDef.icon}
+          title={activeDef.title}
+          subtitle={activeDef.description}
+          onClose={() => setActiveSection(null)}
+          onSave={() => setActiveSection(null)}
+        >
+          {renderSectionContent(activeDef.id)}
+        </SectionModal>
+      )}
     </div>
   )
 }

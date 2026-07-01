@@ -12,9 +12,10 @@ export function EligibilityCriteriaCard({ criteria }: EligibilityCriteriaCardPro
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <Clock className="h-3.5 w-3.5 text-gray-500" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-gray-900">Eligibility Criteria</h2>
+          <span className="shrink-0 text-[10px] font-bold text-[#004FBA] bg-[#004FBA]/10 px-1.5 py-0.5 rounded">M2</span>
+          <h2 className="text-sm font-semibold text-gray-900">Chronic/Prolonged OCS Use Rate</h2>
         </div>
-        <span className="shrink-0 text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">M2 — Chronic/Prolonged OCS Use Rate</span>
+        <span className="shrink-0 text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Eligibility Criteria</span>
       </div>
 
       <ul className="space-y-2.5">

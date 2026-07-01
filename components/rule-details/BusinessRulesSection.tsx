@@ -1,0 +1,96 @@
+import { Users, CheckCircle2, Clock, BarChart2, RefreshCw, Layers } from 'lucide-react'
+import { CohortCard } from './CohortCard'
+import { MetricRecommendationCard } from './MetricRecommendationCard'
+import { InfoNote } from './InfoNote'
+import type { RulePackage } from '@/lib/types'
+
+interface BusinessRulesSectionProps {
+  rulePackage: RulePackage
+}
+
+export function BusinessRulesSection({ rulePackage }: BusinessRulesSectionProps) {
+  const {
+    clinicalSummary,
+    eligibilityCriteria, exclusionCriteria, temporalRules,
+    ruleLogic,
+  } = rulePackage
+
+  return (
+    <div className="space-y-6">
+
+      {/* Section 1 — IBD Patient Cohort Identification */}
+      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <h2 className="mb-1 text-xl font-semibold text-brand-900">1. IBD Patient Cohort Identification</h2>
+        <p className="mb-4 text-sm leading-relaxed text-gray-700">
+          Identify individuals with IBD who are at risk of oral corticosteroid overuse.
+        </p>
+
+        <div className="flex flex-col gap-4">
+          <CohortCard
+            icon={Users}
+            title="Cohort Definition"
+            description={clinicalSummary.text}
+            badge="Cohort Definition"
+          />
+          <CohortCard
+            icon={CheckCircle2}
+            title="Eligible IBD Cohort"
+            description="Patients who meet the cohort definition and additional criteria will be evaluated using the recommended metrics on the right."
+            tone="muted"
+          />
+        </div>
+      </section>
+
+      {/* Section 2 — Recommended Metrics for Quantifying the Overuse of Oral Corticosteroids */}
+      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <h2 className="mb-1 text-xl font-semibold text-emerald-600">2. Recommended Metrics for Quantifying the Overuse of Oral Corticosteroids</h2>
+        <p className="mb-4 text-sm leading-relaxed text-gray-600">
+          Patients meeting the cohort definition are evaluated using the following recommended metrics.
+        </p>
+
+        <div className="space-y-5">
+          <MetricRecommendationCard
+            icon={Clock}
+            accent="blue"
+            title="Chronic/Prolonged OCS Use Rate"
+            bullets={[
+              eligibilityCriteria[0]?.label,
+              ...(eligibilityCriteria[0]?.subItems ?? []),
+            ].filter((b): b is string => !!b)}
+            ruleType="Duration Based"
+          />
+          <MetricRecommendationCard
+            icon={BarChart2}
+            accent="violet"
+            title="High-Dose/Prolonged OCS Exposure Rate"
+            bullets={[exclusionCriteria[0]?.label].filter((b): b is string => !!b)}
+            ruleType="Dose + Duration"
+          />
+          <MetricRecommendationCard
+            icon={RefreshCw}
+            accent="emerald"
+            title="Repeat OCS Course Rate"
+            bullets={[temporalRules[0]?.value].filter((b): b is string => !!b)}
+            ruleType="Episode Count"
+          />
+          <MetricRecommendationCard
+            icon={Layers}
+            accent="gray"
+            title="Composite OCS Overuse Flag"
+            bullets={ruleLogic.map((step) => step.condition)}
+            ruleType="Composite OR Logic"
+          />
+
+          <InfoNote
+            title="How It Works"
+            lines={[
+              'If a patient meets the criteria for any one of the metrics above, they will be flagged as an OCS overuser.',
+              'This composite flag is used for aggregated reporting and care gap insights.',
+            ]}
+          />
+        </div>
+      </section>
+
+    </div>
+  )
+}
