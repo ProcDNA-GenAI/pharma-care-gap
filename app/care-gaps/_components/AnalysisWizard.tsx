@@ -506,7 +506,7 @@ export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
             New Analysis
           </span>
         </div> */}
-        <h1 className="text-xl font-bold text-gray-900">Care Gap Rule Authoring</h1>
+        <h1 className="text-xl font-bold text-gray-900">Care Gap Context and Input</h1>
         <p className="mt-1 text-sm text-gray-400">Configure each section, then generate your rules</p>
       </div>
 

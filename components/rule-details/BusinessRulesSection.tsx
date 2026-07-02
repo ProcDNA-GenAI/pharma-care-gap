@@ -18,32 +18,32 @@ export function BusinessRulesSection({ rulePackage }: BusinessRulesSectionProps)
   return (
     <div className="space-y-6">
 
-      {/* Section 1 — IBD Patient Cohort Identification */}
-      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-xl font-semibold text-brand-900">1. IBD Patient Cohort Identification</h2>
+      {/* Section 1 — IBD Patient Cohort Eligibility */}
+      <section className="rounded-2xl border-2 border-gray-300 bg-white p-5 shadow-lg">
+        <h2 className="mb-1 text-base font-semibold text-brand-900">1. IBD Patient Cohort Eligibility</h2>
         <p className="mb-4 text-sm leading-relaxed text-gray-700">
-          Identify individuals with IBD who are at risk of oral corticosteroid overuse.
+          Business rules to create IBD patient cohort for care gap analysis.
         </p>
 
         <div className="flex flex-col gap-4">
           <CohortCard
             icon={Users}
-            title="Cohort Definition"
+            title="IBD Patient Cohort Definition"
             description={clinicalSummary.text}
-            badge="Cohort Definition"
+            badge="IBD Patient Cohort Definition"
           />
           <CohortCard
             icon={CheckCircle2}
             title="Eligible IBD Cohort"
-            description="Patients who meet the cohort definition and additional criteria will be evaluated using the recommended metrics on the right."
+            description="Patients meeting the IBD cohort definition are evaluated using the following recommended care gap metrics"
             tone="muted"
           />
         </div>
       </section>
 
       {/* Section 2 — Recommended Metrics for Quantifying the Overuse of Oral Corticosteroids */}
-      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-xl font-semibold text-emerald-600">2. Recommended Metrics for Quantifying the Overuse of Oral Corticosteroids</h2>
+      <section className="rounded-2xl border-2 border-gray-300 bg-white p-5 shadow-lg">
+        <h2 className="mb-1 text-base font-semibold text-emerald-600">2. Recommended Care Gap Metrics for Quantifying the Overuse of Oral Corticosteroids</h2>
         <p className="mb-4 text-sm leading-relaxed text-gray-600">
           Patients meeting the cohort definition are evaluated using the following recommended metrics.
         </p>

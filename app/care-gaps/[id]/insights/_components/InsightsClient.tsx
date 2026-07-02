@@ -2,12 +2,15 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react'
 import {
-  Users, Activity, TrendingUp, BarChart2, RefreshCw,
+  Users, Activity, BarChart2, RefreshCw,
   Clock, FlaskConical, Repeat2, Download, Upload, SlidersHorizontal,
   X, Database, AlertCircle,
 } from 'lucide-react'
 import { KpiCard } from '@/components/insights/KpiCard'
 import { SummaryInsightCards } from '@/components/insights/SummaryInsightCards'
+import { CommercialSummaryPanel } from '@/components/insights/CommercialSummaryPanel'
+import { InsightsSideNav } from '@/components/insights/InsightsSideNav'
+import type { InsightsView } from '@/components/insights/InsightsSideNav'
 import { FilterBar } from '@/components/insights/FilterBar'
 import { InsightsTable, RiskBadge } from '@/components/insights/InsightsTable'
 import type { Column } from '@/components/insights/InsightsTable'
@@ -160,6 +163,7 @@ export function InsightsClient() {
   } = usePatientDb(parameters)
 
   // ── UI state ─────────────────────────────────────────────────────────────
+  const [activeView, setActiveView]   = useState<InsightsView>('overview')
   const [activeTab, setActiveTab]     = useState<InsightsTab>('hcp')
   const [filters, setFilters]         = useState<InsightsFilters>({ search: '', territory: 'All', specialty: 'All' })
   const [sortKey, setSortKey]         = useState('m7Rate')
@@ -271,6 +275,15 @@ export function InsightsClient() {
     }
   }, [hcpRows, territoryRows, demographicRows])
 
+  // ── Commercial summary (derived from existing HCP/Territory aggregations) ──
+  const commercialSummary = useMemo(() => {
+    const hcpsWithOveruse   = hcpRows.filter((r) => r.ocsOveruse > 0).length
+    const territoriesCovered = territoryRows.length
+    const totalHcps         = hcpRows.length
+    const avgHcpsPerMsl     = territoriesCovered === 0 ? 0 : totalHcps / territoriesCovered
+    return { hcpsWithOveruse, territoriesCovered, avgHcpsPerMsl }
+  }, [hcpRows, territoryRows])
+
   // ── Column + rowKey for active tab ────────────────────────────────────────
   type AnyRow = HcpAgg | AccountAgg | TerritoryAgg | DemographicAgg
   const tableProps = useMemo(() => {
@@ -338,101 +351,100 @@ export function InsightsClient() {
         </div>
       )}
 
-      {/* ── Primary KPI Row ── */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard title="Total Eligible IBD Patients" value={kpis.totalPatients}
-          caption="M1 flag = 1 (active cohort)" badge="Full Cohort" variant="default"
-          icon={<Users className="h-4 w-4" />} />
-        <KpiCard title="Patients with OCS Use" value={kpis.ocsUse}
-          caption={`${kpis.ocsUseRate}% of cohort`} badge={`${kpis.ocsUseRate}%`}
-          variant="default" icon={<Activity className="h-4 w-4" />} />
-        <KpiCard title="Patients with OCS Overuse" value={kpis.ocsOveruse}
-          caption={`${kpis.ocsOveruseRate}% of cohort · composite overuse flag`}
-          variant="highlight"
-          icon={<BarChart2 className="h-4 w-4" />} />
-        <KpiCard title="Composite OCS Overuse Rate" value={`${kpis.m7Rate}%`}
-          caption="Share of cohort meeting any overuse criterion" badge="Primary KPI" variant="success"
-          icon={<TrendingUp className="h-4 w-4" />} />
-      </div>
-
-      {/* ── Secondary KPI Row ── */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <KpiCard size="secondary" title="Chronic OCS Use" value={kpis.chronicOcs}
-          caption={`Cumulative OCS days ≥ ${parameters.ocsDurationThreshold} within the measurement window`}
-          badge={`${kpis.chronicOcsRate}%`} icon={<Clock className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="High-Dose OCS" value={kpis.highDose}
-          caption={`≥ ${parameters.highDoseDurationDays} consecutive days on high-dose therapy`}
-          badge={`${kpis.highDoseRate}%`} variant="warning"
-          icon={<FlaskConical className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="Repeat Course" value={kpis.repeatCourse}
-          caption="More than one distinct OCS course in the period"
-          badge={`${kpis.repeatCourseRate}%`} icon={<Repeat2 className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="Taper Failure" value={kpis.taperFailure}
-          caption={`Returns to OCS within ${parameters.taperFailMonths} months of a prior course`}
-          badge={`${kpis.taperFailureRate}%`} variant="warning"
-          icon={<TrendingUp className="h-3.5 w-3.5" />} />
-        <KpiCard size="secondary" title="Post-Discontinuation Relapse" value={kpis.relapse}
-          caption={`Relapse flagged within a ${parameters.relapseWindowMonths}-month post-discontinuation window`}
-          badge={`${kpis.relapseRate}%`} icon={<RefreshCw className="h-3.5 w-3.5" />} />
-      </div>
-
-      {/* ── Key Insights ── */}
-      <SummaryInsightCards insights={summaryInsights} />
-
-      {/* ── Tabs + Filter + Table ── */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-
-        {/* Tab bar */}
-        <div className="border-b border-gray-200">
-          <div className="flex overflow-x-auto scrollbar-hide">
-            {TABS.map((tab) => {
-              const unavailable = UNAVAILABLE_TABS.has(tab.key)
-              const isActive    = activeTab === tab.key
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => handleTabChange(tab.key)}
-                  disabled={unavailable}
-                  title={unavailable ? 'Source data does not contain payer/date columns' : undefined}
-                  className={[
-                    'relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none shrink-0',
-                    unavailable
-                      ? 'cursor-not-allowed text-gray-300'
-                      : isActive
-                        ? 'border-b-2 border-[#004FBA] text-[#004FBA]'
-                        : 'text-gray-500 hover:text-gray-700',
-                  ].join(' ')}
-                >
-                  {tab.label}
-                  {unavailable && (
-                    <span className="ml-1.5 rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-gray-400">
-                      N/A
-                    </span>
-                  )}
-                </button>
-              )
-            })}
+      {activeView === 'overview' ? (
+        <>
+          {/* ── Section 1: Key Patient Counts & Coverage ── */}
+          <div>
+            <h2 className="text-base font-bold text-gray-900">1. Key Patient Counts &amp; Coverage</h2>
+            <p className="mt-0.5 text-xs text-gray-500">All metrics are calculated within the eligible IBD cohort.</p>
           </div>
-        </div>
 
-        {/* Filter bar */}
-        <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-2.5">
-          <FilterBar filters={filters} territories={territories} specialties={specialties}
-            activeTab={activeTab} onChange={handleFiltersChange} />
-          <span className="shrink-0 text-[10px] text-gray-400">
-            {totalRows} result{totalRows !== 1 ? 's' : ''}
-          </span>
-        </div>
+          <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-[repeat(6,minmax(0,1fr))_minmax(0,1.6fr)]">
+            <KpiCard size="secondary" title="Eligible IBD Cohort" value={kpis.totalPatients}
+              caption="Patients satisfying cohort definition" badge="100%"
+              icon={<Users className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="OCS Users" value={kpis.ocsUse}
+              caption="Patients with ≥1 OCS claim" badge="100%"
+              icon={<Activity className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="Composite OCS Overusers" value={kpis.ocsOveruse}
+              caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
+              variant="highlight" icon={<BarChart2 className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="Duration-Based Overuse" value={kpis.chronicOcs}
+              caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
+              icon={<Clock className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="High-Dose / Prolonged Exposure" value={kpis.highDose}
+              caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
+              variant="warning" icon={<FlaskConical className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="Repeat OCS Course" value={kpis.repeatCourse}
+              caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
+              icon={<Repeat2 className="h-3.5 w-3.5" />} />
 
-        {/* Table */}
-        <InsightsTable
-          columns={tableProps.columns}
-          rows={pagedRows as AnyRow[]}
-          rowKey={tableProps.rowKey}
-          sortKey={sortKey} sortDir={sortDir} onSort={handleSort}
-          page={page} pageSize={PAGE_SIZE} totalRows={totalRows} onPage={setPage}
-        />
-      </div>
+            <CommercialSummaryPanel
+              hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
+              territoriesCovered={commercialSummary.territoriesCovered}
+              avgHcpsPerMsl={commercialSummary.avgHcpsPerMsl}
+            />
+          </div>
+
+          {/* ── Key Insights ── */}
+          <SummaryInsightCards insights={summaryInsights} />
+        </>
+      ) : (
+        /* ── Detailed View: Tabs + Filter + Table ── */
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+
+          {/* Tab bar */}
+          <div className="border-b border-gray-200">
+            <div className="flex overflow-x-auto scrollbar-hide">
+              {TABS.map((tab) => {
+                const unavailable = UNAVAILABLE_TABS.has(tab.key)
+                const isActive    = activeTab === tab.key
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => handleTabChange(tab.key)}
+                    disabled={unavailable}
+                    title={unavailable ? 'Source data does not contain payer/date columns' : undefined}
+                    className={[
+                      'relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none shrink-0',
+                      unavailable
+                        ? 'cursor-not-allowed text-gray-300'
+                        : isActive
+                          ? 'border-b-2 border-[#004FBA] text-[#004FBA]'
+                          : 'text-gray-500 hover:text-gray-700',
+                    ].join(' ')}
+                  >
+                    {tab.label}
+                    {unavailable && (
+                      <span className="ml-1.5 rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-gray-400">
+                        N/A
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Filter bar */}
+          <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-2.5">
+            <FilterBar filters={filters} territories={territories} specialties={specialties}
+              activeTab={activeTab} onChange={handleFiltersChange} />
+            <span className="shrink-0 text-[10px] text-gray-400">
+              {totalRows} result{totalRows !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* Table */}
+          <InsightsTable
+            columns={tableProps.columns}
+            rows={pagedRows as AnyRow[]}
+            rowKey={tableProps.rowKey}
+            sortKey={sortKey} sortDir={sortDir} onSort={handleSort}
+            page={page} pageSize={PAGE_SIZE} totalRows={totalRows} onPage={setPage}
+          />
+        </div>
+      )}
 
       {/* ── Footer ── */}
       <div className="flex items-center justify-between px-1 text-[10px] text-gray-400">
@@ -447,6 +459,8 @@ export function InsightsClient() {
 
   return (
     <div className={['flex gap-5 items-start', showParams ? '' : ''].join('')}>
+      <InsightsSideNav active={activeView} onChange={setActiveView} />
+
       {mainContent}
 
       {/* ── Collapsible parameters sidebar ── */}

@@ -17,7 +17,7 @@ export default function CareGapsError({ error, reset }: ErrorProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <AppHeader breadcrumbs={[{ label: 'Care Gap Rule Authoring' }]} />
+      <AppHeader breadcrumbs={[{ label: 'Care Gap Context and Input' }]} />
       <main className="flex flex-1 flex-col items-center justify-center gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
           <AlertTriangle className="h-6 w-6 text-red-600" />

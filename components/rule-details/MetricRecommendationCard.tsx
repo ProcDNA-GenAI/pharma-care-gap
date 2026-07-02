@@ -21,11 +21,16 @@ export function MetricRecommendationCard({
     <div className="flex overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
       <div className={`w-1 shrink-0 ${styles.bar}`} aria-hidden="true" />
       <div className="min-w-0 flex-1 px-4 py-3.5">
-        <div className="mb-1.5 flex items-center gap-2">
-          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${styles.iconBg} ${styles.iconText}`}>
-            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        <div className="mb-1.5 flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${styles.iconBg} ${styles.iconText}`}>
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+            </div>
+            <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
           </div>
-          <h4 className="text-base font-semibold text-gray-900">{title}</h4>
+          <div className="shrink-0">
+            <RuleTypeTag accent={accent} value={ruleType} />
+          </div>
         </div>
 
         <ul className="space-y-1 pl-9">
@@ -36,10 +41,6 @@ export function MetricRecommendationCard({
             </li>
           ))}
         </ul>
-
-        <div className="mt-2 flex justify-end">
-          <RuleTypeTag accent={accent} value={ruleType} />
-        </div>
       </div>
     </div>
   )

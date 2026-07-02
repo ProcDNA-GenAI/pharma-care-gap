@@ -4,7 +4,7 @@ import { AppHeader } from '@/components/layout'
 export default function CareGapsLoading() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <AppHeader breadcrumbs={[{ label: 'Care Gap Rule Authoring' }]} />
+      <AppHeader breadcrumbs={[{ label: 'Care Gap Context and Input' }]} />
       <main className="flex-1 px-6 py-8 max-w-screen-xl mx-auto w-full">
         <div className="mb-8">
           <div className="h-6 w-48 rounded-md bg-gray-200 animate-pulse" />

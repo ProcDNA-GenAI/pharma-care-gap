@@ -10,8 +10,8 @@ export default function RuleDetailsPage({ params }: PageProps) {
     <div className="flex min-h-screen flex-col bg-gray-50">
       <AppHeader
         breadcrumbs={[
-          { label: 'Care Gap Rule Authoring', href: '/care-gaps' },
-          { label: 'Business Rules' },
+          { label: 'Care Gap Context and Input', href: '/care-gaps' },
+          { label: 'Business Rules Configuration' },
         ]}
       />
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-8 py-8">

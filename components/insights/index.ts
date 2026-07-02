@@ -1,4 +1,7 @@
 export { KpiCard } from './KpiCard'
 export { SummaryInsightCards } from './SummaryInsightCards'
+export { CommercialSummaryPanel } from './CommercialSummaryPanel'
+export { InsightsSideNav } from './InsightsSideNav'
+export type { InsightsView } from './InsightsSideNav'
 export { FilterBar } from './FilterBar'
 export { InsightsTable, RiskBadge } from './InsightsTable'

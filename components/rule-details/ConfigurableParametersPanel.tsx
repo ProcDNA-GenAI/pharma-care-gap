@@ -18,6 +18,8 @@ interface ConfigurableParametersPanelProps {
   hideHeader?: boolean
   /** When true, drops the outer border/background/padding — use when nesting inside another card shell */
   bare?: boolean
+  /** Render only the IBD cohort group, only the metric-threshold groups, or (default) all groups */
+  only?: 'cohort' | 'metrics'
 }
 
 // M1 — IBD Cohort
@@ -59,7 +61,10 @@ export function ConfigurableParametersPanel({
   hideActions = false,
   hideHeader = false,
   bare = false,
+  only,
 }: ConfigurableParametersPanelProps) {
+  const showCohort  = only !== 'metrics'
+  const showMetrics = only !== 'cohort'
   return (
     <div className="flex flex-col gap-3">
       <div className={cn(!bare && 'rounded-xl border border-gray-200 bg-white p-4')}>
@@ -74,121 +79,129 @@ export function ConfigurableParametersPanel({
         )}
 
         {/* M1 — IBD Cohort */}
-        <GroupHeading>IBD Cohort (Denominator)</GroupHeading>
-        <div className="divide-y divide-gray-100">
-          <ParameterField
-            label="Measurement Window"
-            tooltip="Rolling measurement period for OCS accumulation"
-            value={parameters.measurementMonths}
-            onChange={(v) => onParameterChange('measurementMonths', v)}
-            options={MEASUREMENT_OPTIONS}
-            unit="months"
-          />
-          <ParameterField
-            label="Minimum IBD Claims"
-            tooltip="Minimum number of IBD diagnosis claims required to confirm cohort membership"
-            value={parameters.ibdMinClaims}
-            onChange={(v) => onParameterChange('ibdMinClaims', v)}
-            options={IBD_CLAIMS_OPTIONS}
-          />
-          <ParameterField
-            label="Min Gap Between Claims"
-            tooltip="Minimum days between IBD claims to count as separate encounters"
-            value={parameters.ibdGapDays}
-            onChange={(v) => onParameterChange('ibdGapDays', v)}
-            options={IBD_GAP_OPTIONS}
-            unit="days"
-          />
-        </div>
+        {showCohort && (
+          <>
+            <GroupHeading>IBD Patient Cohort Eligibility</GroupHeading>
+            <div className="divide-y divide-gray-100">
+              <ParameterField
+                label="Measurement Window"
+                tooltip="Rolling measurement period for OCS accumulation"
+                value={parameters.measurementMonths}
+                onChange={(v) => onParameterChange('measurementMonths', v)}
+                options={MEASUREMENT_OPTIONS}
+                unit="months"
+              />
+              <ParameterField
+                label="Minimum IBD Claims"
+                tooltip="Minimum number of IBD diagnosis claims required to confirm cohort membership"
+                value={parameters.ibdMinClaims}
+                onChange={(v) => onParameterChange('ibdMinClaims', v)}
+                options={IBD_CLAIMS_OPTIONS}
+              />
+              <ParameterField
+                label="Min Gap Between Claims"
+                tooltip="Minimum days between IBD claims to count as separate encounters"
+                value={parameters.ibdGapDays}
+                onChange={(v) => onParameterChange('ibdGapDays', v)}
+                options={IBD_GAP_OPTIONS}
+                unit="days"
+              />
+            </div>
+          </>
+        )}
 
-        {/* M2 — Chronic OCS Use */}
-        <GroupHeading>Chronic OCS Use</GroupHeading>
-        <div className="divide-y divide-gray-100">
-          <ParameterField
-            label="Cumulative OCS Days Threshold"
-            tooltip="Cumulative non-overlapping OCS days in measurement window (STOCKPILE logic)"
-            value={parameters.ocsDurationThreshold}
-            onChange={(v) => onParameterChange('ocsDurationThreshold', v)}
-            options={OCS_DAYS_OPTIONS}
-            unit="days"
-          />
-        </div>
+        {showMetrics && (
+          <>
+            {/* M2 — Chronic OCS Use */}
+            <GroupHeading>Chronic OCS Use</GroupHeading>
+            <div className="divide-y divide-gray-100">
+              <ParameterField
+                label="Cumulative OCS Days Threshold"
+                tooltip="Cumulative non-overlapping OCS days in measurement window (STOCKPILE logic)"
+                value={parameters.ocsDurationThreshold}
+                onChange={(v) => onParameterChange('ocsDurationThreshold', v)}
+                options={OCS_DAYS_OPTIONS}
+                unit="days"
+              />
+            </div>
 
-        {/* M3 — High-Dose OCS Exposure */}
-        <GroupHeading>High-Dose OCS Exposure</GroupHeading>
-        <div className="divide-y divide-gray-100">
-          <ParameterField
-            label="Consecutive Days at High Dose"
-            tooltip="Consecutive days at or above the prednisone-equivalent threshold"
-            value={parameters.highDoseDurationDays}
-            onChange={(v) => onParameterChange('highDoseDurationDays', v)}
-            options={CONSEC_DAYS_OPTIONS}
-            unit="days"
-          />
-          <ParameterField
-            label="Prednisone-Equivalent Threshold"
-            tooltip="Daily prednisone-equivalent dose threshold (mg/day)"
-            value={parameters.highDoseMg}
-            onChange={(v) => onParameterChange('highDoseMg', v)}
-            options={PRED_MG_OPTIONS}
-            unit="mg/day"
-          />
-          <ParameterField
-            label="Cumulative OCS mg Threshold"
-            tooltip="Total cumulative prednisone-equivalent mg threshold"
-            value={parameters.highDoseCumulativeMg}
-            onChange={(v) => onParameterChange('highDoseCumulativeMg', v)}
-            options={CUM_MG_OPTIONS}
-            unit="mg"
-          />
-        </div>
+            {/* M3 — High-Dose OCS Exposure */}
+            <GroupHeading>High-Dose OCS Exposure</GroupHeading>
+            <div className="divide-y divide-gray-100">
+              <ParameterField
+                label="Consecutive Days at High Dose"
+                tooltip="Consecutive days at or above the prednisone-equivalent threshold"
+                value={parameters.highDoseDurationDays}
+                onChange={(v) => onParameterChange('highDoseDurationDays', v)}
+                options={CONSEC_DAYS_OPTIONS}
+                unit="days"
+              />
+              <ParameterField
+                label="Prednisone-Equivalent Threshold"
+                tooltip="Daily prednisone-equivalent dose threshold (mg/day)"
+                value={parameters.highDoseMg}
+                onChange={(v) => onParameterChange('highDoseMg', v)}
+                options={PRED_MG_OPTIONS}
+                unit="mg/day"
+              />
+              <ParameterField
+                label="Cumulative OCS mg Threshold"
+                tooltip="Total cumulative prednisone-equivalent mg threshold"
+                value={parameters.highDoseCumulativeMg}
+                onChange={(v) => onParameterChange('highDoseCumulativeMg', v)}
+                options={CUM_MG_OPTIONS}
+                unit="mg"
+              />
+            </div>
 
-        {/* M4 — Repeat OCS Course */}
-        <GroupHeading>Repeat OCS Course</GroupHeading>
-        <div className="divide-y divide-gray-100">
-          <ParameterField
-            label="Inter-Course Gap (New Course Trigger)"
-            tooltip="Minimum gap between last fill end date and next fill start to define a new course"
-            value={parameters.courseGapDays}
-            onChange={(v) => onParameterChange('courseGapDays', v)}
-            options={GAP_OPTIONS}
-            unit="days"
-          />
-        </div>
+            {/* M4 — Repeat OCS Course */}
+            <GroupHeading>Repeat OCS Course</GroupHeading>
+            <div className="divide-y divide-gray-100">
+              <ParameterField
+                label="Inter-Course Gap (New Course Trigger)"
+                tooltip="Minimum gap between last fill end date and next fill start to define a new course"
+                value={parameters.courseGapDays}
+                onChange={(v) => onParameterChange('courseGapDays', v)}
+                options={GAP_OPTIONS}
+                unit="days"
+              />
+            </div>
 
-        {/* M5 — Steroid Taper Failure */}
-        <GroupHeading>Steroid Taper Failure</GroupHeading>
-        <div className="divide-y divide-gray-100">
-          <ParameterField
-            label="Taper Achievement Window"
-            tooltip="Months within which OCS must be reduced below taper dose threshold"
-            value={parameters.taperFailMonths}
-            onChange={(v) => onParameterChange('taperFailMonths', v)}
-            options={TAPER_WINDOW_OPTIONS}
-            unit="months"
-          />
-          <ParameterField
-            label="Taper Dose Threshold"
-            tooltip="Daily dose (mg/day) below which tapering is considered achieved"
-            value={parameters.taperDoseThresholdMg}
-            onChange={(v) => onParameterChange('taperDoseThresholdMg', v)}
-            options={TAPER_DOSE_OPTIONS}
-            unit="mg/day"
-          />
-        </div>
+            {/* M5 — Steroid Taper Failure */}
+            <GroupHeading>Steroid Taper Failure</GroupHeading>
+            <div className="divide-y divide-gray-100">
+              <ParameterField
+                label="Taper Achievement Window"
+                tooltip="Months within which OCS must be reduced below taper dose threshold"
+                value={parameters.taperFailMonths}
+                onChange={(v) => onParameterChange('taperFailMonths', v)}
+                options={TAPER_WINDOW_OPTIONS}
+                unit="months"
+              />
+              <ParameterField
+                label="Taper Dose Threshold"
+                tooltip="Daily dose (mg/day) below which tapering is considered achieved"
+                value={parameters.taperDoseThresholdMg}
+                onChange={(v) => onParameterChange('taperDoseThresholdMg', v)}
+                options={TAPER_DOSE_OPTIONS}
+                unit="mg/day"
+              />
+            </div>
 
-        {/* M6 — Post-Discontinuation Relapse */}
-        <GroupHeading>Post-Discontinuation Relapse</GroupHeading>
-        <div className="divide-y divide-gray-100">
-          <ParameterField
-            label="Relapse Window"
-            tooltip="Months after OCS discontinuation within which a relapse (new OCS course) is flagged"
-            value={parameters.relapseWindowMonths}
-            onChange={(v) => onParameterChange('relapseWindowMonths', v)}
-            options={RELAPSE_OPTIONS}
-            unit="months"
-          />
-        </div>
+            {/* M6 — Post-Discontinuation Relapse */}
+            <GroupHeading>Post-Discontinuation Relapse</GroupHeading>
+            <div className="divide-y divide-gray-100">
+              <ParameterField
+                label="Relapse Window"
+                tooltip="Months after OCS discontinuation within which a relapse (new OCS course) is flagged"
+                value={parameters.relapseWindowMonths}
+                onChange={(v) => onParameterChange('relapseWindowMonths', v)}
+                options={RELAPSE_OPTIONS}
+                unit="months"
+              />
+            </div>
+          </>
+        )}
 
       </div>
 
@@ -203,7 +216,7 @@ export function ConfigurableParametersPanel({
           iconLeft={<Sparkles className="h-4 w-4" />}
           style={{ backgroundColor: '#004FBA' }}
         >
-          Generate Care Gap Insights 
+          Generate Care Gap Insights
         </Button>
       )}
     </div>

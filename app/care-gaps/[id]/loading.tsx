@@ -6,7 +6,7 @@ export default function RuleDetailsLoading() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       <AppHeader
         breadcrumbs={[
-          { label: 'Care Gap Rule Authoring', href: '/care-gaps' },
+          { label: 'Care Gap Context and Input', href: '/care-gaps' },
           { label: 'Rule Details' },
         ]}
       />

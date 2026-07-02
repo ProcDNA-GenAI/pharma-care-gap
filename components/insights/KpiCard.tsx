@@ -25,29 +25,30 @@ export function KpiCard({ title, value, caption, badge, variant = 'default', ico
   const isPrimary = size === 'primary'
 
   return (
-    <div className={cn('rounded-xl border bg-white p-4 shadow-sm flex flex-col gap-2', s.card, variant === 'highlight' && 'bg-purple-50')}>
-      <div className="flex items-start justify-between gap-2">
-        <div className={cn('flex shrink-0 items-center justify-center rounded-lg', isPrimary ? 'h-9 w-9' : 'h-7 w-7', s.iconBg)}>
-          <span className={cn(isPrimary ? 'h-4.5 w-4.5' : 'h-4 w-4', s.iconColor)}>{icon}</span>
+    <div className={cn('rounded-xl border bg-white p-3 shadow-sm flex flex-col gap-1', s.card, variant === 'highlight' && 'bg-purple-50')}>
+      <div className="flex items-start gap-1.5">
+        <div className={cn('flex shrink-0 items-center justify-center rounded-lg', isPrimary ? 'h-8 w-8' : 'h-6 w-6', s.iconBg)}>
+          <span className={cn(isPrimary ? 'h-4 w-4' : 'h-3.5 w-3.5', s.iconColor)}>{icon}</span>
         </div>
-        {badge && (
-          <span className={cn(
-            'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-            variant === 'highlight' ? 'bg-purple-100 text-purple-700' :
-            variant === 'success'   ? 'bg-emerald-100 text-emerald-700' :
-            'bg-blue-50 text-[#004FBA]',
-          )}>
-            {badge}
-          </span>
-        )}
+        <p className="min-w-0 text-xs font-medium leading-tight text-gray-600">{title}</p>
       </div>
-      <div>
-        <p className={cn('font-bold tabular-nums leading-none', isPrimary ? 'text-2xl' : 'text-xl', s.value)}>
-          {typeof value === 'number' ? value.toLocaleString() : value}
-        </p>
-        <p className="mt-1 text-xs font-medium text-gray-500">{title}</p>
-        <p className="mt-0.5 text-[10px] text-gray-400">{caption}</p>
-      </div>
+
+      <p className={cn('font-bold tabular-nums leading-none', isPrimary ? 'text-2xl' : 'text-lg', s.value)}>
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </p>
+
+      {badge && (
+        <span className={cn(
+          'inline-flex w-fit shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none',
+          variant === 'highlight' ? 'bg-purple-100 text-purple-700' :
+          variant === 'success'   ? 'bg-emerald-100 text-emerald-700' :
+          'bg-blue-50 text-[#004FBA]',
+        )}>
+          {badge}
+        </span>
+      )}
+
+      <p className="text-[10px] leading-snug text-gray-400 line-clamp-2">{caption}</p>
     </div>
   )
 }

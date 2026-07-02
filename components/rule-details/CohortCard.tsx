@@ -24,23 +24,25 @@ export function CohortCard({ icon: Icon, title, description, badge, tone = 'whit
           : 'border border-gray-200 bg-white shadow-sm',
       )}
     >
-      <div className="mb-2 flex items-center gap-2">
-        <div
-          className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-            isMuted ? 'bg-white/70 text-blue-500' : 'bg-blue-50 text-[#004FBA]',
-          )}
-        >
-          <Icon className="h-4 w-4" aria-hidden="true" />
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <div
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+              isMuted ? 'bg-white/70 text-blue-500' : 'bg-blue-50 text-[#004FBA]',
+            )}
+          >
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
         </div>
-        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+        {badge && (
+          <div className="shrink-0">
+            <RuleTypeTag accent="blue" value={badge} />
+          </div>
+        )}
       </div>
       <p className="text-sm leading-relaxed text-gray-700">{description}</p>
-      {badge && (
-        <div className="mt-3">
-          <RuleTypeTag accent="blue" value={badge} />
-        </div>
-      )}
     </div>
   )
 }
