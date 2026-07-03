@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Users, Activity, BarChart2, RefreshCw,
   Clock, FlaskConical, Repeat2, Download, Upload, SlidersHorizontal,
   X, Database, AlertCircle,
 } from 'lucide-react'
 import { KpiCard } from '@/components/insights/KpiCard'
-import { SummaryInsightCards } from '@/components/insights/SummaryInsightCards'
 import { CommercialSummaryPanel } from '@/components/insights/CommercialSummaryPanel'
 import { InsightsSideNav } from '@/components/insights/InsightsSideNav'
 import type { InsightsView } from '@/components/insights/InsightsSideNav'
@@ -20,7 +19,7 @@ import { DEFAULT_PARAMETERS } from '@/hooks/useParameterState'
 import type { ParameterValues } from '@/lib/types'
 import type {
   HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg,
-  InsightsTab, InsightsFilters, SummaryInsights,
+  InsightsTab, InsightsFilters,
 } from '@/lib/types/insights'
 
 const PAGE_SIZE = 10
@@ -107,7 +106,6 @@ function sortRows<T extends object>(rows: T[], key: string, dir: 'asc' | 'desc')
 }
 
 function loadStoredParams(): ParameterValues {
-  if (typeof window === 'undefined') return DEFAULT_PARAMETERS
   try {
     const raw = localStorage.getItem('ruleParameters')
     if (raw) return { ...DEFAULT_PARAMETERS, ...JSON.parse(raw) }
@@ -141,8 +139,12 @@ function StatusPill({ status, label }: { status: string; label: string }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function InsightsClient() {
-  // ── Parameter state (loaded from localStorage, falls back to defaults) ───
-  const [parameters, setParameters] = useState<ParameterValues>(loadStoredParams)
+  // ── Parameter state (starts at defaults to match SSR, synced from localStorage after mount) ───
+  const [parameters, setParameters] = useState<ParameterValues>(DEFAULT_PARAMETERS)
+
+  useEffect(() => {
+    setParameters(loadStoredParams())
+  }, [])
 
   const handleParameterChange = useCallback(
     <K extends keyof ParameterValues>(key: K, value: ParameterValues[K]) => {
@@ -259,22 +261,6 @@ export function InsightsClient() {
 
   const totalRows = activeRows[activeTab].length
 
-  // ── Summary insights ──────────────────────────────────────────────────────
-  const summaryInsights = useMemo<SummaryInsights>(() => {
-    const sortedHcp  = [...hcpRows].sort((a, b) => b.m7Rate - a.m7Rate)
-    const sortedTerr = [...territoryRows].sort((a, b) => b.m7Rate - a.m7Rate)
-    const sortedDemo = [...demographicRows].sort((a, b) => b.m7Rate - a.m7Rate)
-    const flagged    = hcpRows.filter((r) => r.m7Rate >= FLAG_THRESHOLD).length
-    return {
-      highestRiskHcp:         sortedHcp[0]  ?? hcpRows[0],
-      highestBurdenTerritory: sortedTerr[0] ?? territoryRows[0],
-      highestRiskAgeBand:     sortedDemo[0] ?? demographicRows[0],
-      flaggedHcpCount:  flagged,
-      totalHcpCount:    hcpRows.length,
-      flaggedHcpRate:   hcpRows.length === 0 ? 0 : Math.round((flagged / hcpRows.length) * 1000) / 10,
-    }
-  }, [hcpRows, territoryRows, demographicRows])
-
   // ── Commercial summary (derived from existing HCP/Territory aggregations) ──
   const commercialSummary = useMemo(() => {
     const hcpsWithOveruse   = hcpRows.filter((r) => r.ocsOveruse > 0).length
@@ -386,8 +372,6 @@ export function InsightsClient() {
             />
           </div>
 
-          {/* ── Key Insights ── */}
-          <SummaryInsightCards insights={summaryInsights} />
         </>
       ) : (
         /* ── Detailed View: Tabs + Filter + Table ── */
@@ -446,14 +430,6 @@ export function InsightsClient() {
         </div>
       )}
 
-      {/* ── Footer ── */}
-      <div className="flex items-center justify-between px-1 text-[10px] text-gray-400">
-        <span>
-          {dataDate || (hasRealData ? 'Data loaded' : 'Loading demo data…')}
-          {status === 'computing' && ' · Recalculating…'}
-        </span>
-        <span>M7 = M2 OR M3 OR M4 OR M5 OR M6 flags · HCP flag threshold: ≥ {FLAG_THRESHOLD}% M7 rate</span>
-      </div>
     </div>
   )
 

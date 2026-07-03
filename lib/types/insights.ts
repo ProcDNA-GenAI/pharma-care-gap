@@ -107,15 +107,6 @@ export interface DemographicAgg {
   m7Rate: number
 }
 
-export interface SummaryInsights {
-  highestRiskHcp: HcpAgg
-  highestBurdenTerritory: TerritoryAgg
-  highestRiskAgeBand: DemographicAgg
-  flaggedHcpCount: number
-  totalHcpCount: number
-  flaggedHcpRate: number
-}
-
 export type InsightsTab = 'hcp' | 'account' | 'geography' | 'demographic'
 
 export interface InsightsFilters {
