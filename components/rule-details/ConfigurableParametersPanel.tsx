@@ -47,7 +47,7 @@ const RELAPSE_OPTIONS: SelectOption[]      = [1, 2, 3, 4, 6].map((v) => ({ label
 
 export function GroupHeading({ children }: { children: string }) {
   return (
-    <p className="mt-4 mb-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+    <p className="mt-4 mb-1.5 text-[10px] font-bold text-black uppercase tracking-wider">
       {children}
     </p>
   )

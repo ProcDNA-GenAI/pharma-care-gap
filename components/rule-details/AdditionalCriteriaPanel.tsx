@@ -13,9 +13,9 @@ interface AdditionalCriteriaPanelProps {
 }
 
 const COMPOSITE_OPTIONS: SelectOption[] = [
-  { label: 'Any_1', value: 'Any_1' },
-  { label: 'Any_2', value: 'Any_2' },
-  { label: 'All_3', value: 'All_3' },
+  { label: 'Any 1', value: 'Any_1' },
+  { label: 'Any 2', value: 'Any_2' },
+  { label: 'All 3', value: 'All_3' },
 ]
 
 export function AdditionalCriteriaPanel({ parameters, onParameterChange }: AdditionalCriteriaPanelProps) {
@@ -58,7 +58,9 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
           <div>
             <GroupHeading>Composite Overuse Flag</GroupHeading>
             <div className="flex items-center gap-2 py-1.5">
-              <span className="flex-1 min-w-0 truncate text-xs text-gray-700"># of metrics indicating overuse of OCS</span>
+              <span className="flex-1 min-w-0 text-xs text-gray-700">
+                # of metrics indicating overuse of OCS
+              </span>
               <div className="w-[100px] shrink-0">
                 <Select
                   options={COMPOSITE_OPTIONS}
