@@ -23,7 +23,6 @@ import type {
 } from '@/lib/types/insights'
 
 const PAGE_SIZE = 10
-const FLAG_THRESHOLD = 20
 
 const TABS = [
   { key: 'hcp',         label: 'HCP Level'        },
@@ -52,8 +51,6 @@ const HCP_COLUMNS: Column<HcpAgg>[] = [
   { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
   { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
   { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
-  { key: 'taperFailure',  label: 'Taper Failure', sortable: true, align: 'right', render: (r) => r.taperFailure.toLocaleString() },
-  { key: 'relapse',       label: 'Post-Disc. Relapse', sortable: true, align: 'right', render: (r) => r.relapse.toLocaleString() },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
@@ -88,8 +85,6 @@ const DEMOGRAPHIC_COLUMNS: Column<DemographicAgg>[] = [
   { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
   { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
   { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
-  { key: 'taperFailure',  label: 'Taper Failure', sortable: true, align: 'right', render: (r) => r.taperFailure.toLocaleString() },
-  { key: 'relapse',       label: 'Post-Disc. Relapse', sortable: true, align: 'right', render: (r) => r.relapse.toLocaleString() },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
@@ -161,7 +156,7 @@ export function InsightsClient() {
   // ── SQLite + reactive query engine ───────────────────────────────────────
   const {
     status, statusLabel, hasRealData, rowCount, loadFile,
-    kpis, hcpRows, accountRows, territoryRows, demographicRows, dataDate, error,
+    kpis, hcpRows, accountRows, territoryRows, demographicRows, error,
   } = usePatientDb(parameters)
 
   // ── UI state ─────────────────────────────────────────────────────────────
