@@ -32,7 +32,7 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
 
       {/* Section 2 — Recommended Care Gap Measures for OCS Overuse */}
       <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-1 text-2xl font-semibold leading-tight text-[#138A57]">2. Recommended Care Gap Measures for Oral Corticosteroid (OCS) Overuse</h2>
+        <h2 className="mb-1 text-2xl font-semibold leading-tight text-[#138A57]">2. Recommended Care Gap Metrics for Oral Corticosteroid (OCS) Overuse</h2>
         <p className="mb-4 text-sm leading-relaxed text-[#5F6B7A]">
           Evaluate eligible IBD patients across clinically relevant indicators of inappropriate or prolonged OCS use.
         </p>
