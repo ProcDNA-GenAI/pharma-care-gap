@@ -1,4 +1,4 @@
-export type MetricAccent = 'blue' | 'violet' | 'emerald' | 'amber' | 'red' | 'gray'
+export type MetricAccent = 'blue' | 'green' | 'purple' | 'orange'
 
 export const ACCENT_STYLES: Record<MetricAccent, {
   bar: string
@@ -8,25 +8,31 @@ export const ACCENT_STYLES: Record<MetricAccent, {
   tagLabel: string
   tagValue: string
 }> = {
-  blue:    { bar: 'bg-blue-500',    iconBg: 'bg-blue-50',    iconText: 'text-blue-600',    tagBg: 'bg-blue-50',    tagLabel: 'text-slate-400',   tagValue: 'text-blue-700' },
-  violet:  { bar: 'bg-violet-500',  iconBg: 'bg-violet-50',  iconText: 'text-violet-600',  tagBg: 'bg-violet-50',  tagLabel: 'text-violet-400',  tagValue: 'text-violet-700' },
-  emerald: { bar: 'bg-emerald-500', iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', tagBg: 'bg-emerald-50', tagLabel: 'text-emerald-400', tagValue: 'text-emerald-700' },
-  amber:   { bar: 'bg-amber-500',   iconBg: 'bg-amber-50',   iconText: 'text-amber-600',   tagBg: 'bg-amber-50',   tagLabel: 'text-amber-400',   tagValue: 'text-amber-700' },
-  red:     { bar: 'bg-red-500',     iconBg: 'bg-red-50',     iconText: 'text-red-600',     tagBg: 'bg-red-50',    tagLabel: 'text-red-400',      tagValue: 'text-red-700' },
-  gray:    { bar: 'bg-gray-400',    iconBg: 'bg-gray-100',   iconText: 'text-gray-600',    tagBg: 'bg-gray-100',  tagLabel: 'text-gray-400',     tagValue: 'text-gray-600' },
+  blue:   { bar: 'bg-blue-500',   iconBg: 'bg-blue-50',   iconText: 'text-blue-600',   tagBg: 'bg-blue-50',   tagLabel: 'text-[#6B7280]',   tagValue: 'text-[#3B82F6]' },
+  green:  { bar: 'bg-green-500',  iconBg: 'bg-green-50',  iconText: 'text-green-600',  tagBg: 'bg-green-50',  tagLabel: 'text-[#6B7280]',  tagValue: 'text-[#16A34A]' },
+  purple: { bar: 'bg-purple-500', iconBg: 'bg-purple-50', iconText: 'text-purple-600', tagBg: 'bg-purple-50', tagLabel: 'text-[#6B7280]', tagValue: 'text-[#8B5CF6]' },
+  orange: { bar: 'bg-orange-500', iconBg: 'bg-orange-50', iconText: 'text-orange-600', tagBg: 'bg-orange-50', tagLabel: 'text-[#6B7280]', tagValue: 'text-[#F97316]' },
 }
 
 interface RuleTypeTagProps {
   accent: MetricAccent
+  label?: string
   value: string
+  /** Overrides the accent's default value color with an explicit hex */
+  valueColor?: string
 }
 
-export function RuleTypeTag({ accent, value }: RuleTypeTagProps) {
+export function RuleTypeTag({ accent, label = 'Care Gap Metric Type', value, valueColor }: RuleTypeTagProps) {
   const s = ACCENT_STYLES[accent]
   return (
-    <div className={`flex w-40 flex-col items-start rounded-lg px-4 py-1.5 text-left ${s.tagBg}`}>
-      <span className={`text-[9px] font-bold uppercase tracking-wide ${s.tagLabel}`}>Care Gap Metric Type</span>
-      <span className={`text-xs font-semibold leading-tight ${s.tagValue}`}>{value}</span>
+    <div className={`flex w-40 shrink-0 flex-col items-start rounded-lg px-4 py-1.5 text-left ${s.tagBg}`}>
+      <span className={`text-[9px] font-bold uppercase tracking-wide ${s.tagLabel}`}>{label}</span>
+      <span
+        className={`text-xs font-semibold leading-tight ${valueColor ? '' : s.tagValue}`}
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </span>
     </div>
   )
 }

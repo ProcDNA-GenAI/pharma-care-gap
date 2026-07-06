@@ -55,8 +55,8 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
           </div>
           {/* Name + role */}
           <div className="hidden sm:flex flex-col leading-none">
-            <span className="text-xs font-semibold text-gray-800">Admin</span>
-            <span className="text-[10px] text-gray-400 mt-0.5">Therapy Area Scientist</span>
+            <span className="text-xs font-semibold text-[#1F2937]">Admin</span>
+            <span className="text-[10px] text-[#6B7280] mt-0.5">Therapy Area Scientist</span>
           </div>
           {/* Caret */}
           <svg className="h-3.5 w-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" viewBox="0 0 16 16" fill="none" aria-hidden="true">

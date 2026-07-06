@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { SlidersHorizontal } from 'lucide-react'
-import { ConfigurableParametersPanel, GroupHeading } from './ConfigurableParametersPanel'
+import { ParameterField } from './ParameterField'
 import { Select } from '@/components/ui/Select'
 import type { SelectOption } from '@/components/ui/Select'
 import type { ParameterValues } from '@/lib/types'
@@ -12,69 +11,135 @@ interface AdditionalCriteriaPanelProps {
   onParameterChange: (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => void
 }
 
+const MEASUREMENT_OPTIONS: SelectOption[]  = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
+const IBD_CLAIMS_OPTIONS: SelectOption[]   = [1, 2, 3].map((v) => ({ label: String(v), value: v }))
+const IBD_GAP_OPTIONS: SelectOption[]      = [14, 30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
+const OCS_DAYS_OPTIONS: SelectOption[]     = [60, 75, 90, 120, 180].map((v) => ({ label: String(v), value: v }))
+const CONSEC_DAYS_OPTIONS: SelectOption[]  = [30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
+const PRED_MG_OPTIONS: SelectOption[]      = [5, 7.5, 10, 15, 20].map((v) => ({ label: String(v), value: v }))
+const CUM_MG_OPTIONS: SelectOption[]       = [300, 450, 600, 900].map((v) => ({ label: String(v), value: v }))
+const GAP_OPTIONS: SelectOption[]          = [14, 21, 30, 45, 60].map((v) => ({ label: String(v), value: v }))
+
 const COMPOSITE_OPTIONS: SelectOption[] = [
-  { label: 'Any 1', value: 'Any_1' },
-  { label: 'Any 2', value: 'Any_2' },
-  { label: 'All 3', value: 'All_3' },
+  { label: '≥ 1 Criteria', value: 'Any_1' },
+  { label: '≥ 2 Criteria', value: 'Any_2' },
+  { label: 'All Criteria', value: 'All_3' },
 ]
+
+function ConfigCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <h3 className="mb-2 text-sm font-semibold text-[#1D3F8F]">{title}</h3>
+      <div className="divide-y divide-gray-100">{children}</div>
+    </div>
+  )
+}
 
 export function AdditionalCriteriaPanel({ parameters, onParameterChange }: AdditionalCriteriaPanelProps) {
   const [compositeLogic, setCompositeLogic] = useState<string | number>('Any_1')
 
   return (
-    <div className="rounded-2xl border-2 border-gray-300 bg-white p-4 shadow-lg">
-      <div className="mb-1 flex items-center gap-2">
-        <SlidersHorizontal className="h-4 w-4 text-[#004FBA]" aria-hidden="true" />
-        <h3 className="text-base font-semibold text-gray-900">Configurable Parameters</h3>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mb-4">
+        <h2 className="mb-1 text-xl font-semibold text-[#1D3F8F]">Care Gap Business Rules Configuration</h2>
+        <p className="text-sm leading-relaxed text-[#5F6B7A]">
+          Set the clinical rules used to define patient cohort and evaluate OCS overuse care gap.
+        </p>
       </div>
-      <p className="mb-4 text-sm text-gray-400">Fine-tune thresholds to define the IBD patient cohort and care gap metric thresholds</p>
 
       <div className="space-y-4">
 
-        {/* Inner box 1 — IBD Patient Cohort Eligibility */}
-        <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
-          <ConfigurableParametersPanel
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            hideHeader
-            hideActions
-            bare
-            only="cohort"
-          />
-        </div>
+      <ConfigCard title="Patient Cohort Definition">
+        <ParameterField
+          label="Measurement Period"
+          tooltip="Rolling measurement period for OCS accumulation"
+          value={parameters.measurementMonths}
+          onChange={(v) => onParameterChange('measurementMonths', v)}
+          options={MEASUREMENT_OPTIONS}
+          unit="months"
+        />
+        <ParameterField
+          label="Minimum IBD Diagnosis Claims"
+          tooltip="Minimum number of IBD diagnosis claims required to confirm cohort membership"
+          value={parameters.ibdMinClaims}
+          onChange={(v) => onParameterChange('ibdMinClaims', v)}
+          options={IBD_CLAIMS_OPTIONS}
+        />
+        <ParameterField
+          label="Minimum Days Between IBD Diagnosis Claims"
+          tooltip="Minimum days between IBD claims to count as separate encounters"
+          value={parameters.ibdGapDays}
+          onChange={(v) => onParameterChange('ibdGapDays', v)}
+          options={IBD_GAP_OPTIONS}
+          unit="days"
+        />
+      </ConfigCard>
 
-        {/* Inner box 2 — Recommended Care Gap Metrics */}
-        <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
-          <ConfigurableParametersPanel
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            hideHeader
-            hideActions
-            bare
-            only="metrics"
-          />
+      <ConfigCard title="Chronic OCS Exposure">
+        <ParameterField
+          label="Minimum Cumulative OCS Days"
+          tooltip="Cumulative non-overlapping OCS days in the measurement window"
+          value={parameters.ocsDurationThreshold}
+          onChange={(v) => onParameterChange('ocsDurationThreshold', v)}
+          options={OCS_DAYS_OPTIONS}
+          unit="days"
+        />
+      </ConfigCard>
 
-          {/* Composite Overuse Flag — kept inside this inner box, not a separate card */}
-          <div>
-            <GroupHeading tooltip="If a patient meets the criteria for any one of the metrics above, they will be flagged as an OCS overuser. This composite flag is used for aggregated reporting and care gap insights.">
-              Composite Overuse Eligibility
-            </GroupHeading>
-            <div className="flex items-center gap-2 py-1.5">
-              <span className="flex-1 min-w-0 text-xs text-gray-700">
-                #Care Gap Metrics Indicating Overuse of OCS
-              </span>
-              <div className="w-[100px] shrink-0">
-                <Select
-                  options={COMPOSITE_OPTIONS}
-                  value={compositeLogic}
-                  onChange={setCompositeLogic}
-                  ariaLabel="#Care Gap Metrics Indicating Overuse of OCS"
-                  fullWidth
-                />
-              </div>
-            </div>
+      <ConfigCard title="High-Dose OCS Exposure">
+        <ParameterField
+          label="Consecutive Days at High Dose"
+          tooltip="Consecutive days at or above the prednisone-equivalent threshold"
+          value={parameters.highDoseDurationDays}
+          onChange={(v) => onParameterChange('highDoseDurationDays', v)}
+          options={CONSEC_DAYS_OPTIONS}
+          unit="days"
+        />
+        <ParameterField
+          label="Prednisone-Equivalent Daily Dose"
+          tooltip="Daily prednisone-equivalent dose threshold"
+          value={parameters.highDoseMg}
+          onChange={(v) => onParameterChange('highDoseMg', v)}
+          options={PRED_MG_OPTIONS}
+          unit="mg/day"
+        />
+        <ParameterField
+          label="Cumulative Prednisone-Equivalent Dose"
+          tooltip="Total cumulative prednisone-equivalent mg threshold"
+          value={parameters.highDoseCumulativeMg}
+          onChange={(v) => onParameterChange('highDoseCumulativeMg', v)}
+          options={CUM_MG_OPTIONS}
+          unit="mg"
+        />
+      </ConfigCard>
+
+      <ConfigCard title="Recurrent OCS Courses">
+        <ParameterField
+          label="Minimum Gap Between OCS Courses"
+          tooltip="Minimum gap between last fill end date and next fill start to define a new course"
+          value={parameters.courseGapDays}
+          onChange={(v) => onParameterChange('courseGapDays', v)}
+          options={GAP_OPTIONS}
+          unit="days"
+        />
+      </ConfigCard>
+
+      <ConfigCard title="Composite Care Gap Rule">
+        <div className="flex items-center gap-2 py-1.5">
+          <span className="flex-1 min-w-0 text-xs text-[#4B5563]">
+            Minimum Number of Care Gap Criteria Met
+          </span>
+          <div className="w-[110px] shrink-0">
+            <Select
+              options={COMPOSITE_OPTIONS}
+              value={compositeLogic}
+              onChange={setCompositeLogic}
+              ariaLabel="Minimum Number of Care Gap Criteria Met"
+              fullWidth
+            />
           </div>
         </div>
+      </ConfigCard>
 
       </div>
     </div>

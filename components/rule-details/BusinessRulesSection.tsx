@@ -1,77 +1,95 @@
-import { Users, Clock, BarChart2, RefreshCw, Layers } from 'lucide-react'
+import { Users, Calendar, BarChart2, RefreshCw, Puzzle } from 'lucide-react'
 import { CohortCard } from './CohortCard'
 import { MetricRecommendationCard } from './MetricRecommendationCard'
-import type { RulePackage } from '@/lib/types'
+import type { ParameterValues } from '@/lib/types'
 
 interface BusinessRulesSectionProps {
-  rulePackage: RulePackage
+  parameters: ParameterValues
 }
 
-export function BusinessRulesSection({ rulePackage }: BusinessRulesSectionProps) {
+export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) {
   const {
-    clinicalSummary,
-    eligibilityCriteria, exclusionCriteria, temporalRules,
-    ruleLogic,
-  } = rulePackage
+    ibdMinClaims, ibdGapDays,
+    ocsDurationThreshold,
+    highDoseMg, highDoseDurationDays, highDoseCumulativeMg,
+    courseGapDays,
+  } = parameters
 
   return (
     <div className="space-y-6">
 
       {/* Section 1 — IBD Patient Cohort Eligibility */}
-      <section className="rounded-2xl border-2 border-gray-300 bg-white p-5 shadow-lg">
-        <h2 className="mb-1 text-base font-semibold text-brand-900">1. IBD Patient Cohort Eligibility</h2>
-        <p className="mb-4 text-sm leading-relaxed text-gray-700">
-          Business rules to create IBD patient cohort for care gap analysis.
+      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-1 text-2xl font-semibold leading-tight text-[#1D3F8F]">1. IBD Patient Cohort Eligibility</h2>
+        <p className="mb-4 text-sm leading-relaxed text-[#5F6B7A]">
+          Define the patient population eligible for oral corticosteroid (OCS) care gap evaluation.
         </p>
 
-        <div className="flex flex-col gap-4">
-          <CohortCard
-            icon={Users}
-            title="IBD Patient Cohort Definition"
-            description={clinicalSummary.text}
-            badge="IBD Patient Cohort Definition"
-          />
-        </div>
+        <CohortCard
+          icon={Users}
+          title="IBD Patient Cohort Definition"
+          description="Patients are eligible for care gap analysis if they:"
+          items={[
+            `Have ≥ ${ibdMinClaims} medical claims with an IBD diagnosis (ICD-10 K50.x or K51.x)`,
+            `Have a minimum of ${ibdGapDays} days between the first and last IBD diagnosis claim`,
+            'Are identified within the selected measurement period',
+          ]}
+          badgeLabel="Care Gap Metric Type"
+          badgeValue="IBD Cohort Eligibility"
+        />
       </section>
 
-      {/* Section 2 — Recommended Metrics for Quantifying the Overuse of Oral Corticosteroids */}
-      <section className="rounded-2xl border-2 border-gray-300 bg-white p-5 shadow-lg">
-        <h2 className="mb-1 text-base font-semibold text-emerald-600">2. Recommended Care Gap Metrics for Quantifying the Overuse of Oral Corticosteroids</h2>
-        <p className="mb-4 text-sm leading-relaxed text-gray-600">
-          Patients meeting the IBD cohort definition are evaluated using the following recommended care gap metrics.
+      {/* Section 2 — Recommended Care Gap Measures for OCS Overuse */}
+      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-1 text-2xl font-semibold leading-tight text-[#138A57]">2. Recommended Care Gap Metrics for Oral Corticosteroid (OCS) Overuse</h2>
+        <p className="mb-4 text-sm leading-relaxed text-[#5F6B7A]">
+          Evaluate eligible IBD patients across clinically relevant indicators of inappropriate or prolonged OCS use.
         </p>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           <MetricRecommendationCard
-            icon={Clock}
-            accent="blue"
-            title="Chronic/Prolonged OCS Use Rate"
+            icon={Calendar}
+            accent="green"
+            title="Chronic Oral Corticosteroid Use"
+            description="Identify patients with prolonged exposure to oral corticosteroids."
             bullets={[
-              eligibilityCriteria[0]?.label,
-              ...(eligibilityCriteria[0]?.subItems ?? []),
-            ].filter((b): b is string => !!b)}
-            ruleType="Duration Based"
+              `Total cumulative OCS exposure ≥ ${ocsDurationThreshold} days during the measurement period`,
+            ]}
+            ruleType="Duration-Based"
           />
           <MetricRecommendationCard
             icon={BarChart2}
-            accent="violet"
-            title="High-Dose/Prolonged OCS Exposure Rate"
-            bullets={[exclusionCriteria[0]?.label].filter((b): b is string => !!b)}
-            ruleType="Dose + Duration"
+            accent="purple"
+            title="High-Dose Oral Corticosteroid Exposure"
+            description="Identify patients with sustained exposure to high-dose oral corticosteroids."
+            bullets={[
+              `Prednisone-equivalent dose ≥ ${highDoseMg} mg/day for ≥ ${highDoseDurationDays} consecutive days OR`,
+              `Total cumulative prednisone-equivalent dose ≥ ${highDoseCumulativeMg} mg`,
+            ]}
+            ruleType="Dose-Based"
           />
           <MetricRecommendationCard
             icon={RefreshCw}
-            accent="emerald"
-            title="Repeat OCS Course Rate"
-            bullets={[temporalRules[0]?.value].filter((b): b is string => !!b)}
-            ruleType="Episode Count"
+            accent="orange"
+            title="Recurrent Oral Corticosteroid Courses"
+            description="Identify patients receiving repeated courses of oral corticosteroids."
+            bullets={[
+              'More than 1 distinct OCS treatment courses during the measurement period',
+              `A new treatment course is defined by a gap of ≥ ${courseGapDays} days between prescriptions`,
+            ]}
+            ruleType="Treatment Pattern"
           />
           <MetricRecommendationCard
-            icon={Layers}
-            accent="gray"
-            title="Composite OCS Overuse Eligibility"
-            bullets={ruleLogic.map((step) => step.condition)}
-            ruleType="Composite OR Logic"
+            icon={Puzzle}
+            accent="blue"
+            title="Composite OCS Overuse Assessment"
+            description="Patients are classified as having a potential OCS overuse care gap when they satisfy the selected composite rule."
+            bullets={[
+              'Meets at least one care gap criterion',
+              'Meets at least two care gap criteria',
+              'Meets all care gap criteria',
+            ]}
+            ruleType="Composite Assessment"
           />
         </div>
       </section>

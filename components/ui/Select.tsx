@@ -30,7 +30,7 @@ export function Select({ options, value, onChange, className, ariaLabel, fullWid
           onChange(isNaN(asNum) ? raw : asNum)
         }}
         className={cn(
-          'appearance-none rounded-lg border border-gray-300 bg-white py-1 pl-2.5 pr-7 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer',
+          'appearance-none rounded-lg border border-gray-300 bg-white py-1 pl-2.5 pr-7 text-xs text-[#374151] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer',
           fullWidth ? 'w-full' : 'w-16',
         )}
       >

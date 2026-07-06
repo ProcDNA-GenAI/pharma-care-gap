@@ -71,7 +71,7 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
 
   return (
     <PageLayout
-      left={<BusinessRulesSection rulePackage={rulePackage} />}
+      left={<BusinessRulesSection parameters={parameters} />}
       right={
         <div className="space-y-6">
           <AdditionalCriteriaPanel

@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react'
+import { BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 interface GenerateInsightsButtonProps {
@@ -11,13 +11,13 @@ export function GenerateInsightsButton({ onClick, loading = false }: GenerateIns
     <Button
       variant="primary"
       size="lg"
-      className="w-full"
+      className="h-14 w-full rounded-xl text-base"
       loading={loading}
       onClick={onClick}
-      iconLeft={<Sparkles className="h-4 w-4" />}
+      iconLeft={<BarChart3 className="h-5 w-5" />}
       style={{ backgroundColor: '#F97316' }}
     >
-      Generate Care Gap Insights
+      Analyze Care Gaps
     </Button>
   )
 }
