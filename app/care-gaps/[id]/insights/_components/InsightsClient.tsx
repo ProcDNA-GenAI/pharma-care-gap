@@ -398,44 +398,25 @@ export function InsightsClient() {
             <p className="mt-0.5 text-xs text-gray-500">All metrics are calculated within the eligible IBD cohort.</p>
           </div>
 
-          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[25fr_55fr_270px]">
-            {/* Base Population */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">Base Population</h3>
-                <p className="mt-0.5 text-xs text-gray-500">Defines the eligible analysis population</p>
-              </div>
-              <div className="grid grid-cols-2 items-stretch gap-3 lg:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,0.3fr)]">
-                <KpiCard size="secondary" title="Eligible IBD Cohort" value={kpis.totalPatients}
-                  caption="Patients satisfying cohort definition" badge="100%"
-                  icon={<Users className="h-3.5 w-3.5" />} />
-                <KpiCard size="secondary" title="OCS Users" value={kpis.ocsUse}
-                  caption="Patients with ≥1 OCS claim" badge="100%"
-                  icon={<Activity className="h-3.5 w-3.5" />} />
-              </div>
-            </div>
-
-            {/* OCS Overuse Indicators */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">OCS Overuse Indicators</h3>
-                <p className="mt-0.5 text-xs text-gray-500">Patients meeting one or more overuse criteria</p>
-              </div>
-              <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-4 lg:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,0.6fr)]">
-                <KpiCard size="secondary" title="Composite OCS Overusers" value={kpis.ocsOveruse}
-                  caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
-                  variant="highlight" icon={<BarChart2 className="h-3.5 w-3.5" />} />
-                <KpiCard size="secondary" title="Duration-Based Overuse" value={kpis.chronicOcs}
-                  caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
-                  icon={<Clock className="h-3.5 w-3.5" />} />
-                <KpiCard size="secondary" title="High-Dose / Prolonged Exposure" value={kpis.highDose}
-                  caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
-                  variant="warning" icon={<FlaskConical className="h-3.5 w-3.5" />} />
-                <KpiCard size="secondary" title="Repeat OCS Course" value={kpis.repeatCourse}
-                  caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
-                  icon={<Repeat2 className="h-3.5 w-3.5" />} />
-              </div>
-            </div>
+          <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-[repeat(6,minmax(0,1fr))_minmax(0,1.6fr)]">
+            <KpiCard size="secondary" title="Eligible IBD Cohort" value={kpis.totalPatients}
+              caption="Patients satisfying cohort definition" badge="100%"
+              icon={<Users className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="OCS Users" value={kpis.ocsUse}
+              caption="Patients with ≥1 OCS claim" badge="100%"
+              icon={<Activity className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="Composite OCS Overusers" value={kpis.ocsOveruse}
+              caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
+              variant="highlight" icon={<BarChart2 className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="Duration-Based Overuse" value={kpis.chronicOcs}
+              caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
+              icon={<Clock className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="High-Dose / Prolonged Exposure" value={kpis.highDose}
+              caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
+              variant="warning" icon={<FlaskConical className="h-3.5 w-3.5" />} />
+            <KpiCard size="secondary" title="Repeat OCS Course" value={kpis.repeatCourse}
+              caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
+              icon={<Repeat2 className="h-3.5 w-3.5" />} />
 
             <CommercialSummaryPanel
               hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
@@ -538,8 +519,9 @@ export function InsightsClient() {
   )
 
   return (
-    <div className={['flex gap-5 items-start', showParams ? '' : ''].join('')}>
+    <div className={['flex items-start gap-5', showParams ? '' : ''].join('')}>
       <InsightsSideNav active={activeView} onChange={setActiveView} />
+      <div className="w-20 shrink-0 -mr-2" aria-hidden="true" />
 
       {mainContent}
 
