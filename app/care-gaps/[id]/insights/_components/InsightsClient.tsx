@@ -372,7 +372,7 @@ export function InsightsClient() {
                 <p className="mt-0.5 text-xs text-[#6B7280]">Patients evaluated across clinically relevant indicators of inappropriate or prolonged OCS use.</p>
 
                 <div className="mt-3 grid grid-cols-4 gap-3">
-                  <KpiCard title="Patients with Potential OCS Overuse" value={kpis.ocsOveruse}
+                  <KpiCard title="Potential OCS Overuse" value={kpis.ocsOveruse}
                     caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
                     variant="purple" icon={<BarChart2 className="h-4 w-4" />} />
                   <KpiCard title="Chronic OCS Exposure" value={kpis.chronicOcs}
