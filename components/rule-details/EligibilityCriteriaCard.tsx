@@ -34,7 +34,7 @@ export function EligibilityCriteriaCard({ criteria }: EligibilityCriteriaCardPro
       </ul>
 
       <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5">
-        <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Rule Type</p>
+        <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Care Gap Metric Type</p>
         <p className="text-xs text-blue-800">Duration-Based</p>
       </div>
     </Card>

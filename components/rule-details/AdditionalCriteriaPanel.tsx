@@ -25,9 +25,9 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
     <div className="rounded-2xl border-2 border-gray-300 bg-white p-4 shadow-lg">
       <div className="mb-1 flex items-center gap-2">
         <SlidersHorizontal className="h-4 w-4 text-[#004FBA]" aria-hidden="true" />
-        <h3 className="text-base font-semibold text-gray-900">Additional Criteria</h3>
+        <h3 className="text-base font-semibold text-gray-900">Configurable Parameters</h3>
       </div>
-      <p className="mb-4 text-sm text-gray-400">Fine-tune the thresholds used across the recommended metrics</p>
+      <p className="mb-4 text-sm text-gray-400">Fine-tune thresholds to define the IBD patient cohort and care gap metric thresholds</p>
 
       <div className="space-y-4">
 
@@ -56,17 +56,19 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
 
           {/* Composite Overuse Flag — kept inside this inner box, not a separate card */}
           <div>
-            <GroupHeading>Composite Overuse Flag</GroupHeading>
+            <GroupHeading tooltip="If a patient meets the criteria for any one of the metrics above, they will be flagged as an OCS overuser. This composite flag is used for aggregated reporting and care gap insights.">
+              Composite Overuse Eligibility
+            </GroupHeading>
             <div className="flex items-center gap-2 py-1.5">
               <span className="flex-1 min-w-0 text-xs text-gray-700">
-                # of metrics indicating overuse of OCS
+                #Care Gap Metrics Indicating Overuse of OCS
               </span>
               <div className="w-[100px] shrink-0">
                 <Select
                   options={COMPOSITE_OPTIONS}
                   value={compositeLogic}
                   onChange={setCompositeLogic}
-                  ariaLabel="# of metrics indicating overuse of OCS"
+                  ariaLabel="#Care Gap Metrics Indicating Overuse of OCS"
                   fullWidth
                 />
               </div>

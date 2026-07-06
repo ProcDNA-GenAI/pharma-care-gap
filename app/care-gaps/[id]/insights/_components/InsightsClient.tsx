@@ -4,21 +4,25 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Users, Activity, BarChart2, RefreshCw,
   Clock, FlaskConical, Repeat2, Download, Upload, SlidersHorizontal,
-  X, Database, AlertCircle,
+  X, Database, AlertCircle, Info, ArrowRight,
 } from 'lucide-react'
 import { KpiCard } from '@/components/insights/KpiCard'
 import { CommercialSummaryPanel } from '@/components/insights/CommercialSummaryPanel'
+import { DistributionTable } from '@/components/insights/DistributionTable'
+import type { DistributionColumn } from '@/components/insights/DistributionTable'
 import { InsightsSideNav } from '@/components/insights/InsightsSideNav'
 import type { InsightsView } from '@/components/insights/InsightsSideNav'
 import { FilterBar } from '@/components/insights/FilterBar'
 import { InsightsTable, RiskBadge } from '@/components/insights/InsightsTable'
 import type { Column } from '@/components/insights/InsightsTable'
 import { ConfigurableParametersPanel } from '@/components/rule-details/ConfigurableParametersPanel'
+import { Button } from '@/components/ui/Button'
 import { usePatientDb } from '@/hooks/usePatientDb'
 import { DEFAULT_PARAMETERS } from '@/hooks/useParameterState'
 import type { ParameterValues } from '@/lib/types'
 import type {
   HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg,
+  SpecialtyAgg, AgeDistributionAgg, HcpSegmentAgg,
   InsightsTab, InsightsFilters,
 } from '@/lib/types/insights'
 
@@ -33,6 +37,33 @@ const TABS = [
   { key: 'temporal',    label: 'Temporal Trend'    },
 ]
 const UNAVAILABLE_TABS = new Set(['payer', 'temporal'])
+
+// ─── Granular Care Gap Distribution (column headers; rows come from live SQL) ─
+
+const SPECIALTY_COLUMNS: DistributionColumn[] = [
+  { label: 'Specialty' },
+  { label: 'Eligible Patients', align: 'right' },
+  { label: 'Composite Overusers', align: 'right' },
+  { label: 'Overuse %', align: 'right' },
+]
+
+const AGE_COLUMNS: DistributionColumn[] = [
+  { label: 'Age Group' },
+  { label: 'Eligible Patients', align: 'right' },
+  { label: 'Composite Overusers', align: 'right' },
+  { label: 'Overuse %', align: 'right' },
+]
+
+const HCP_SEGMENT_COLUMNS: DistributionColumn[] = [
+  { label: 'Overuse Band' },
+  { label: 'HCP Count', align: 'right' },
+  { label: 'Patients', align: 'right' },
+]
+
+function withTotalRate(totalPatients: number, overusers: number): (string | number)[] {
+  const rate = totalPatients === 0 ? 0 : Math.round((overusers / totalPatients) * 1000) / 10
+  return ['Total', totalPatients.toLocaleString(), overusers.toLocaleString(), `${rate}%`]
+}
 
 // ─── Column definitions ───────────────────────────────────────────────────────
 
@@ -157,6 +188,7 @@ export function InsightsClient() {
   const {
     status, statusLabel, hasRealData, rowCount, loadFile,
     kpis, hcpRows, accountRows, territoryRows, demographicRows, error,
+    specialtyRows, ageDistributionRows, hcpSegmentRows,
   } = usePatientDb(parameters)
 
   // ── UI state ─────────────────────────────────────────────────────────────
@@ -265,6 +297,32 @@ export function InsightsClient() {
     return { hcpsWithOveruse, territoriesCovered, avgHcpsPerMsl }
   }, [hcpRows, territoryRows])
 
+  // ── Granular Care Gap Distribution (live SQL-backed rows + Total row) ──────
+  const specialtyTableRows = useMemo(() => specialtyRows.map((r): (string | number)[] => [
+    r.specialty, r.totalPatients.toLocaleString(), r.overusers.toLocaleString(), `${r.overuseRate}%`,
+  ]), [specialtyRows])
+  const specialtyTotalRow = useMemo(() => withTotalRate(
+    specialtyRows.reduce((sum, r) => sum + r.totalPatients, 0),
+    specialtyRows.reduce((sum, r) => sum + r.overusers, 0),
+  ), [specialtyRows])
+
+  const ageTableRows = useMemo(() => ageDistributionRows.map((r): (string | number)[] => [
+    r.ageBand, r.totalPatients.toLocaleString(), r.overusers.toLocaleString(), `${r.overuseRate}%`,
+  ]), [ageDistributionRows])
+  const ageTotalRow = useMemo(() => withTotalRate(
+    ageDistributionRows.reduce((sum, r) => sum + r.totalPatients, 0),
+    ageDistributionRows.reduce((sum, r) => sum + r.overusers, 0),
+  ), [ageDistributionRows])
+
+  const hcpSegmentTableRows = useMemo(() => hcpSegmentRows.map((r): (string | number)[] => [
+    r.band, r.hcpCount.toLocaleString(), r.patients.toLocaleString(),
+  ]), [hcpSegmentRows])
+  const hcpSegmentTotalRow = useMemo((): (string | number)[] => [
+    'Total',
+    hcpSegmentRows.reduce((sum, r) => sum + r.hcpCount, 0).toLocaleString(),
+    hcpSegmentRows.reduce((sum, r) => sum + r.patients, 0).toLocaleString(),
+  ], [hcpSegmentRows])
+
   // ── Column + rowKey for active tab ────────────────────────────────────────
   type AnyRow = HcpAgg | AccountAgg | TerritoryAgg | DemographicAgg
   const tableProps = useMemo(() => {
@@ -340,25 +398,44 @@ export function InsightsClient() {
             <p className="mt-0.5 text-xs text-gray-500">All metrics are calculated within the eligible IBD cohort.</p>
           </div>
 
-          <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-[repeat(6,minmax(0,1fr))_minmax(0,1.6fr)]">
-            <KpiCard size="secondary" title="Eligible IBD Cohort" value={kpis.totalPatients}
-              caption="Patients satisfying cohort definition" badge="100%"
-              icon={<Users className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="OCS Users" value={kpis.ocsUse}
-              caption="Patients with ≥1 OCS claim" badge="100%"
-              icon={<Activity className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="Composite OCS Overusers" value={kpis.ocsOveruse}
-              caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
-              variant="highlight" icon={<BarChart2 className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="Duration-Based Overuse" value={kpis.chronicOcs}
-              caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
-              icon={<Clock className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="High-Dose / Prolonged Exposure" value={kpis.highDose}
-              caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
-              variant="warning" icon={<FlaskConical className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="Repeat OCS Course" value={kpis.repeatCourse}
-              caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
-              icon={<Repeat2 className="h-3.5 w-3.5" />} />
+          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[25fr_55fr_270px]">
+            {/* Base Population */}
+            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Base Population</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Defines the eligible analysis population</p>
+              </div>
+              <div className="grid grid-cols-2 items-stretch gap-3 lg:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,0.3fr)]">
+                <KpiCard size="secondary" title="Eligible IBD Cohort" value={kpis.totalPatients}
+                  caption="Patients satisfying cohort definition" badge="100%"
+                  icon={<Users className="h-3.5 w-3.5" />} />
+                <KpiCard size="secondary" title="OCS Users" value={kpis.ocsUse}
+                  caption="Patients with ≥1 OCS claim" badge="100%"
+                  icon={<Activity className="h-3.5 w-3.5" />} />
+              </div>
+            </div>
+
+            {/* OCS Overuse Indicators */}
+            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">OCS Overuse Indicators</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Patients meeting one or more overuse criteria</p>
+              </div>
+              <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-4 lg:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,0.6fr)]">
+                <KpiCard size="secondary" title="Composite OCS Overusers" value={kpis.ocsOveruse}
+                  caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
+                  variant="highlight" icon={<BarChart2 className="h-3.5 w-3.5" />} />
+                <KpiCard size="secondary" title="Duration-Based Overuse" value={kpis.chronicOcs}
+                  caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
+                  icon={<Clock className="h-3.5 w-3.5" />} />
+                <KpiCard size="secondary" title="High-Dose / Prolonged Exposure" value={kpis.highDose}
+                  caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
+                  variant="warning" icon={<FlaskConical className="h-3.5 w-3.5" />} />
+                <KpiCard size="secondary" title="Repeat OCS Course" value={kpis.repeatCourse}
+                  caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
+                  icon={<Repeat2 className="h-3.5 w-3.5" />} />
+              </div>
+            </div>
 
             <CommercialSummaryPanel
               hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
@@ -367,6 +444,38 @@ export function InsightsClient() {
             />
           </div>
 
+          {/* ── Section 2: Granular Care Gap Distribution ── */}
+          <div>
+            <h2 className="text-base font-bold text-gray-900">2. Granular Care Gap Distribution</h2>
+            <p className="mt-0.5 text-xs text-gray-500">Distribution of OCS overuse across important commercial dimensions.</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <DistributionTable title="A. Specialty Distribution" columns={SPECIALTY_COLUMNS} rows={specialtyTableRows} totalRow={specialtyTotalRow} />
+            <DistributionTable title="B. Patient Age Distribution" columns={AGE_COLUMNS} rows={ageTableRows} totalRow={ageTotalRow} />
+            <DistributionTable title="C. Top HCP Segments by Overuse Rate" columns={HCP_SEGMENT_COLUMNS} rows={hcpSegmentTableRows} totalRow={hcpSegmentTotalRow} />
+          </div>
+
+          {/* ── Informational footer callout ── */}
+          <div className="flex flex-col items-start gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF3FF] text-[#004FBA]">
+                <Info className="h-4 w-4" />
+              </div>
+              <p className="text-xs text-gray-600">
+                Drill down into HCP, Territory, Account, Specialty and Patient level details using the Detailed View.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setActiveView('detailed')}
+              iconRight={<ArrowRight className="h-3.5 w-3.5" />}
+              className="shrink-0"
+            >
+              Go to Detailed View
+            </Button>
+          </div>
         </>
       ) : (
         /* ── Detailed View: Tabs + Filter + Table ── */

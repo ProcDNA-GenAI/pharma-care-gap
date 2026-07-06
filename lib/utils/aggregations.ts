@@ -12,10 +12,10 @@ const M6_THRESHOLD   = 3
 
 export function computeGlobalKpis(rows: PatientRow[]): GlobalKpis {
   const total        = rows.length
-  const ocsUse       = rows.filter((r) => r.M3 > 0).length
-  const ocsOveruse   = rows.filter((r) => r.M7 > M7_THRESHOLD).length
-  const chronicOcs   = rows.filter((r) => r.M3 > M3_THRESHOLD).length
-  const highDose     = rows.filter((r) => r.M7 > 0).length
+  const ocsUse       = rows.filter((r) => r.High_Dose_Days > 0).length
+  const ocsOveruse   = rows.filter((r) => r.Composite_Overuse > M7_THRESHOLD).length
+  const chronicOcs   = rows.filter((r) => r.High_Dose_Days > M3_THRESHOLD).length
+  const highDose     = rows.filter((r) => r.Composite_Overuse > 0).length
   const repeatCourse = rows.filter((r) => r.M4 > M4_THRESHOLD).length
   const taperFailure = rows.filter((r) => r.M5 > M5_THRESHOLD).length
   const relapse      = rows.filter((r) => r.M6 > 0 && r.M6 <= M6_THRESHOLD).length
@@ -47,7 +47,7 @@ export function aggregateByHcp(rows: PatientRow[]): HcpAgg[] {
   }
   return Array.from(map.entries()).map(([npi, pts]) => {
     const total        = pts.length
-    const ocsOveruse   = pts.filter((p) => p.M7 > M7_THRESHOLD).length
+    const ocsOveruse   = pts.filter((p) => p.Composite_Overuse > M7_THRESHOLD).length
     return {
       npi,
       name:         npi,
@@ -56,9 +56,9 @@ export function aggregateByHcp(rows: PatientRow[]): HcpAgg[] {
       territory:    pts[0].Territory,
       region:       pts[0].Region,
       totalPatients: total,
-      ocsUse:        pts.filter((p) => p.M3 > 0).length,
-      chronicOcs:    pts.filter((p) => p.M3 > M3_THRESHOLD).length,
-      highDose:      pts.filter((p) => p.M7 > 0).length,
+      ocsUse:        pts.filter((p) => p.High_Dose_Days > 0).length,
+      chronicOcs:    pts.filter((p) => p.High_Dose_Days > M3_THRESHOLD).length,
+      highDose:      pts.filter((p) => p.Composite_Overuse > 0).length,
       ocsOveruse,
       repeatCourse:  pts.filter((p) => p.M4 > M4_THRESHOLD).length,
       taperFailure:  pts.filter((p) => p.M5 > M5_THRESHOLD).length,
@@ -76,16 +76,16 @@ export function aggregateByAccount(rows: PatientRow[]): AccountAgg[] {
   }
   return Array.from(map.entries()).map(([account, pts]) => {
     const total      = pts.length
-    const ocsOveruse = pts.filter((p) => p.M7 > M7_THRESHOLD).length
+    const ocsOveruse = pts.filter((p) => p.Composite_Overuse > M7_THRESHOLD).length
     const specCount  = new Map<string, number>()
     pts.forEach((p) => specCount.set(p.Specialty, (specCount.get(p.Specialty) ?? 0) + 1))
     const topSpecialty = [...specCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
     return {
       account, territory: pts[0].Territory, region: pts[0].Region,
       totalPatients: total,
-      ocsUse:        pts.filter((p) => p.M3 > 0).length,
-      chronicOcs:    pts.filter((p) => p.M3 > M3_THRESHOLD).length,
-      highDose:      pts.filter((p) => p.M7 > 0).length,
+      ocsUse:        pts.filter((p) => p.High_Dose_Days > 0).length,
+      chronicOcs:    pts.filter((p) => p.High_Dose_Days > M3_THRESHOLD).length,
+      highDose:      pts.filter((p) => p.Composite_Overuse > 0).length,
       ocsOveruse,    m7Rate: rate(ocsOveruse, total),
       repeatCourse:  pts.filter((p) => p.M4 > M4_THRESHOLD).length,
       taperFailure:  pts.filter((p) => p.M5 > M5_THRESHOLD).length,
@@ -102,13 +102,13 @@ export function aggregateByTerritory(rows: PatientRow[]): TerritoryAgg[] {
   }
   return Array.from(map.entries()).map(([territory, pts]) => {
     const total      = pts.length
-    const ocsOveruse = pts.filter((p) => p.M7 > M7_THRESHOLD).length
+    const ocsOveruse = pts.filter((p) => p.Composite_Overuse > M7_THRESHOLD).length
     const hcpCount   = new Set(pts.map((p) => p.NPI)).size
     return {
       territory, region: pts[0].Region, totalPatients: total,
-      ocsUse:       pts.filter((p) => p.M3 > 0).length,
-      chronicOcs:   pts.filter((p) => p.M3 > M3_THRESHOLD).length,
-      highDose:     pts.filter((p) => p.M7 > 0).length,
+      ocsUse:       pts.filter((p) => p.High_Dose_Days > 0).length,
+      chronicOcs:   pts.filter((p) => p.High_Dose_Days > M3_THRESHOLD).length,
+      highDose:     pts.filter((p) => p.Composite_Overuse > 0).length,
       ocsOveruse,   m7Rate: rate(ocsOveruse, total),
       repeatCourse: pts.filter((p) => p.M4 > M4_THRESHOLD).length,
       taperFailure: pts.filter((p) => p.M5 > M5_THRESHOLD).length,
@@ -127,12 +127,12 @@ export function aggregateByDemographic(rows: PatientRow[]): DemographicAgg[] {
   return Array.from(map.entries()).map(([key, pts]) => {
     const [ageBand, gender] = key.split('||') as [AgeBand, string]
     const total      = pts.length
-    const ocsOveruse = pts.filter((p) => p.M7 > M7_THRESHOLD).length
+    const ocsOveruse = pts.filter((p) => p.Composite_Overuse > M7_THRESHOLD).length
     return {
       ageBand, gender, totalPatients: total,
-      ocsUse:        pts.filter((p) => p.M3 > 0).length,
-      chronicOcs:    pts.filter((p) => p.M3 > M3_THRESHOLD).length,
-      highDose:      pts.filter((p) => p.M7 > 0).length,
+      ocsUse:        pts.filter((p) => p.High_Dose_Days > 0).length,
+      chronicOcs:    pts.filter((p) => p.High_Dose_Days > M3_THRESHOLD).length,
+      highDose:      pts.filter((p) => p.Composite_Overuse > 0).length,
       ocsOveruse,    m7Rate: rate(ocsOveruse, total),
       repeatCourse:  pts.filter((p) => p.M4 > M4_THRESHOLD).length,
       taperFailure:  pts.filter((p) => p.M5 > M5_THRESHOLD).length,

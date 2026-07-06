@@ -7,13 +7,13 @@ export interface PatientRow {
   Region: string
   Pat_Age: number
   Pat_Gender: string
-  M1: number
-  M2: number
-  M3: number
+  IBD_Claims: number
+  Chronic_OCS_Days: number
+  High_Dose_Days: number
   M4: number
   M5: number
   M6: number
-  M7: number
+  Composite_Overuse: number
 }
 
 export type AgeBand = '18–34' | '35–49' | '50–64' | '65+'
@@ -105,6 +105,26 @@ export interface DemographicAgg {
   taperFailure: number
   relapse: number
   m7Rate: number
+}
+
+export interface SpecialtyAgg {
+  specialty: string
+  totalPatients: number
+  overusers: number
+  overuseRate: number
+}
+
+export interface AgeDistributionAgg {
+  ageBand: AgeBand
+  totalPatients: number
+  overusers: number
+  overuseRate: number
+}
+
+export interface HcpSegmentAgg {
+  band: string
+  hcpCount: number
+  patients: number
 }
 
 export type InsightsTab = 'hcp' | 'account' | 'geography' | 'demographic'

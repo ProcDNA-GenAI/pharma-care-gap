@@ -27,7 +27,7 @@ export function ExclusionCriteriaCard({ criteria }: ExclusionCriteriaCardProps) 
       </ul>
 
       <div className="mt-3 rounded-lg border border-violet-100 bg-violet-50 px-3 py-2.5">
-        <p className="text-[10px] font-semibold text-violet-700 uppercase tracking-wide mb-1">Rule Type</p>
+        <p className="text-[10px] font-semibold text-violet-700 uppercase tracking-wide mb-1">Care Gap Metric Type</p>
         <p className="text-xs text-violet-800">Dose + Duration Composite</p>
       </div>
     </Card>

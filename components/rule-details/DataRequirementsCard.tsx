@@ -23,7 +23,7 @@ export function DataRequirementsCard({ requirements: _ }: DataRequirementsCardPr
       </p>
 
       <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5">
-        <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-1">Rule Type</p>
+        <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-1">Care Gap Metric Type</p>
         <p className="text-xs text-amber-800">Dose Trajectory</p>
       </div>
     </Card>

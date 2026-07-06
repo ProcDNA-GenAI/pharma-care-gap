@@ -15,13 +15,13 @@ function parseRow(raw: Record<string, unknown>): PatientRow {
     Region:    String(raw['Region'] ?? ''),
     Pat_Age:   toNum(raw['Pat_Age']),
     Pat_Gender:String(raw['Pat_Gender'] ?? ''),
-    M1: toNum(raw['M1']),
-    M2: toNum(raw['M2']),
-    M3: toNum(raw['M3']),
+    IBD_Claims: toNum(raw['IBD_Claims']),
+    Chronic_OCS_Days: toNum(raw['Chronic_OCS_Days']),
+    High_Dose_Days: toNum(raw['High_Dose_Days']),
     M4: toNum(raw['M4']),
     M5: toNum(raw['M5']),
     M6: toNum(raw['M6']),
-    M7: toNum(raw['M7']),
+    Composite_Overuse: toNum(raw['Composite_Overuse']),
   }
 }
 

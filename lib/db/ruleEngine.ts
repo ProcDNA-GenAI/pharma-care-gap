@@ -11,8 +11,8 @@ export const CREATE_FACT_TABLE_SQL = `
     Region    TEXT,
     Pat_Age   INTEGER,
     Pat_Gender TEXT,
-    M1 REAL, M2 REAL, M3 REAL,
-    M4 REAL, M5 REAL, M6 REAL, M7 REAL
+    IBD_Claims REAL, Chronic_OCS_Days REAL, High_Dose_Days REAL,
+    M4 REAL, M5 REAL, M6 REAL, Composite_Overuse REAL
   )
 `
 
@@ -23,13 +23,13 @@ export const TRUNCATE_FACT_TABLE_SQL = `DELETE FROM patient_fact`
  * Must be executed in order (DROP first, then CREATE).
  *
  * Flag semantics against raw measurements:
- *   M1 = IBD claim count       → flag if >= ibdMinClaims
- *   M2 = cumulative OCS days   → flag if >= ocsDurationThreshold
- *   M3 = high-dose OCS days    → flag if >= highDoseDurationDays
+ *   IBD_Claims       = IBD claim count       → flag if >= ibdMinClaims
+ *   Chronic_OCS_Days = cumulative OCS days   → flag if >= ocsDurationThreshold
+ *   High_Dose_Days   = high-dose OCS days    → flag if >= highDoseDurationDays
  *   M4 = repeat course count   → flag if > 1
  *   M5 = months to taper fail  → flag if > taperFailMonths
  *   M6 = months to relapse     → flag if > 0 AND <= relapseWindowMonths
- *   M7 = composite (OR of M2–M6 flags)
+ *   Composite_Overuse = composite (OR of Chronic_OCS_Days/High_Dose_Days/M4–M6 flags)
  */
 export function buildMetricsViewSQL(p: ParameterValues): string[] {
   const ocs  = p.ocsDurationThreshold
@@ -38,8 +38,8 @@ export function buildMetricsViewSQL(p: ParameterValues): string[] {
   const rel  = p.relapseWindowMonths
   const ibd  = p.ibdMinClaims
 
-  const m2f = `CASE WHEN M2 >= ${ocs}  THEN 1 ELSE 0 END`
-  const m3f = `CASE WHEN M3 >= ${hdur} THEN 1 ELSE 0 END`
+  const m2f = `CASE WHEN Chronic_OCS_Days >= ${ocs}  THEN 1 ELSE 0 END`
+  const m3f = `CASE WHEN High_Dose_Days >= ${hdur} THEN 1 ELSE 0 END`
   const m4f = `CASE WHEN M4 > 1        THEN 1 ELSE 0 END`
   const m5f = `CASE WHEN M5 > ${tap}   THEN 1 ELSE 0 END`
   const m6f = `CASE WHEN M6 > 0 AND M6 <= ${rel} THEN 1 ELSE 0 END`
@@ -49,17 +49,17 @@ export function buildMetricsViewSQL(p: ParameterValues): string[] {
     `CREATE VIEW patient_metrics AS
       SELECT
         Pat_ID, NPI, Specialty, Account, Territory, Region, Pat_Age, Pat_Gender,
-        M1, M2, M3, M4, M5, M6, M7,
-        CASE WHEN M1 >= ${ibd} THEN 1 ELSE 0 END  AS M1_flag,
-        ${m2f} AS M2_flag,
-        ${m3f} AS M3_flag,
+        IBD_Claims, Chronic_OCS_Days, High_Dose_Days, M4, M5, M6, Composite_Overuse,
+        CASE WHEN IBD_Claims >= ${ibd} THEN 1 ELSE 0 END  AS IBD_Claims_flag,
+        ${m2f} AS Chronic_OCS_Days_flag,
+        ${m3f} AS High_Dose_Days_flag,
         ${m4f} AS M4_flag,
         ${m5f} AS M5_flag,
         ${m6f} AS M6_flag,
         CASE WHEN
           ${m2f} = 1 OR ${m3f} = 1 OR
           ${m4f} = 1 OR ${m5f} = 1 OR ${m6f} = 1
-        THEN 1 ELSE 0 END AS M7_flag
+        THEN 1 ELSE 0 END AS Composite_Overuse_flag
       FROM patient_fact
       WHERE Pat_Age >= 18`,
   ]

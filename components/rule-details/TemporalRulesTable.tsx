@@ -27,7 +27,7 @@ export function TemporalRulesTable({ rules }: TemporalRulesTableProps) {
       </ul>
 
       <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2.5">
-        <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-1">Rule Type</p>
+        <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-1">Care Gap Metric Type</p>
         <p className="text-xs text-emerald-800">Episode Count</p>
       </div>
     </Card>

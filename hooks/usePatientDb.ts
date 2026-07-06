@@ -3,10 +3,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { SqlDatabase } from '@/lib/db/sqlite-singleton'
 import type { ParameterValues } from '@/lib/types'
-import type { GlobalKpis, HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg } from '@/lib/types/insights'
+import type {
+  GlobalKpis, HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg,
+  SpecialtyAgg, AgeDistributionAgg, HcpSegmentAgg,
+} from '@/lib/types/insights'
 import { MOCK_GLOBAL_KPIS, MOCK_HCP_ROWS, MOCK_ACCOUNT_ROWS, MOCK_TERRITORY_ROWS, MOCK_DEMOGRAPHIC_ROWS } from '@/lib/mocks/insights.mock'
 import { buildMetricsViewSQL, CREATE_FACT_TABLE_SQL, TRUNCATE_FACT_TABLE_SQL } from '@/lib/db/ruleEngine'
-import { GLOBAL_KPIS_SQL, HCP_AGG_SQL, ACCOUNT_AGG_SQL, TERRITORY_AGG_SQL, DEMOGRAPHIC_AGG_SQL } from '@/lib/db/kpiEngine'
+import {
+  GLOBAL_KPIS_SQL, HCP_AGG_SQL, ACCOUNT_AGG_SQL, TERRITORY_AGG_SQL, DEMOGRAPHIC_AGG_SQL,
+  SPECIALTY_AGG_SQL, AGE_DISTRIBUTION_SQL, HCP_SEGMENT_SQL,
+} from '@/lib/db/kpiEngine'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +29,9 @@ export interface UsePatientDbResult {
   accountRows: AccountAgg[]
   territoryRows: TerritoryAgg[]
   demographicRows: DemographicAgg[]
+  specialtyRows: SpecialtyAgg[]
+  ageDistributionRows: AgeDistributionAgg[]
+  hcpSegmentRows: HcpSegmentAgg[]
   dataDate: string
   error: string | null
 }
@@ -63,6 +72,9 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
   const [accountRows, setAccountRows] = useState<AccountAgg[]>(MOCK_ACCOUNT_ROWS)
   const [territoryRows, setTerritoryRows] = useState<TerritoryAgg[]>(MOCK_TERRITORY_ROWS)
   const [demographicRows, setDemographicRows] = useState<DemographicAgg[]>(MOCK_DEMOGRAPHIC_ROWS)
+  const [specialtyRows, setSpecialtyRows] = useState<SpecialtyAgg[]>([])
+  const [ageDistributionRows, setAgeDistributionRows] = useState<AgeDistributionAgg[]>([])
+  const [hcpSegmentRows, setHcpSegmentRows] = useState<HcpSegmentAgg[]>([])
 
   const dbRef = useRef<SqlDatabase | null>(null)
   const paramsRef = useRef(parameters)
@@ -178,6 +190,32 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
             m7Rate:       n(r.m7_rate),
           })))
 
+          // 7. Specialty distribution
+          const specialtyRaw = toObjects(db.exec(SPECIALTY_AGG_SQL))
+          setSpecialtyRows(specialtyRaw.map((r) => ({
+            specialty:     s(r.specialty),
+            totalPatients: n(r.total_patients),
+            overusers:     n(r.overusers),
+            overuseRate:   n(r.overuse_rate),
+          })))
+
+          // 8. Age distribution
+          const ageRaw = toObjects(db.exec(AGE_DISTRIBUTION_SQL))
+          setAgeDistributionRows(ageRaw.map((r) => ({
+            ageBand:       s(r.age_band) as AgeDistributionAgg['ageBand'],
+            totalPatients: n(r.total_patients),
+            overusers:     n(r.overusers),
+            overuseRate:   n(r.overuse_rate),
+          })))
+
+          // 9. HCP overuse-rate segments
+          const segmentRaw = toObjects(db.exec(HCP_SEGMENT_SQL))
+          setHcpSegmentRows(segmentRaw.map((r) => ({
+            band:     s(r.band),
+            hcpCount: n(r.hcp_count),
+            patients: n(r.patients),
+          })))
+
           setStatus('ready')
           resolve()
         } catch (err) {
@@ -222,15 +260,15 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
               Pat_ID: s(r.Pat_ID), NPI: s(r.NPI), Specialty: s(r.Specialty),
               Account: s(r.Account), Territory: s(r.Territory), Region: s(r.Region),
               Pat_Age: n(r.Pat_Age), Pat_Gender: s(r.Pat_Gender),
-              M1: n(r.M1), M2: n(r.M2), M3: n(r.M3),
-              M4: n(r.M4), M5: n(r.M5), M6: n(r.M6), M7: n(r.M7),
+              IBD_Claims: n(r.IBD_Claims), Chronic_OCS_Days: n(r.Chronic_OCS_Days), High_Dose_Days: n(r.High_Dose_Days),
+              M4: n(r.M4), M5: n(r.M5), M6: n(r.M6), Composite_Overuse: n(r.Composite_Overuse),
             }))
             if (rows.length && !cancelled) {
               const stmt = db.prepare(`INSERT INTO patient_fact VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
               db.run('BEGIN TRANSACTION')
               for (const r of rows) {
                 stmt.run([r.Pat_ID, r.NPI, r.Specialty, r.Account, r.Territory, r.Region,
-                  r.Pat_Age, r.Pat_Gender, r.M1, r.M2, r.M3, r.M4, r.M5, r.M6, r.M7])
+                  r.Pat_Age, r.Pat_Gender, r.IBD_Claims, r.Chronic_OCS_Days, r.High_Dose_Days, r.M4, r.M5, r.M6, r.Composite_Overuse])
               }
               db.run('COMMIT')
               stmt.free()
@@ -294,7 +332,8 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
       let rows: {
         Pat_ID: string; NPI: string; Specialty: string; Account: string
         Territory: string; Region: string; Pat_Age: number; Pat_Gender: string
-        M1: number; M2: number; M3: number; M4: number; M5: number; M6: number; M7: number
+        IBD_Claims: number; Chronic_OCS_Days: number; High_Dose_Days: number
+        M4: number; M5: number; M6: number; Composite_Overuse: number
       }[]
 
       if (ext === 'csv') {
@@ -309,8 +348,8 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
           Pat_ID: s(r.Pat_ID), NPI: s(r.NPI), Specialty: s(r.Specialty),
           Account: s(r.Account), Territory: s(r.Territory), Region: s(r.Region),
           Pat_Age: n(r.Pat_Age), Pat_Gender: s(r.Pat_Gender),
-          M1: n(r.M1), M2: n(r.M2), M3: n(r.M3),
-          M4: n(r.M4), M5: n(r.M5), M6: n(r.M6), M7: n(r.M7),
+          IBD_Claims: n(r.IBD_Claims), Chronic_OCS_Days: n(r.Chronic_OCS_Days), High_Dose_Days: n(r.High_Dose_Days),
+          M4: n(r.M4), M5: n(r.M5), M6: n(r.M6), Composite_Overuse: n(r.Composite_Overuse),
         }))
       } else {
         const { parseExcelFile } = await import('@/lib/utils/parseExcel')
@@ -331,7 +370,7 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
         stmt.run([
           r.Pat_ID, r.NPI, r.Specialty, r.Account, r.Territory, r.Region,
           r.Pat_Age, r.Pat_Gender,
-          r.M1, r.M2, r.M3, r.M4, r.M5, r.M6, r.M7,
+          r.IBD_Claims, r.Chronic_OCS_Days, r.High_Dose_Days, r.M4, r.M5, r.M6, r.Composite_Overuse,
         ])
       }
       db.run('COMMIT')
@@ -368,6 +407,7 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
     hasRealData, rowCount,
     loadFile,
     kpis, hcpRows, accountRows, territoryRows, demographicRows,
+    specialtyRows, ageDistributionRows, hcpSegmentRows,
     dataDate, error,
   }
 }

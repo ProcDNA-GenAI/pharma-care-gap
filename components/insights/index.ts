@@ -1,5 +1,7 @@
 export { KpiCard } from './KpiCard'
 export { CommercialSummaryPanel } from './CommercialSummaryPanel'
+export { DistributionTable } from './DistributionTable'
+export type { DistributionColumn } from './DistributionTable'
 export { InsightsSideNav } from './InsightsSideNav'
 export type { InsightsView } from './InsightsSideNav'
 export { FilterBar } from './FilterBar'

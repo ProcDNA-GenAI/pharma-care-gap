@@ -27,7 +27,7 @@ export function EvidenceMappingCard({ mappings }: EvidenceMappingCardProps) {
       </ul>
 
       <div className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2.5">
-        <p className="text-[10px] font-semibold text-red-700 uppercase tracking-wide mb-1">Rule Type</p>
+        <p className="text-[10px] font-semibold text-red-700 uppercase tracking-wide mb-1">Care Gap Metric Type</p>
         <p className="text-xs text-red-800">Post-Exposure Surveillance</p>
       </div>
     </Card>

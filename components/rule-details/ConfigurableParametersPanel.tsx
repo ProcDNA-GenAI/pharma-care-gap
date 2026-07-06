@@ -1,8 +1,9 @@
 'use client'
 
-import { SlidersHorizontal, Sparkles } from 'lucide-react'
+import { SlidersHorizontal, Sparkles, Info } from 'lucide-react'
 import { ParameterField } from './ParameterField'
 import { Button } from '@/components/ui/Button'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils/cn'
 import type { ParameterValues } from '@/lib/types'
 import type { SelectOption } from '@/components/ui/Select'
@@ -38,17 +39,15 @@ const CUM_MG_OPTIONS: SelectOption[]       = [300, 450, 600, 900].map((v) => ({ 
 // M4 — Repeat course
 const GAP_OPTIONS: SelectOption[]          = [14, 21, 30, 45, 60].map((v) => ({ label: String(v), value: v }))
 
-// M5 — Taper failure
-const TAPER_WINDOW_OPTIONS: SelectOption[] = [1, 2, 3, 4, 6].map((v) => ({ label: String(v), value: v }))
-const TAPER_DOSE_OPTIONS: SelectOption[]   = [5, 7.5, 10, 15].map((v) => ({ label: String(v), value: v }))
-
-// M6 — Relapse
-const RELAPSE_OPTIONS: SelectOption[]      = [1, 2, 3, 4, 6].map((v) => ({ label: String(v), value: v }))
-
-export function GroupHeading({ children }: { children: string }) {
+export function GroupHeading({ children, tooltip }: { children: string; tooltip?: string }) {
   return (
-    <p className="mt-4 mb-1.5 text-[10px] font-bold text-black uppercase tracking-wider">
+    <p className="mt-4 mb-1.5 flex items-center gap-1 text-[10px] font-bold text-black uppercase tracking-wider">
       {children}
+      {tooltip && (
+        <Tooltip content={tooltip} className="normal-case font-normal tracking-normal">
+          <Info className="h-3 w-3 text-gray-400 cursor-help shrink-0" aria-label="Group info" />
+        </Tooltip>
+      )}
     </p>
   )
 }
@@ -164,40 +163,6 @@ export function ConfigurableParametersPanel({
                 onChange={(v) => onParameterChange('courseGapDays', v)}
                 options={GAP_OPTIONS}
                 unit="days"
-              />
-            </div>
-
-            {/* M5 — Steroid Taper Failure */}
-            <GroupHeading>Steroid Taper Failure</GroupHeading>
-            <div className="divide-y divide-gray-100">
-              <ParameterField
-                label="Taper Achievement Window"
-                tooltip="Months within which OCS must be reduced below taper dose threshold"
-                value={parameters.taperFailMonths}
-                onChange={(v) => onParameterChange('taperFailMonths', v)}
-                options={TAPER_WINDOW_OPTIONS}
-                unit="months"
-              />
-              <ParameterField
-                label="Taper Dose Threshold"
-                tooltip="Daily dose (mg/day) below which tapering is considered achieved"
-                value={parameters.taperDoseThresholdMg}
-                onChange={(v) => onParameterChange('taperDoseThresholdMg', v)}
-                options={TAPER_DOSE_OPTIONS}
-                unit="mg/day"
-              />
-            </div>
-
-            {/* M6 — Post-Discontinuation Relapse */}
-            <GroupHeading>Post-Discontinuation Relapse</GroupHeading>
-            <div className="divide-y divide-gray-100">
-              <ParameterField
-                label="Relapse Window"
-                tooltip="Months after OCS discontinuation within which a relapse (new OCS course) is flagged"
-                value={parameters.relapseWindowMonths}
-                onChange={(v) => onParameterChange('relapseWindowMonths', v)}
-                options={RELAPSE_OPTIONS}
-                unit="months"
               />
             </div>
           </>

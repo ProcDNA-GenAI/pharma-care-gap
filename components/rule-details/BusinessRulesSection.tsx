@@ -1,7 +1,6 @@
-import { Users, CheckCircle2, Clock, BarChart2, RefreshCw, Layers } from 'lucide-react'
+import { Users, Clock, BarChart2, RefreshCw, Layers } from 'lucide-react'
 import { CohortCard } from './CohortCard'
 import { MetricRecommendationCard } from './MetricRecommendationCard'
-import { InfoNote } from './InfoNote'
 import type { RulePackage } from '@/lib/types'
 
 interface BusinessRulesSectionProps {
@@ -32,12 +31,6 @@ export function BusinessRulesSection({ rulePackage }: BusinessRulesSectionProps)
             description={clinicalSummary.text}
             badge="IBD Patient Cohort Definition"
           />
-          <CohortCard
-            icon={CheckCircle2}
-            title="Eligible IBD Cohort"
-            description="Patients meeting the IBD cohort definition are evaluated using the following recommended care gap metrics"
-            tone="muted"
-          />
         </div>
       </section>
 
@@ -45,7 +38,7 @@ export function BusinessRulesSection({ rulePackage }: BusinessRulesSectionProps)
       <section className="rounded-2xl border-2 border-gray-300 bg-white p-5 shadow-lg">
         <h2 className="mb-1 text-base font-semibold text-emerald-600">2. Recommended Care Gap Metrics for Quantifying the Overuse of Oral Corticosteroids</h2>
         <p className="mb-4 text-sm leading-relaxed text-gray-600">
-          Patients meeting the cohort definition are evaluated using the following recommended metrics.
+          Patients meeting the IBD cohort definition are evaluated using the following recommended care gap metrics.
         </p>
 
         <div className="space-y-5">
@@ -76,17 +69,9 @@ export function BusinessRulesSection({ rulePackage }: BusinessRulesSectionProps)
           <MetricRecommendationCard
             icon={Layers}
             accent="gray"
-            title="Composite OCS Overuse Flag"
+            title="Composite OCS Overuse Eligibility"
             bullets={ruleLogic.map((step) => step.condition)}
             ruleType="Composite OR Logic"
-          />
-
-          <InfoNote
-            title="How It Works"
-            lines={[
-              'If a patient meets the criteria for any one of the metrics above, they will be flagged as an OCS overuser.',
-              'This composite flag is used for aggregated reporting and care gap insights.',
-            ]}
           />
         </div>
       </section>

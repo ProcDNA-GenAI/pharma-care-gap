@@ -34,7 +34,7 @@ export function ClinicalSummaryCard({ clinicalSummary }: ClinicalSummaryCardProp
       )}
 
       <div className="mt-3 rounded-lg border border-[#004FBA]/10 bg-[#004FBA]/5 px-3 py-2.5">
-        <p className="text-[10px] font-semibold text-[#004FBA] uppercase tracking-wide mb-1">Rule Type</p>
+        <p className="text-[10px] font-semibold text-[#004FBA] uppercase tracking-wide mb-1">Care Gap Metric Type</p>
         <p className="text-xs text-[#004FBA]/80">Cohort Definition</p>
       </div>
     </Card>

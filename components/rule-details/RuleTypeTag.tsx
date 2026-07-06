@@ -25,7 +25,7 @@ export function RuleTypeTag({ accent, value }: RuleTypeTagProps) {
   const s = ACCENT_STYLES[accent]
   return (
     <div className={`flex w-40 flex-col items-start rounded-lg px-4 py-1.5 text-left ${s.tagBg}`}>
-      <span className={`text-[9px] font-bold uppercase tracking-wide ${s.tagLabel}`}>Rule Type</span>
+      <span className={`text-[9px] font-bold uppercase tracking-wide ${s.tagLabel}`}>Care Gap Metric Type</span>
       <span className={`text-xs font-semibold leading-tight ${s.tagValue}`}>{value}</span>
     </div>
   )
