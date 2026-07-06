@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { Info } from 'lucide-react'
 import { ParameterField } from './ParameterField'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { Select } from '@/components/ui/Select'
 import type { SelectOption } from '@/components/ui/Select'
 import type { ParameterValues } from '@/lib/types'
@@ -126,9 +128,12 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
 
       <ConfigCard title="Composite Care Gap Rule">
         <div className="flex items-center gap-2 py-1.5">
-          <span className="flex-1 min-w-0 text-xs text-[#4B5563]">
-            Minimum Number of Care Gap Criteria Met
-          </span>
+          <div className="flex flex-1 min-w-0 items-center gap-1">
+            <span className="text-xs text-[#4B5563]">Minimum Number of Care Gap Criteria Met</span>
+            <Tooltip content="Patients who meet the IBD cohort eligibility criteria are evaluated against the selected OCS care gap measures.">
+              <Info className="h-3 w-3 shrink-0 cursor-help text-gray-400" />
+            </Tooltip>
+          </div>
           <div className="w-[110px] shrink-0">
             <Select
               options={COMPOSITE_OPTIONS}

@@ -4,10 +4,11 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Users, Activity, BarChart2, RefreshCw,
   Clock, FlaskConical, Repeat2, Download, Upload, SlidersHorizontal,
-  X, Database, AlertCircle, Info, ArrowRight,
+  Database, AlertCircle, Info, ArrowRight,
 } from 'lucide-react'
 import { KpiCard } from '@/components/insights/KpiCard'
 import { CommercialSummaryPanel } from '@/components/insights/CommercialSummaryPanel'
+import { BusinessRuleSummaryPanel } from '@/components/insights/BusinessRuleSummaryPanel'
 import { DistributionTable } from '@/components/insights/DistributionTable'
 import type { DistributionColumn } from '@/components/insights/DistributionTable'
 import { InsightsSideNav } from '@/components/insights/InsightsSideNav'
@@ -15,7 +16,6 @@ import type { InsightsView } from '@/components/insights/InsightsSideNav'
 import { FilterBar } from '@/components/insights/FilterBar'
 import { InsightsTable, RiskBadge } from '@/components/insights/InsightsTable'
 import type { Column } from '@/components/insights/InsightsTable'
-import { ConfigurableParametersPanel } from '@/components/rule-details/ConfigurableParametersPanel'
 import { Button } from '@/components/ui/Button'
 import { usePatientDb } from '@/hooks/usePatientDb'
 import { DEFAULT_PARAMETERS } from '@/hooks/useParameterState'
@@ -43,21 +43,21 @@ const UNAVAILABLE_TABS = new Set(['payer', 'temporal'])
 const SPECIALTY_COLUMNS: DistributionColumn[] = [
   { label: 'Specialty' },
   { label: 'Eligible Patients', align: 'right' },
-  { label: 'Composite Overusers', align: 'right' },
-  { label: 'Overuse %', align: 'right' },
+  { label: 'Overuse Patients (≥ 1 Criterion)', align: 'right' },
+  { label: 'Overuse Rate', align: 'right' },
 ]
 
 const AGE_COLUMNS: DistributionColumn[] = [
   { label: 'Age Group' },
   { label: 'Eligible Patients', align: 'right' },
-  { label: 'Composite Overusers', align: 'right' },
-  { label: 'Overuse %', align: 'right' },
+  { label: 'Overuse Patients (≥ 1 Criterion)', align: 'right' },
+  { label: 'Overuse Rate', align: 'right' },
 ]
 
 const HCP_SEGMENT_COLUMNS: DistributionColumn[] = [
-  { label: 'Overuse Band' },
+  { label: 'Overuse Rate Band' },
   { label: 'HCP Count', align: 'right' },
-  { label: 'Patients', align: 'right' },
+  { label: 'Eligible Patients', align: 'right' },
 ]
 
 function withTotalRate(totalPatients: number, overusers: number): (string | number)[] {
@@ -198,7 +198,8 @@ export function InsightsClient() {
   const [sortKey, setSortKey]         = useState('m7Rate')
   const [sortDir, setSortDir]         = useState<'asc' | 'desc'>('desc')
   const [page, setPage]               = useState(1)
-  const [showParams, setShowParams]   = useState(false)
+  const [editingRules, setEditingRules]     = useState(false)
+  const [showParameters, setShowParameters] = useState(false)
   const [uploading, setUploading]     = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -336,52 +337,6 @@ export function InsightsClient() {
   const mainContent = (
     <div className="flex-1 min-w-0 space-y-5">
 
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-900">Care Gap Insights</h1>
-            <StatusPill status={status} label={statusLabel} />
-            {hasRealData && rowCount > 0 && (
-              <span className="text-[10px] text-gray-400">
-                {rowCount.toLocaleString()} patients loaded
-              </span>
-            )}
-          </div>
-          <p className="mt-0.5 text-sm text-gray-500 max-w-2xl">
-            A real-time view of overuse and care gap burden across the eligible IBD cohort — surfaced by HCP, geography, and patient demographics as parameters change.
-            {!hasRealData && status !== 'loading' && ' Upload your own CSV/Excel to replace demo data.'}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={() => setShowParams((v) => !v)}
-            className={[
-              'inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium shadow-sm transition-colors',
-              showParams
-                ? 'border-[#004FBA] bg-[#EEF3FF] text-[#004FBA]'
-                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
-            ].join(' ')}
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Parameters
-          </button>
-          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="sr-only" />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading || status === 'initializing'}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
-          >
-            {uploading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-            {uploading ? 'Loading…' : 'Load Data'}
-          </button>
-          <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors">
-            <Download className="h-3.5 w-3.5" />
-            Export
-          </button>
-        </div>
-      </div>
-
       {/* ── Error banner ── */}
       {error && (
         <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -392,64 +347,74 @@ export function InsightsClient() {
 
       {activeView === 'overview' ? (
         <>
-          {/* ── Section 1: Key Patient Counts & Coverage ── */}
-          <div>
-            <h2 className="text-base font-bold text-gray-900">1. Key Patient Counts &amp; Coverage</h2>
-            <p className="mt-0.5 text-xs text-gray-500">All metrics are calculated within the eligible IBD cohort.</p>
+          {/* ── Sections 1 & 2: one box, divided by a vertical rule ── */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start lg:divide-x lg:divide-gray-300">
+
+              {/* Section 1: Eligible IBD Patient Cohort */}
+              <div className="lg:pr-4">
+                <h2 className="text-base font-bold text-[#1D3F8F]">1. Eligible IBD Patient Cohort</h2>
+                <p className="mt-0.5 text-xs text-[#6B7280]">Patient population that meets the defined IBD cohort criteria.</p>
+
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <KpiCard title="Eligible IBD Cohort" value={kpis.totalPatients}
+                    caption="Patients satisfying cohort definition" badge="100%"
+                    icon={<Users className="h-4 w-4" />} />
+                  <KpiCard title="OCS Users" value={kpis.ocsUse}
+                    caption="Patients with ≥1 OCS claim" badge={`${kpis.ocsUseRate}%`}
+                    icon={<Activity className="h-4 w-4" />} />
+                </div>
+              </div>
+
+              {/* Section 2: OCS Overuse Summary — Key Metrics */}
+              <div className="lg:pl-4">
+                <h2 className="text-base font-bold text-[#1D3F8F]">2. OCS Overuse Summary — Key Metrics</h2>
+                <p className="mt-0.5 text-xs text-[#6B7280]">Patients evaluated across clinically relevant indicators of inappropriate or prolonged OCS use.</p>
+
+                <div className="mt-3 grid grid-cols-4 gap-3">
+                  <KpiCard title="Patients with Potential OCS Overuse" value={kpis.ocsOveruse}
+                    caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
+                    variant="purple" icon={<BarChart2 className="h-4 w-4" />} />
+                  <KpiCard title="Chronic OCS Exposure" value={kpis.chronicOcs}
+                    caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
+                    variant="green" icon={<Clock className="h-4 w-4" />} />
+                  <KpiCard title="High-Dose OCS Exposure" value={kpis.highDose}
+                    caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
+                    variant="orange" icon={<FlaskConical className="h-4 w-4" />} />
+                  <KpiCard title="Recurrent OCS Courses" value={kpis.repeatCourse}
+                    caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
+                    variant="blue" icon={<Repeat2 className="h-4 w-4" />} />
+                </div>
+              </div>
+
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-[repeat(6,minmax(0,1fr))_minmax(0,1.6fr)]">
-            <KpiCard size="secondary" title="Eligible IBD Cohort" value={kpis.totalPatients}
-              caption="Patients satisfying cohort definition" badge="100%"
-              icon={<Users className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="OCS Users" value={kpis.ocsUse}
-              caption="Patients with ≥1 OCS claim" badge="100%"
-              icon={<Activity className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="Composite OCS Overusers" value={kpis.ocsOveruse}
-              caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
-              variant="highlight" icon={<BarChart2 className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="Duration-Based Overuse" value={kpis.chronicOcs}
-              caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
-              icon={<Clock className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="High-Dose / Prolonged Exposure" value={kpis.highDose}
-              caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
-              variant="warning" icon={<FlaskConical className="h-3.5 w-3.5" />} />
-            <KpiCard size="secondary" title="Repeat OCS Course" value={kpis.repeatCourse}
-              caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
-              icon={<Repeat2 className="h-3.5 w-3.5" />} />
+          {/* ── Section 3: Care Gap Distribution Across Key Dimensions ── */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h2 className="text-base font-bold text-[#1D3F8F]">3. Care Gap Distribution Across Key Dimensions</h2>
+            <p className="mt-0.5 text-xs text-[#6B7280]">Explore the distribution of OCS overuse across provider, patient, and geographic dimensions to identify the highest-priority opportunities for medical engagement.</p>
 
-            <CommercialSummaryPanel
-              hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
-              territoriesCovered={commercialSummary.territoriesCovered}
-              avgHcpsPerMsl={commercialSummary.avgHcpsPerMsl}
-            />
+            <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <DistributionTable title="A. By HCP Specialty" columns={SPECIALTY_COLUMNS} rows={specialtyTableRows} totalRow={specialtyTotalRow} />
+              <DistributionTable title="B. By Patient Age Group" columns={AGE_COLUMNS} rows={ageTableRows} totalRow={ageTotalRow} />
+              <DistributionTable title="C. Top HCP Segments by Overuse Rate" columns={HCP_SEGMENT_COLUMNS} rows={hcpSegmentTableRows} totalRow={hcpSegmentTotalRow} />
+            </div>
           </div>
 
-          {/* ── Section 2: Granular Care Gap Distribution ── */}
-          <div>
-            <h2 className="text-base font-bold text-gray-900">2. Granular Care Gap Distribution</h2>
-            <p className="mt-0.5 text-xs text-gray-500">Distribution of OCS overuse across important commercial dimensions.</p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-            <DistributionTable title="A. Specialty Distribution" columns={SPECIALTY_COLUMNS} rows={specialtyTableRows} totalRow={specialtyTotalRow} />
-            <DistributionTable title="B. Patient Age Distribution" columns={AGE_COLUMNS} rows={ageTableRows} totalRow={ageTotalRow} />
-            <DistributionTable title="C. Top HCP Segments by Overuse Rate" columns={HCP_SEGMENT_COLUMNS} rows={hcpSegmentTableRows} totalRow={hcpSegmentTotalRow} />
-          </div>
-
-          {/* ── Informational footer callout ── */}
+          {/* ── Bottom CTA bar ── */}
           <div className="flex flex-col items-start gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF3FF] text-[#004FBA]">
                 <Info className="h-4 w-4" />
               </div>
-              <p className="text-xs text-gray-600">
-                Drill down into HCP, Territory, Account, Specialty and Patient level details using the Detailed View.
+              <p className="text-xs text-[#4B5563]">
+                Use the Detailed View to explore patient and HCP level insights by territory, account, specialty, and overuse measure.
               </p>
             </div>
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => setActiveView('detailed')}
               iconRight={<ArrowRight className="h-3.5 w-3.5" />}
               className="shrink-0"
@@ -519,47 +484,79 @@ export function InsightsClient() {
   )
 
   return (
-    <div className={['flex items-start gap-5', showParams ? '' : ''].join('')}>
-      <InsightsSideNav active={activeView} onChange={setActiveView} />
-      <div className="w-20 shrink-0 -mr-2" aria-hidden="true" />
+    <div className="flex min-w-0 flex-1 flex-col gap-5">
 
-      {mainContent}
-
-      {/* ── Collapsible parameters sidebar ── */}
-      {showParams && (
-        <div className="w-80 shrink-0 sticky top-0">
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-            {/* Sidebar header */}
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-3.5 w-3.5 text-[#004FBA]" />
-                <span className="text-xs font-semibold text-gray-900">Configurable Parameters</span>
-                <span className="text-xs text-gray-400">(Select Values to analyze Care Gap)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {status === 'computing' && (
-                  <span className="flex items-center gap-1 text-[10px] text-violet-600">
-                    <RefreshCw className="h-2.5 w-2.5 animate-spin" />
-                    Recalculating…
-                  </span>
-                )}
-                <button onClick={() => setShowParams(false)} className="rounded p-0.5 text-gray-400 hover:text-gray-600">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-            {/* Parameter fields */}
-            <div className="max-h-[calc(100vh-180px)] overflow-y-auto px-1 py-1 scrollbar-hide">
-              <ConfigurableParametersPanel
-                parameters={parameters}
-                onParameterChange={handleParameterChange}
-                hideActions={true}
-                hideHeader={true}
-              />
-            </div>
+      {/* ── Header: offset by fixed sidebar width (w-20 = 80px) ── */}
+      <div className="flex items-start justify-between gap-4 pl-24">
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl font-bold text-[#1D3F8F]">Care Gap Insights</h1>
+            <StatusPill status={status} label={statusLabel} />
+            {hasRealData && rowCount > 0 && (
+              <span className="text-[10px] text-[#6B7280]">
+                {rowCount.toLocaleString()} patients loaded
+              </span>
+            )}
           </div>
+          <p className="mt-0.5 text-sm text-[#4B5563] max-w-2xl">
+            Understand where oral corticosteroid overuse exists within the eligible IBD population to support evidence-based medical engagement and care optimization.
+            {!hasRealData && status !== 'loading' && ' Upload your own CSV/Excel to replace demo data.'}
+          </p>
         </div>
-      )}
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={() => setShowParameters((v) => !v)}
+            className={[
+              'inline-flex h-9 items-center gap-2 rounded-lg border px-4 text-sm font-medium shadow-sm transition-colors',
+              showParameters
+                ? 'border-[#004FBA] bg-[#EEF3FF] text-[#004FBA]'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+            ].join(' ')}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Parameters
+          </button>
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="sr-only" />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading || status === 'initializing'}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            {uploading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {uploading ? 'Loading…' : 'Load Data'}
+          </button>
+          <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors">
+            <Download className="h-4 w-4" />
+            Export
+          </button>
+        </div>
+      </div>
+
+      {/* ── Content row ── */}
+      <div className="flex items-start gap-5">
+        <InsightsSideNav active={activeView} onChange={setActiveView} />
+        <div className="w-20 shrink-0 -mr-2" aria-hidden="true" />
+
+        {mainContent}
+
+        {/* ── Right sidebar: always present to keep layout stable ── */}
+        <div className="w-72 shrink-0 space-y-4 lg:sticky lg:top-5">
+          {showParameters && (
+            <BusinessRuleSummaryPanel
+              parameters={parameters}
+              onParameterChange={handleParameterChange}
+              editing={editingRules}
+              onToggleEditing={() => setEditingRules((v) => !v)}
+            />
+          )}
+          <CommercialSummaryPanel
+            hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
+            territoriesCovered={commercialSummary.territoriesCovered}
+            avgHcpsPerMsl={commercialSummary.avgHcpsPerMsl}
+          />
+        </div>
+      </div>
+
     </div>
   )
 }

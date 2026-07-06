@@ -20,16 +20,16 @@ export function DistributionTable({ title, columns, rows, totalRow }: Distributi
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
       <div className="border-b border-gray-100 px-4 py-3">
-        <span className="text-xs font-semibold text-gray-900">{title}</span>
+        <span className="text-xs font-semibold text-[#1D3F8F]">{title}</span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="max-h-72 overflow-auto">
         <table className="min-w-full text-xs">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50">
+            <tr className="sticky top-0 z-10 border-b border-gray-100 bg-gray-50">
               {columns.map((col) => (
                 <th
                   key={col.label}
-                  className={cn('px-4 py-2.5 font-semibold text-gray-600 whitespace-nowrap', alignClass(col.align))}
+                  className={cn('px-3 py-2.5 font-semibold text-gray-600 leading-snug', alignClass(col.align))}
                 >
                   {col.label}
                 </th>
@@ -40,7 +40,7 @@ export function DistributionTable({ title, columns, rows, totalRow }: Distributi
             {rows.map((row, i) => (
               <tr key={i} className="hover:bg-gray-50 transition-colors">
                 {row.map((cell, j) => (
-                  <td key={j} className={cn('px-4 py-2.5 text-gray-700', alignClass(columns[j]?.align))}>
+                  <td key={j} className={cn('px-3 py-2.5 text-gray-700', alignClass(columns[j]?.align))}>
                     {cell}
                   </td>
                 ))}
@@ -48,9 +48,9 @@ export function DistributionTable({ title, columns, rows, totalRow }: Distributi
             ))}
           </tbody>
           <tfoot>
-            <tr className="border-t border-gray-100 bg-gray-50">
+            <tr className="sticky bottom-0 border-t border-gray-100 bg-gray-50">
               {totalRow.map((cell, j) => (
-                <td key={j} className={cn('px-4 py-2.5 font-semibold text-gray-900', alignClass(columns[j]?.align))}>
+                <td key={j} className={cn('px-3 py-2.5 font-semibold text-gray-900', alignClass(columns[j]?.align))}>
                   {cell}
                 </td>
               ))}

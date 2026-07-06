@@ -7,8 +7,8 @@ interface CohortCardProps {
   title: string
   description: string
   items: string[]
-  badgeLabel: string
-  badgeValue: string
+  badgeLabel?: string
+  badgeValue?: string
   accent?: MetricAccent
 }
 
@@ -22,7 +22,7 @@ export function CohortCard({ icon: Icon, title, description, items, badgeLabel, 
           </div>
           <h3 className="text-xl font-semibold text-[#1D3F8F]">{title}</h3>
         </div>
-        <RuleTypeTag accent={accent} label={badgeLabel} value={badgeValue} valueColor="#2F6FDF" />
+        {badgeLabel && badgeValue && <RuleTypeTag accent={accent} label={badgeLabel!} value={badgeValue!} valueColor="#2F6FDF" />}
       </div>
 
       <p className="mb-3 text-sm leading-relaxed text-[#4B5563]">{description}</p>
