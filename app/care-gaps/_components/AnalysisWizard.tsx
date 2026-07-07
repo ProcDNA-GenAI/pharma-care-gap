@@ -4,7 +4,7 @@ import { useState, useRef, DragEvent, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   UploadCloud, FileText, Link2, Plus, X,
-  Stethoscope, Database, FileSpreadsheet, BookOpen, LayoutGrid,
+  Stethoscope, FileSpreadsheet, BookOpen, LayoutGrid,
   LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
@@ -16,15 +16,11 @@ import { GenerateButton } from './GenerateButton'
 
 const TARGET_ID = 'ibd-biologic-initiation'
 
-const CLAIMS_EXTS   = ['.csv', '.json', '.xlsx', '.pdf', '.docx', '.txt']
 const CLINICAL_EXTS = ['.pdf', '.docx', '.doc', '.ppt', '.pptx', '.txt']
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface FormData {
-  claimsMode:         'upload' | 'paste'
-  claimsFile:         File | null
-  claimsSchema:       string
   marketDefinition:   string
   clinicalFile:       File | null
   careGapDescription: string
@@ -35,9 +31,6 @@ interface FormData {
 type SetFn = <K extends keyof FormData>(key: K, value: FormData[K]) => void
 
 const INITIAL: FormData = {
-  claimsMode:         'upload',
-  claimsFile:         null,
-  claimsSchema:       '',
   marketDefinition:   '',
   clinicalFile:       null,
   careGapDescription: '',
@@ -51,7 +44,7 @@ export interface AnalysisWizardProps {
 
 // ── Section registry ──────────────────────────────────────────────────────────
 
-type SectionId = 'clinical' | 'claims' | 'market' | 'evidence' | 'output'
+type SectionId = 'clinical' | 'market' | 'evidence' | 'output'
 
 interface SectionDef {
   id:          SectionId
@@ -70,14 +63,6 @@ const SECTIONS: SectionDef[] = [
     description: 'Define disease area, objective and patient population',
     required: true,
     isComplete: (fd) => !!fd.clinicalFile || !!fd.careGapDescription.trim(),
-  },
-  {
-    id: 'claims',
-    icon: Database,
-    title: 'Claims Data Schema',
-    description: 'Upload or paste the claims data source schema',
-    required: true,
-    isComplete: (fd) => (fd.claimsMode === 'upload' ? !!fd.claimsFile : !!fd.claimsSchema.trim()),
   },
   {
     id: 'market',
@@ -209,61 +194,6 @@ function FileDropZone({
         className="sr-only"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) pick(f) }}
       />
-    </div>
-  )
-}
-
-// ── Section content — Claims data ─────────────────────────────────────────────
-
-function StepClaims({ fd, set }: { fd: FormData; set: SetFn }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex rounded-lg border border-gray-200 bg-gray-100 p-0.5" role="tablist" aria-label="Input mode">
-        {(['upload', 'paste'] as const).map((mode) => (
-          <button
-            key={mode}
-            type="button"
-            role="tab"
-            id={`tab-${mode}`}
-            aria-selected={fd.claimsMode === mode}
-            onClick={() => set('claimsMode', mode)}
-            className={cn(
-              'flex-1 rounded-md py-1.5 text-xs font-medium transition-all',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA]',
-              fd.claimsMode === mode
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700',
-            )}
-          >
-            {mode === 'upload' ? 'Upload schema' : 'Paste schema'}
-          </button>
-        ))}
-      </div>
-
-      {fd.claimsMode === 'upload' ? (
-        <FileDropZone
-          inputId="claims-file"
-          file={fd.claimsFile}
-          onFile={(f) => set('claimsFile', f)}
-          onClear={() => set('claimsFile', null)}
-          acceptedExts={CLAIMS_EXTS}
-          ariaLabel="Upload claims schema file"
-        />
-      ) : (
-        <div>
-          <label htmlFor="claims-schema" className="mb-1.5 block text-xs font-medium text-gray-600">
-            Schema definition
-          </label>
-          <textarea
-            id="claims-schema"
-            rows={8}
-            value={fd.claimsSchema}
-            onChange={(e) => set('claimsSchema', e.target.value)}
-            placeholder="Paste your schema here — column names, data types, sample values, etc."
-            className={TEXTAREA_CLS}
-          />
-        </div>
-      )}
     </div>
   )
 }
@@ -481,7 +411,6 @@ export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
   function renderSectionContent(id: SectionId): ReactNode {
     switch (id) {
       case 'clinical': return <StepClinical fd={fd} set={set} />
-      case 'claims':   return <StepClaims fd={fd} set={set} />
       case 'market':   return <StepMarket fd={fd} set={set} />
       case 'evidence':
         return (
