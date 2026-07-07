@@ -25,7 +25,7 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
           items={[
             'Have ≥ X medical claims with an IBD diagnosis (ICD-10 K50.x or K51.x)',
             'Have a minimum of Y days between the first and last IBD diagnosis claim',
-            'Are identified within the selected measurement period',
+            'Are identified within the selected look forward period',
           ]}
         />
       </section>
@@ -44,9 +44,11 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
             title="Chronic Oral Corticosteroid Use"
             description="Identify patients with prolonged exposure to oral corticosteroids."
             bullets={[
-              'Total cumulative OCS exposure ≥ X days during the measurement period',
+              'Total cumulative OCS exposure ≥ X days during the look forward period',
             ]}
             ruleType="Duration-Based"
+            sourceHref="https://guidelines.example.com/chronic-ocs-use-source"
+            sourceLabel="Source"
           />
           <MetricRecommendationCard
             icon={BarChart2}
@@ -65,7 +67,7 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
             title="Recurrent Oral Corticosteroid Courses"
             description="Identify patients receiving repeated courses of oral corticosteroids."
             bullets={[
-              'More than X distinct OCS treatment courses during the measurement period',
+              'More than X distinct OCS treatment courses during the look forward period',
               'A new treatment course is defined by a gap of ≥ Y days between prescriptions',
             ]}
             ruleType="Treatment Pattern"

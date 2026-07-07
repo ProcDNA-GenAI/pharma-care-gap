@@ -376,13 +376,13 @@ export function InsightsClient() {
                     caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
                     variant="purple" icon={<BarChart2 className="h-4 w-4" />} />
                   <KpiCard title="Chronic OCS Exposure" value={kpis.chronicOcs}
-                    caption=">90 cumulative OCS days within measurement period" badge={`${kpis.chronicOcsRate}%`}
+                    caption=">90 cumulative OCS days within look forward period" badge={`${kpis.chronicOcsRate}%`}
                     variant="green" icon={<Clock className="h-4 w-4" />} />
                   <KpiCard title="High-Dose OCS Exposure" value={kpis.highDose}
                     caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
                     variant="orange" icon={<FlaskConical className="h-4 w-4" />} />
                   <KpiCard title="Recurrent OCS Courses" value={kpis.repeatCourse}
-                    caption="≥2 distinct OCS courses within the measurement period" badge={`${kpis.repeatCourseRate}%`}
+                    caption="≥2 distinct OCS courses within the look forward period" badge={`${kpis.repeatCourseRate}%`}
                     variant="blue" icon={<Repeat2 className="h-4 w-4" />} />
                 </div>
               </div>

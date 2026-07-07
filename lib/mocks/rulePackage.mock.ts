@@ -12,7 +12,7 @@ export const MOCK_RULE_PACKAGE: RulePackage = {
 
   // ── M1: IBD Cohort Identification (Denominator) ──────────────────────────
   clinicalSummary: {
-    text: 'Patients with ≥ 2 medical claims with K50.x or K51.x (ICD-10 code), ≥30 days apart, within measurement period.',
+    text: 'Patients with ≥ 2 medical claims with K50.x or K51.x (ICD-10 code), ≥30 days apart, within look forward period.',
     sources: [
       'AbbVie Medical Affairs — Care Gap Analytics Platform SOP',
       'ACG Clinical Guideline: Ulcerative Colitis in Adults (2024)',

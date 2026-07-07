@@ -53,8 +53,8 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
 
       <ConfigCard title="Patient Cohort Definition">
         <ParameterField
-          label="Measurement Period"
-          tooltip="Rolling measurement period for OCS accumulation"
+          label="Look Forward Period"
+          tooltip="Rolling look forward period for OCS accumulation"
           value={parameters.measurementMonths}
           onChange={(v) => onParameterChange('measurementMonths', v)}
           options={MEASUREMENT_OPTIONS}

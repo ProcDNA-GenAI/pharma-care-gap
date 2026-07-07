@@ -11,10 +11,12 @@ interface MetricRecommendationCardProps {
   description: string
   bullets:     string[]
   ruleType:    string
+  sourceHref?: string
+  sourceLabel?: string
 }
 
 export function MetricRecommendationCard({
-  icon: Icon, accent, title, description, bullets, ruleType,
+  icon: Icon, accent, title, description, bullets, ruleType, sourceHref, sourceLabel = 'Evidence Source',
 }: MetricRecommendationCardProps) {
   const styles = ACCENT_STYLES[accent]
 
@@ -29,7 +31,20 @@ export function MetricRecommendationCard({
             </div>
             <h4 className="text-xl font-semibold text-[#1D3F8F]">{title}</h4>
           </div>
-          <RuleTypeTag accent={accent} value={ruleType} />
+          <div className="flex shrink-0 flex-col gap-2">
+            <RuleTypeTag accent={accent} value={ruleType} />
+            {sourceHref && (
+              <a
+                href={sourceHref}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-40 flex-col items-start rounded-lg bg-gray-100 px-4 py-2 text-left transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+                aria-label={`${sourceLabel} link`}
+              >
+                <span className="text-[9px] font-bold uppercase tracking-wide text-[#6B7280]">{sourceLabel}</span>
+              </a>
+            )}
+          </div>
         </div>
 
         <p className="mb-2 text-sm leading-relaxed text-[#4B5563]">{description}</p>

@@ -1,11 +1,18 @@
 'use client'
 
-import { useState, useRef, DragEvent, ReactNode } from 'react'
+import { useState, useRef, type DragEvent, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  UploadCloud, FileText, Link2, Plus, X,
-  Stethoscope, FileSpreadsheet, BookOpen, LayoutGrid,
-  LucideIcon,
+  UploadCloud,
+  FileText,
+  Link2,
+  Plus,
+  X,
+  Stethoscope,
+  FileSpreadsheet,
+  BookOpen,
+  LayoutGrid,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { ProcessingLoader } from './CareGapUploadClient'
@@ -15,44 +22,35 @@ import { SectionModal } from './SectionModal'
 import { GenerateButton } from './GenerateButton'
 
 const TARGET_ID = 'ibd-biologic-initiation'
-
 const CLINICAL_EXTS = ['.pdf', '.docx', '.doc', '.ppt', '.pptx', '.txt']
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface FormData {
-  marketDefinition:   string
-  clinicalFile:       File | null
+  marketDefinition: string
+  clinicalFile: File | null
   careGapDescription: string
-  referenceLinks:     string[]
-  outputGranularity:  string
+  referenceLinks: string[]
+  outputGranularity: string
 }
 
 type SetFn = <K extends keyof FormData>(key: K, value: FormData[K]) => void
 
 const INITIAL: FormData = {
-  marketDefinition:   '',
-  clinicalFile:       null,
+  marketDefinition: '',
+  clinicalFile: null,
   careGapDescription: '',
-  referenceLinks:     [''],
-  outputGranularity:  '',
+  referenceLinks: [],
+  outputGranularity: '',
 }
 
-export interface AnalysisWizardProps {
-  onSubmit?: (data: FormData) => void
-}
-
-// ── Section registry ──────────────────────────────────────────────────────────
-
-type SectionId = 'clinical' | 'market' | 'evidence' | 'output'
+type SectionId = 'clinical' | 'market' | 'output' | 'evidence'
 
 interface SectionDef {
-  id:          SectionId
-  icon:        LucideIcon
-  title:       string
+  id: SectionId
+  icon: LucideIcon
+  title: string
   description: string
-  required:    boolean
-  isComplete:  (fd: FormData, urlErrors: string[]) => boolean
+  required: boolean
+  isComplete: (fd: FormData) => boolean
 }
 
 const SECTIONS: SectionDef[] = [
@@ -73,15 +71,6 @@ const SECTIONS: SectionDef[] = [
     isComplete: (fd) => !!fd.marketDefinition.trim(),
   },
   {
-    id: 'evidence',
-    icon: BookOpen,
-    title: 'Evidence Sources',
-    description: 'Attach one or more guideline reference links',
-    required: false,
-    isComplete: (fd, urlErrors) =>
-      fd.referenceLinks.some((link) => link.trim() !== '') && !urlErrors.some(Boolean),
-  },
-  {
     id: 'output',
     icon: LayoutGrid,
     title: 'Output Granularity',
@@ -91,24 +80,53 @@ const SECTIONS: SectionDef[] = [
   },
 ]
 
-// ── Shared styles ─────────────────────────────────────────────────────────────
+const EVIDENCE_SECTION: SectionDef = {
+  id: 'evidence',
+  icon: BookOpen,
+  title: 'Evidence Sources',
+  description: 'Attach one or more guideline reference links',
+  required: false,
+  isComplete: () => false,
+}
+
+const EVIDENCE_LINK_SUGGESTIONS = [
+  {
+    label: 'ACG Clinical Guideline: Ulcerative Colitis in Adults',
+    url: 'https://guidelines.example.com/acg-ulcerative-colitis-2024',
+  },
+  {
+    label: "ACG Clinical Guideline: Crohn's Disease in Adults",
+    url: 'https://guidelines.example.com/acg-crohns-disease-2024',
+  },
+  {
+    label: 'AGA Care Gap Evidence Summary',
+    url: 'https://guidelines.example.com/aga-care-gap-evidence-summary',
+  },
+  {
+    label: 'EULAR / ECCO Evidence Review Digest',
+    url: 'https://guidelines.example.com/ecco-evidence-review-digest',
+  },
+] as const
 
 const TEXTAREA_CLS =
   'w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-sm text-gray-900 ' +
   'placeholder:text-gray-400 focus:border-[#004FBA] focus:bg-white focus:outline-none ' +
   'focus:ring-2 focus:ring-[#004FBA]/15 resize-none'
 
-// ── File drop zone ────────────────────────────────────────────────────────────
-
 function FileDropZone({
-  inputId, file, onFile, onClear, acceptedExts, ariaLabel,
+  inputId,
+  file,
+  onFile,
+  onClear,
+  acceptedExts,
+  ariaLabel,
 }: {
-  inputId:      string
-  file:         File | null
-  onFile:       (f: File) => void
-  onClear:      () => void
+  inputId: string
+  file: File | null
+  onFile: (f: File) => void
+  onClear: () => void
   acceptedExts: string[]
-  ariaLabel:    string
+  ariaLabel: string
 }) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -132,13 +150,13 @@ function FileDropZone({
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-gray-800">{file.name}</p>
           <p className="text-xs text-gray-400">
-            {(file.size / 1024).toFixed(0)} KB · {file.name.split('.').pop()?.toUpperCase()}
+            {(file.size / 1024).toFixed(0)} KB - {file.name.split('.').pop()?.toUpperCase()}
           </p>
         </div>
         <button
           type="button"
           onClick={onClear}
-          className="shrink-0 text-xs font-medium text-[#004FBA] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] rounded"
+          className="shrink-0 rounded text-xs font-medium text-[#004FBA] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA]"
         >
           Change
         </button>
@@ -151,8 +169,13 @@ function FileDropZone({
       role="button"
       tabIndex={0}
       aria-label={ariaLabel}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
-      onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
+      }}
+      onDragOver={(e) => {
+        e.preventDefault()
+        setDragging(true)
+      }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
@@ -164,10 +187,12 @@ function FileDropZone({
           : 'border-gray-200 bg-gray-50 hover:border-[#004FBA]/40 hover:bg-[#004FBA]/[0.02]',
       )}
     >
-      <div className={cn(
-        'flex h-12 w-12 items-center justify-center rounded-full border-2 mb-3 transition-colors',
-        dragging ? 'border-[#004FBA]/30 bg-[#004FBA]/10' : 'border-gray-200 bg-white',
-      )}>
+      <div
+        className={cn(
+          'mb-3 flex h-12 w-12 items-center justify-center rounded-full border-2 transition-colors',
+          dragging ? 'border-[#004FBA]/30 bg-[#004FBA]/10' : 'border-gray-200 bg-white',
+        )}
+      >
         <UploadCloud
           className={cn('h-6 w-6 transition-colors', dragging ? 'text-[#004FBA]' : 'text-gray-400')}
           aria-hidden="true"
@@ -180,7 +205,7 @@ function FileDropZone({
         {acceptedExts.map((ext) => (
           <span
             key={ext}
-            className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-gray-500 tracking-wide"
+            className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500"
           >
             {ext.replace('.', '').toUpperCase()}
           </span>
@@ -192,13 +217,14 @@ function FileDropZone({
         type="file"
         accept={acceptedExts.join(',')}
         className="sr-only"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) pick(f) }}
+        onChange={(e) => {
+          const f = e.target.files?.[0]
+          if (f) pick(f)
+        }}
       />
     </div>
   )
 }
-
-// ── Section content — Dataset schema / market definitions ────────────────────
 
 function StepMarket({ fd, set }: { fd: FormData; set: SetFn }) {
   return (
@@ -212,16 +238,14 @@ function StepMarket({ fd, set }: { fd: FormData; set: SetFn }) {
         value={fd.marketDefinition}
         onChange={(e) => set('marketDefinition', e.target.value)}
         placeholder={
-          'Enter ICD codes, NDC codes, diagnosis criteria, drug classes, or any market definition…\n\n' +
-          'e.g.\n• K50.x, K51.x — Crohn\'s disease / Ulcerative colitis\n• Prednisone NDC list\n• Biologics: adalimumab, vedolizumab, ustekinumab'
+          'Enter ICD codes, NDC codes, diagnosis criteria, drug classes, or any market definition...\n\n' +
+          'e.g.\n- K50.x, K51.x - Crohn\'s disease / Ulcerative colitis\n- Prednisone NDC list\n- Biologics: adalimumab, vedolizumab, ustekinumab'
         }
         className={TEXTAREA_CLS}
       />
     </div>
   )
 }
-
-// ── Section content — Clinical context ────────────────────────────────────────
 
 function StepClinical({ fd, set }: { fd: FormData; set: SetFn }) {
   return (
@@ -248,7 +272,7 @@ function StepClinical({ fd, set }: { fd: FormData; set: SetFn }) {
           rows={4}
           value={fd.careGapDescription}
           onChange={(e) => set('careGapDescription', e.target.value)}
-          placeholder="Describe the clinical problem, patient population, and the gap in care you want to address…"
+          placeholder="Describe the clinical problem, patient population, and the gap in care you want to address..."
           className={TEXTAREA_CLS}
         />
       </div>
@@ -256,76 +280,114 @@ function StepClinical({ fd, set }: { fd: FormData; set: SetFn }) {
   )
 }
 
-// ── Section content — Evidence sources ────────────────────────────────────────
-
 function StepEvidence({
-  fd, urlErrors, updateLink, addLink, removeLink,
+  fd, customLinks, urlErrors, onToggleLink, onUpdateCustomLink, onAddCustomLink, onRemoveCustomLink, onGenerate,
 }: {
-  fd:          FormData
-  urlErrors:   string[]
-  updateLink:  (index: number, value: string) => void
-  addLink:     () => void
-  removeLink:  (index: number) => void
+  fd: FormData
+  customLinks: string[]
+  urlErrors: string[]
+  onToggleLink: (url: string) => void
+  onUpdateCustomLink: (index: number, value: string) => void
+  onAddCustomLink: () => void
+  onRemoveCustomLink: (index: number) => void
+  onGenerate: () => void
 }) {
   return (
-    <div>
-      <label className="mb-1.5 block text-xs font-medium text-gray-600">
-        Reference Links <span className="font-normal text-gray-400">(optional)</span>
-      </label>
+    <div className="space-y-5">
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-gray-600">
+          Suggested Evidence Sources <span className="font-normal text-gray-400">(selected by default)</span>
+        </label>
 
-      <div className="space-y-2">
-        {fd.referenceLinks.map((link, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Link2
-                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-                aria-hidden="true"
-              />
-              <input
-                type="url"
-                value={link}
-                onChange={(e) => updateLink(index, e.target.value)}
-                placeholder="https://guidelines.org/…"
-                className={cn(
-                  'h-11 w-full rounded-xl border bg-gray-50 pl-10 pr-4 text-sm text-gray-900',
-                  'placeholder:text-gray-400 transition focus:bg-white focus:outline-none focus:ring-2',
-                  urlErrors[index]
-                    ? 'border-red-300 focus:border-red-400 focus:ring-red-400/20'
-                    : 'border-gray-200 focus:border-[#004FBA] focus:ring-[#004FBA]/15',
-                )}
-              />
-            </div>
-            {fd.referenceLinks.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeLink(index)}
-                aria-label="Remove link"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA]"
+        <div className="space-y-3">
+          {EVIDENCE_LINK_SUGGESTIONS.map((item) => {
+            const checked = fd.referenceLinks.includes(item.url)
+
+            return (
+              <label
+                key={item.url}
+                className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:border-[#004FBA]/30 hover:bg-[#004FBA]/[0.02]"
               >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        ))}
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => onToggleLink(item.url)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-[#004FBA] focus:ring-[#004FBA]"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{item.label}</p>
+                  <p className="mt-0.5 break-all text-xs text-gray-400">{item.url}</p>
+                </div>
+              </label>
+            )
+          })}
+        </div>
       </div>
 
-      {urlErrors.some(Boolean) && (
-        <p className="mt-1.5 text-xs text-red-500">Please enter valid URLs (e.g. https://…)</p>
-      )}
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-gray-600">
+          Reference Links <span className="font-normal text-gray-400">(optional)</span>
+        </label>
 
-      <button
-        type="button"
-        onClick={addLink}
-        className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#004FBA] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] rounded"
-      >
-        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-        Add another link
-      </button>
+        <div className="space-y-2">
+          {customLinks.map((link, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Link2
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                  aria-hidden="true"
+                />
+                <input
+                  type="url"
+                  value={link}
+                  onChange={(e) => onUpdateCustomLink(index, e.target.value)}
+                  placeholder="https://guidelines.org/..."
+                  className={cn(
+                    'h-11 w-full rounded-xl border bg-gray-50 pl-10 pr-4 text-sm text-gray-900',
+                    'placeholder:text-gray-400 transition focus:bg-white focus:outline-none focus:ring-2',
+                    urlErrors[index]
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-400/20'
+                      : 'border-gray-200 focus:border-[#004FBA] focus:ring-[#004FBA]/15',
+                  )}
+                />
+              </div>
+              {customLinks.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => onRemoveCustomLink(index)}
+                  aria-label="Remove link"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA]"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {urlErrors.some(Boolean) && (
+          <p className="mt-1.5 text-xs text-red-500">Please enter valid URLs (e.g. https://...)</p>
+        )}
+
+        <button
+          type="button"
+          onClick={onAddCustomLink}
+          className="mt-3 inline-flex items-center gap-1.5 rounded text-xs font-semibold text-[#004FBA] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA]"
+        >
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          Add another link
+        </button>
+      </div>
+
+      <GenerateButton
+        label="Generate Recommended Metrics & Business Rules for Care Gap Quantification"
+        sticky={false}
+        onClick={onGenerate}
+        disabled={false}
+      />
     </div>
   )
 }
-
-// ── Section content — Output granularity ──────────────────────────────────────
 
 function StepOutput({ fd, set }: { fd: FormData; set: SetFn }) {
   return (
@@ -339,8 +401,8 @@ function StepOutput({ fd, set }: { fd: FormData; set: SetFn }) {
         value={fd.outputGranularity}
         onChange={(e) => set('outputGranularity', e.target.value)}
         placeholder={
-          'Describe how you want results grouped…\n\n' +
-          'e.g.\n• HCP-level (by NPI)\n• Account-level\n• Territory / geography\n• Payer\n• Age band\n• Custom segmentation'
+          'Describe how you want results grouped...\n\n' +
+          'e.g.\n- HCP-level (by NPI)\n- Account-level\n- Territory / geography\n- Payer\n- Age band\n- Custom segmentation'
         }
         className={TEXTAREA_CLS}
       />
@@ -348,55 +410,80 @@ function StepOutput({ fd, set }: { fd: FormData; set: SetFn }) {
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-
-export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
+export function AnalysisWizard() {
   const router = useRouter()
   const [fd, setFd] = useState<FormData>(INITIAL)
-  const [generating, setGenerating] = useState(false)
+  const [customLinks, setCustomLinks] = useState<string[]>([''])
   const [urlErrors, setUrlErrors] = useState<string[]>([''])
+  const [generating, setGenerating] = useState(false)
   const [activeSection, setActiveSection] = useState<SectionId | null>(null)
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setFd((prev) => ({ ...prev, [key]: value }))
   }
 
+  function toggleEvidenceLink(url: string) {
+    setFd((prev) => {
+      const exists = prev.referenceLinks.includes(url)
+      return {
+        ...prev,
+        referenceLinks: exists
+          ? prev.referenceLinks.filter((link) => link !== url)
+          : [...prev.referenceLinks, url],
+      }
+    })
+  }
+
   function validateLink(index: number, val: string) {
     setUrlErrors((prev) => {
       const next = [...prev]
-      if (!val.trim()) { next[index] = ''; return next }
-      try { new URL(val.trim()); next[index] = '' }
-      catch { next[index] = 'Please enter a valid URL (e.g. https://…)' }
+      if (!val.trim()) {
+        next[index] = ''
+        return next
+      }
+      try {
+        new URL(val.trim())
+        next[index] = ''
+      } catch {
+        next[index] = 'Please enter a valid URL (e.g. https://...)'
+      }
       return next
     })
   }
 
-  function updateLink(index: number, value: string) {
-    setFd((prev) => {
-      const next = [...prev.referenceLinks]
+  function updateCustomLink(index: number, value: string) {
+    setCustomLinks((prev) => {
+      const next = [...prev]
       next[index] = value
-      return { ...prev, referenceLinks: next }
+      return next
     })
     validateLink(index, value)
   }
 
-  function addLink() {
-    setFd((prev) => ({ ...prev, referenceLinks: [...prev.referenceLinks, ''] }))
+  function addCustomLink() {
+    setCustomLinks((prev) => [...prev, ''])
     setUrlErrors((prev) => [...prev, ''])
   }
 
-  function removeLink(index: number) {
-    setFd((prev) => ({ ...prev, referenceLinks: prev.referenceLinks.filter((_, i) => i !== index) }))
+  function removeCustomLink(index: number) {
+    setCustomLinks((prev) => prev.filter((_, i) => i !== index))
     setUrlErrors((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const completion = SECTIONS.map((s) => s.isComplete(fd, urlErrors))
+  const completion = SECTIONS.map((section) => section.isComplete(fd))
   const completedCount = completion.filter(Boolean).length
+  const isGenerateDisabled = completion.some((done) => !done)
 
-  const isSubmitDisabled = SECTIONS.some((s, i) => s.required && !completion[i])
+  function handleOpenEvidenceSources() {
+    setFd((prev) => (
+      prev.referenceLinks.length > 0
+        ? prev
+        : { ...prev, referenceLinks: EVIDENCE_LINK_SUGGESTIONS.map((item) => item.url) }
+    ))
+    setActiveSection('evidence')
+  }
 
-  async function handleSubmit() {
-    onSubmit?.(fd)
+  async function handleGenerateMetricsAndRules() {
     setGenerating(true)
     await new Promise((r) => setTimeout(r, 9600))
     router.push(`/care-gaps/${TARGET_ID}`)
@@ -406,42 +493,46 @@ export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
     return <ProcessingLoader />
   }
 
-  const activeDef = SECTIONS.find((s) => s.id === activeSection) ?? null
+  const activeDef = activeSection === 'evidence'
+    ? EVIDENCE_SECTION
+    : SECTIONS.find((s) => s.id === activeSection) ?? null
 
   function renderSectionContent(id: SectionId): ReactNode {
     switch (id) {
-      case 'clinical': return <StepClinical fd={fd} set={set} />
-      case 'market':   return <StepMarket fd={fd} set={set} />
+      case 'clinical':
+        return <StepClinical fd={fd} set={set} />
+      case 'market':
+        return <StepMarket fd={fd} set={set} />
+      case 'output':
+        return <StepOutput fd={fd} set={set} />
       case 'evidence':
         return (
           <StepEvidence
             fd={fd}
+            customLinks={customLinks}
             urlErrors={urlErrors}
-            updateLink={updateLink}
-            addLink={addLink}
-            removeLink={removeLink}
+            onToggleLink={toggleEvidenceLink}
+            onUpdateCustomLink={updateCustomLink}
+            onAddCustomLink={addCustomLink}
+            onRemoveCustomLink={removeCustomLink}
+            onGenerate={handleGenerateMetricsAndRules}
           />
         )
-      case 'output': return <StepOutput fd={fd} set={set} />
+      default:
+        return null
     }
   }
 
   return (
     <div className="w-full max-w-3xl">
       <div className="mb-7 text-center">
-        {/* <div className="mb-2 flex items-center justify-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-            New Analysis
-          </span>
-        </div> */}
         <h1 className="text-xl font-bold text-gray-900">Care Gap Context and Input</h1>
-        <p className="mt-1 text-sm text-gray-400">Configure each section, then generate your rules</p>
+        <p className="mt-1 text-sm text-gray-400">Configure each section, then generate recommended evidence sources</p>
       </div>
 
       <ProgressHeader completed={completedCount} total={SECTIONS.length} />
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {SECTIONS.map((section, i) => (
           <ConfigurationCard
             key={section.id}
@@ -456,7 +547,7 @@ export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
       </div>
 
       <div className="mt-7">
-        <GenerateButton disabled={isSubmitDisabled} onClick={handleSubmit} />
+        <GenerateButton disabled={isGenerateDisabled} onClick={handleOpenEvidenceSources} />
       </div>
 
       {activeDef && (
@@ -467,6 +558,8 @@ export function AnalysisWizard({ onSubmit }: AnalysisWizardProps) {
           subtitle={activeDef.description}
           onClose={() => setActiveSection(null)}
           onSave={() => setActiveSection(null)}
+          showSave={activeDef.id !== 'evidence'}
+          widthClassName={activeDef.id === 'evidence' ? 'max-w-2xl' : 'max-w-lg'}
         >
           {renderSectionContent(activeDef.id)}
         </SectionModal>

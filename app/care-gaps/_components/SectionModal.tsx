@@ -12,11 +12,13 @@ export interface SectionModalProps {
   onClose: () => void
   onSave: () => void
   saveDisabled?: boolean
+  showSave?: boolean
+  widthClassName?: string
   children: ReactNode
 }
 
 export function SectionModal({
-  open, icon: Icon, title, subtitle, onClose, onSave, saveDisabled, children,
+  open, icon: Icon, title, subtitle, onClose, onSave, saveDisabled, showSave = true, widthClassName = 'max-w-lg', children,
 }: SectionModalProps) {
   useEffect(() => {
     if (!open) return
@@ -34,7 +36,7 @@ export function SectionModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className={`relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${widthClassName}`}>
 
         {/* Header */}
         <div className="flex items-start gap-3 border-b border-gray-100 px-7 pt-6 pb-5">
@@ -69,19 +71,21 @@ export function SectionModal({
           >
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={onSave}
-            disabled={saveDisabled}
-            className={cn(
-              'rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-all',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] focus-visible:ring-offset-2',
-              saveDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90 active:scale-[0.98]',
-            )}
-            style={{ backgroundColor: '#004FBA' }}
-          >
-            Save
-          </button>
+          {showSave && (
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={saveDisabled}
+              className={cn(
+                'rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-all',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004FBA] focus-visible:ring-offset-2',
+                saveDisabled ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90 active:scale-[0.98]',
+              )}
+              style={{ backgroundColor: '#004FBA' }}
+            >
+              Save
+            </button>
+          )}
         </div>
       </div>
     </div>

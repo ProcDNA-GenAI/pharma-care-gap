@@ -84,7 +84,7 @@ export function ConfigurableParametersPanel({
             <div className="divide-y divide-gray-100">
               <ParameterField
                 label="Measurement Window"
-                tooltip="Rolling measurement period for OCS accumulation"
+                tooltip="Rolling look forward period for OCS accumulation"
                 value={parameters.measurementMonths}
                 onChange={(v) => onParameterChange('measurementMonths', v)}
                 options={MEASUREMENT_OPTIONS}

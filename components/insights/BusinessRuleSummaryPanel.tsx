@@ -59,7 +59,7 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
         <Group title="IBD Cohort Definition">
           {editing ? (
             <>
-              <ParameterField label="Measurement Period" tooltip="Rolling measurement period for OCS accumulation"
+              <ParameterField label="Look Forward Period" tooltip="Rolling look forward period for OCS accumulation"
                 value={parameters.measurementMonths} onChange={(v) => onParameterChange('measurementMonths', v)}
                 options={MEASUREMENT_OPTIONS} unit="months" />
               <ParameterField label="Minimum IBD Diagnosis Claims" tooltip="Minimum number of IBD diagnosis claims required to confirm cohort membership"
@@ -71,7 +71,7 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
             </>
           ) : (
             <>
-              <ReadRow label="Measurement Period" value={`${parameters.measurementMonths} months`} />
+              <ReadRow label="Look Forward Period" value={`${parameters.measurementMonths} months`} />
               <ReadRow label="Minimum IBD Diagnosis Claims" value={String(parameters.ibdMinClaims)} />
               <ReadRow label="Minimum Days Between IBD Diagnosis Claims" value={`${parameters.ibdGapDays} days`} />
             </>
