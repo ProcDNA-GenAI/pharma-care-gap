@@ -7,7 +7,7 @@ interface BusinessRulesSectionProps {
   parameters: ParameterValues
 }
 
-export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProps) {
+export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) {
   return (
     <div className="space-y-6">
 
@@ -23,9 +23,9 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
           title="IBD Patient Cohort Definition"
           description="Patients are eligible for care gap analysis if they:"
           items={[
-            'Have ≥ X medical claims with an IBD diagnosis (ICD-10 K50.x or K51.x)',
-            'Have a minimum of Y days between the first and last IBD diagnosis claim',
-            'Are identified within the selected look forward period',
+            <>Have ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.ibdMinClaims}</strong> medical claims with an IBD diagnosis (ICD-10 K50.x or K51.x)</>,
+            <>Have a minimum of <strong className="font-semibold text-[#1D3F8F]">{parameters.ibdGapDays}</strong> days between the first and last IBD diagnosis claim</>,
+            <>Are identified within the selected <strong className="font-semibold text-[#1D3F8F]">{parameters.measurementMonths}</strong>-month look forward period</>,
           ]}
         />
       </section>
@@ -44,7 +44,7 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
             title="Chronic Oral Corticosteroid Use"
             description="Identify patients with prolonged exposure to oral corticosteroids."
             bullets={[
-              'Total cumulative OCS exposure ≥ X days during the look forward period',
+              <>Total cumulative OCS exposure ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.ocsDurationThreshold}</strong> days during the look forward period</>,
             ]}
             ruleType="Duration-Based"
             sourceHref="https://guidelines.example.com/chronic-ocs-use-source"
@@ -55,8 +55,8 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
             title="High-Dose Oral Corticosteroid Exposure"
             description="Identify patients with sustained exposure to high-dose oral corticosteroids."
             bullets={[
-              'Prednisone-equivalent dose ≥ X mg/day for ≥ Y consecutive days OR',
-              'Total cumulative prednisone-equivalent dose ≥ Z mg',
+              <>Prednisone-equivalent dose ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.highDoseMg}</strong> mg/day for ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.highDoseDurationDays}</strong> consecutive days OR</>,
+              <>Total cumulative prednisone-equivalent dose ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.highDoseCumulativeMg}</strong> mg</>,
             ]}
             ruleType="Dose-Based"
             sourceHref="https://guidelines.example.com/high-dose-ocs-source"
@@ -67,8 +67,8 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
             title="Recurrent Oral Corticosteroid Courses"
             description="Identify patients receiving repeated courses of oral corticosteroids."
             bullets={[
-              'More than X distinct OCS treatment courses during the look forward period',
-              'A new treatment course is defined by a gap of ≥ Y days between prescriptions',
+              'More than 1 distinct OCS treatment course during the look forward period',
+              <>A new treatment course is defined by a gap of ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.courseGapDays}</strong> days between prescriptions</>,
             ]}
             ruleType="Treatment Pattern"
             sourceHref="https://guidelines.example.com/recurrent-ocs-source"

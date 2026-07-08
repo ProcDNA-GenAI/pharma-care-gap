@@ -9,7 +9,7 @@ interface MetricRecommendationCardProps {
   accent:      MetricAccent
   title:       string
   description: string
-  bullets:     string[]
+  bullets:     React.ReactNode[]
   ruleType:    string
   sourceHref?: string
   sourceLabel?: string

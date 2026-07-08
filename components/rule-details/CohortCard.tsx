@@ -6,7 +6,7 @@ interface CohortCardProps {
   icon: LucideIcon
   title: string
   description: string
-  items: string[]
+  items: React.ReactNode[]
   badgeLabel?: string
   badgeValue?: string
   accent?: MetricAccent
