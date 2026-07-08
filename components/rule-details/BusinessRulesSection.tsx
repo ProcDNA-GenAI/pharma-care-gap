@@ -48,7 +48,6 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
             ]}
             ruleType="Duration-Based"
             sourceHref="https://guidelines.example.com/chronic-ocs-use-source"
-            sourceLabel="Source"
           />
           <MetricRecommendationCard
             icon={BarChart2}
@@ -60,6 +59,7 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
               'Total cumulative prednisone-equivalent dose ≥ Z mg',
             ]}
             ruleType="Dose-Based"
+            sourceHref="https://guidelines.example.com/high-dose-ocs-source"
           />
           <MetricRecommendationCard
             icon={RefreshCw}
@@ -71,6 +71,7 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
               'A new treatment course is defined by a gap of ≥ Y days between prescriptions',
             ]}
             ruleType="Treatment Pattern"
+            sourceHref="https://guidelines.example.com/recurrent-ocs-source"
           />
           <MetricRecommendationCard
             icon={Puzzle}
@@ -83,6 +84,7 @@ export function BusinessRulesSection({ parameters: _ }: BusinessRulesSectionProp
               'Meets all care gap criteria',
             ]}
             ruleType="Composite Assessment"
+            sourceHref="https://guidelines.example.com/composite-ocs-source"
           />
         </div>
       </section>

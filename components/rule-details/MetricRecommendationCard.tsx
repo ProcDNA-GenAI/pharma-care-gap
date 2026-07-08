@@ -16,7 +16,7 @@ interface MetricRecommendationCardProps {
 }
 
 export function MetricRecommendationCard({
-  icon: Icon, accent, title, description, bullets, ruleType, sourceHref, sourceLabel = 'Evidence Source',
+  icon: Icon, accent, title, description, bullets, ruleType, sourceHref, sourceLabel = 'Source',
 }: MetricRecommendationCardProps) {
   const styles = ACCENT_STYLES[accent]
 
