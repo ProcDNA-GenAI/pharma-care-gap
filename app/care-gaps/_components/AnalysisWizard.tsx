@@ -91,20 +91,24 @@ const EVIDENCE_SECTION: SectionDef = {
 
 const EVIDENCE_LINK_SUGGESTIONS = [
   {
-    label: 'ACG Clinical Guideline: Ulcerative Colitis in Adults',
-    url: 'https://guidelines.example.com/acg-ulcerative-colitis-2024',
+    label: 'Govani et al. (PMID: 26521118)',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/26521118/',
   },
   {
-    label: "ACG Clinical Guideline: Crohn's Disease in Adults",
-    url: 'https://guidelines.example.com/acg-crohns-disease-2024',
+    label: 'Zhdanova et al.',
+    url: 'https://www.jmcp.org/',
   },
   {
-    label: 'AGA Care Gap Evidence Summary',
-    url: 'https://guidelines.example.com/aga-care-gap-evidence-summary',
+    label: 'AGA / CMS MIPS Quality ID #271',
+    url: 'https://mdinteractive.com/mips_quality_measure/2025-mips-quality-measure-271',
   },
   {
-    label: 'EULAR / ECCO Evidence Review Digest',
-    url: 'https://guidelines.example.com/ecco-evidence-review-digest',
+    label: 'DICE Study Methodology',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11084465/',
+  },
+  {
+    label: 'Damasceno et al.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/41825519/',
   },
 ] as const
 

@@ -22,6 +22,8 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
           icon={Users}
           title="IBD Patient Cohort Definition"
           description="Patients are eligible for care gap analysis if they:"
+          sourceLabel="Govani et al."
+          sourceUrl="https://pubmed.ncbi.nlm.nih.gov/26521118/"
           items={[
             <>Have ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.ibdMinClaims}</strong> medical claims with an IBD diagnosis (ICD-10 K50.x or K51.x)</>,
             <>Have a minimum of <strong className="font-semibold text-[#1D3F8F]">{parameters.ibdGapDays}</strong> days between the first and last IBD diagnosis claim</>,
@@ -47,7 +49,8 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
               <>Total cumulative OCS exposure ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.ocsDurationThreshold}</strong> days during the look forward period</>,
             ]}
             ruleType="Duration-Based"
-            sourceHref="https://guidelines.example.com/chronic-ocs-use-source"
+            sources={['Zhdanova et al.']}
+            sourceUrl="https://www.jmcp.org/"
           />
           <MetricRecommendationCard
             icon={BarChart2}
@@ -59,7 +62,8 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
               <>Total cumulative prednisone-equivalent dose ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.highDoseCumulativeMg}</strong> mg</>,
             ]}
             ruleType="Dose-Based"
-            sourceHref="https://guidelines.example.com/high-dose-ocs-source"
+            sources={['AGA / CMS MIPS Quality ID #271']}
+            sourceUrl="https://mdinteractive.com/mips_quality_measure/2025-mips-quality-measure-271"
           />
           <MetricRecommendationCard
             icon={RefreshCw}
@@ -71,7 +75,8 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
               <>A new treatment course is defined by a gap of ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.courseGapDays}</strong> days between prescriptions</>,
             ]}
             ruleType="Treatment Pattern"
-            sourceHref="https://guidelines.example.com/recurrent-ocs-source"
+            sources={['DICE Study Methodology']}
+            sourceUrl="https://pmc.ncbi.nlm.nih.gov/articles/PMC11084465/"
           />
           <MetricRecommendationCard
             icon={Puzzle}
@@ -84,7 +89,8 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
               'Meets all care gap criteria',
             ]}
             ruleType="Composite Assessment"
-            sourceHref="https://guidelines.example.com/composite-ocs-source"
+            sources={['Damasceno et al.']}
+            sourceUrl="https://pubmed.ncbi.nlm.nih.gov/41825519/"
           />
         </div>
       </section>
