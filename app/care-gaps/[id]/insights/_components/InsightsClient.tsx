@@ -65,9 +65,9 @@ function withTotalRate(totalPatients: number, overusers: number): (string | numb
   return ['Total', totalPatients.toLocaleString(), overusers.toLocaleString(), `${rate}%`]
 }
 
-// ─── Column definitions ───────────────────────────────────────────────────────
+// ─── Column definitions (base — filtered dynamically per enabled metrics) ─────
 
-const HCP_COLUMNS: Column<HcpAgg>[] = [
+const HCP_COLUMNS_BASE: Column<HcpAgg>[] = [
   { key: 'rank',          label: '#',             align: 'center',  render: (_, i) => <span className="text-gray-400">{i + 1}</span> },
   { key: 'name',          label: 'NPI',           sortable: true,   render: (r) => (
     <div>
@@ -85,7 +85,7 @@ const HCP_COLUMNS: Column<HcpAgg>[] = [
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
-const ACCOUNT_COLUMNS: Column<AccountAgg>[] = [
+const ACCOUNT_COLUMNS_BASE: Column<AccountAgg>[] = [
   { key: 'rank',          label: '#',             align: 'center', render: (_, i) => <span className="text-gray-400">{i + 1}</span> },
   { key: 'account',       label: 'Account',       sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.account}</span> },
   { key: 'territory',     label: 'Territory',     sortable: true,  render: (r) => r.territory },
@@ -96,7 +96,7 @@ const ACCOUNT_COLUMNS: Column<AccountAgg>[] = [
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
-const TERRITORY_COLUMNS: Column<TerritoryAgg>[] = [
+const TERRITORY_COLUMNS_BASE: Column<TerritoryAgg>[] = [
   { key: 'rank',          label: '#',            align: 'center', render: (_, i) => <span className="text-gray-400">{i + 1}</span> },
   { key: 'territory',     label: 'Territory',    sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.territory}</span> },
   { key: 'region',        label: 'Region',       sortable: true,  render: (r) => r.region },
@@ -107,7 +107,7 @@ const TERRITORY_COLUMNS: Column<TerritoryAgg>[] = [
   { key: 'risk',          label: 'Risk',         align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
-const DEMOGRAPHIC_COLUMNS: Column<DemographicAgg>[] = [
+const DEMOGRAPHIC_COLUMNS_BASE: Column<DemographicAgg>[] = [
   { key: 'ageBand',       label: 'Age Band',      sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.ageBand}</span> },
   { key: 'gender',        label: 'Gender',        sortable: true,  render: (r) => r.gender },
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
@@ -324,14 +324,55 @@ export function InsightsClient() {
     hcpSegmentRows.reduce((sum, r) => sum + r.patients, 0).toLocaleString(),
   ], [hcpSegmentRows])
 
+  // ── Filtered columns based on enabled metrics ────────────────────────────
+  const { m2Enabled, m3Enabled, m4Enabled, m7Enabled } = parameters
+
+  const hcpColumns = useMemo(() =>
+    HCP_COLUMNS_BASE.filter((col) => {
+      if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk') && !m7Enabled) return false
+      if (col.key === 'chronicOcs'   && !m2Enabled) return false
+      if (col.key === 'highDose'     && !m3Enabled) return false
+      if (col.key === 'repeatCourse' && !m4Enabled) return false
+      return true
+    }),
+    [m2Enabled, m3Enabled, m4Enabled, m7Enabled],
+  )
+
+  const accountColumns = useMemo(() =>
+    ACCOUNT_COLUMNS_BASE.filter((col) => {
+      if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk') && !m7Enabled) return false
+      return true
+    }),
+    [m7Enabled],
+  )
+
+  const territoryColumns = useMemo(() =>
+    TERRITORY_COLUMNS_BASE.filter((col) => {
+      if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk') && !m7Enabled) return false
+      return true
+    }),
+    [m7Enabled],
+  )
+
+  const demographicColumns = useMemo(() =>
+    DEMOGRAPHIC_COLUMNS_BASE.filter((col) => {
+      if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk') && !m7Enabled) return false
+      if (col.key === 'chronicOcs'   && !m2Enabled) return false
+      if (col.key === 'highDose'     && !m3Enabled) return false
+      if (col.key === 'repeatCourse' && !m4Enabled) return false
+      return true
+    }),
+    [m2Enabled, m3Enabled, m4Enabled, m7Enabled],
+  )
+
   // ── Column + rowKey for active tab ────────────────────────────────────────
   type AnyRow = HcpAgg | AccountAgg | TerritoryAgg | DemographicAgg
   const tableProps = useMemo(() => {
-    if (activeTab === 'hcp')         return { columns: HCP_COLUMNS         as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as HcpAgg).npi }
-    if (activeTab === 'account')     return { columns: ACCOUNT_COLUMNS     as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as AccountAgg).account }
-    if (activeTab === 'geography')   return { columns: TERRITORY_COLUMNS   as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as TerritoryAgg).territory }
-    return                                  { columns: DEMOGRAPHIC_COLUMNS as Column<AnyRow>[], rowKey: (r: AnyRow) => `${(r as DemographicAgg).ageBand}-${(r as DemographicAgg).gender}` }
-  }, [activeTab])
+    if (activeTab === 'hcp')         return { columns: hcpColumns         as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as HcpAgg).npi }
+    if (activeTab === 'account')     return { columns: accountColumns     as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as AccountAgg).account }
+    if (activeTab === 'geography')   return { columns: territoryColumns   as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as TerritoryAgg).territory }
+    return                                  { columns: demographicColumns as Column<AnyRow>[], rowKey: (r: AnyRow) => `${(r as DemographicAgg).ageBand}-${(r as DemographicAgg).gender}` }
+  }, [activeTab, hcpColumns, accountColumns, territoryColumns, demographicColumns])
 
   // ─────────────────────────────────────────────────────────────────────────
   const mainContent = (
@@ -356,14 +397,18 @@ export function InsightsClient() {
                 <h2 className="text-base font-bold text-[#1D3F8F]">1. Eligible IBD Patient Cohort</h2>
                 <p className="mt-0.5 text-xs text-[#6B7280]">Patient population that meets the defined IBD cohort criteria.</p>
 
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <KpiCard title="Eligible IBD Cohort" value={kpis.totalPatients}
-                    caption="Patients satisfying cohort definition" badge="100%"
-                    icon={<Users className="h-4 w-4" />} />
-                  <KpiCard title="OCS Users" value={kpis.ocsUse}
-                    caption="Patients with ≥1 OCS claim" badge={`${kpis.ocsUseRate}%`}
-                    icon={<Activity className="h-4 w-4" />} />
-                </div>
+                {parameters.m1Enabled ? (
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <KpiCard title="Eligible IBD Cohort" value={kpis.totalPatients}
+                      caption="Patients satisfying cohort definition" badge="100%"
+                      icon={<Users className="h-4 w-4" />} />
+                    <KpiCard title="OCS Users" value={kpis.ocsUse}
+                      caption="Patients with ≥1 OCS claim" badge={`${kpis.ocsUseRate}%`}
+                      icon={<Activity className="h-4 w-4" />} />
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs italic text-gray-400">IBD Cohort section is disabled.</p>
+                )}
               </div>
 
               {/* Section 2: OCS Overuse Summary — Key Metrics */}
@@ -371,20 +416,35 @@ export function InsightsClient() {
                 <h2 className="text-base font-bold text-[#1D3F8F]">2. OCS Overuse Summary — Key Metrics</h2>
                 <p className="mt-0.5 text-xs text-[#6B7280]">Patients evaluated across clinically relevant indicators of inappropriate or prolonged OCS use.</p>
 
-                <div className="mt-3 grid grid-cols-4 gap-3">
-                  <KpiCard title="Potential OCS Overuse" value={kpis.ocsOveruse}
-                    caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
-                    variant="purple" icon={<BarChart2 className="h-4 w-4" />} />
-                  <KpiCard title="Chronic OCS Exposure" value={kpis.chronicOcs}
-                    caption=">90 cumulative OCS days within look forward period" badge={`${kpis.chronicOcsRate}%`}
-                    variant="green" icon={<Clock className="h-4 w-4" />} />
-                  <KpiCard title="High-Dose OCS Exposure" value={kpis.highDose}
-                    caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
-                    variant="orange" icon={<FlaskConical className="h-4 w-4" />} />
-                  <KpiCard title="Recurrent OCS Courses" value={kpis.repeatCourse}
-                    caption="≥2 distinct OCS courses within the look forward period" badge={`${kpis.repeatCourseRate}%`}
-                    variant="blue" icon={<Repeat2 className="h-4 w-4" />} />
-                </div>
+                {(m2Enabled || m3Enabled || m4Enabled || m7Enabled) ? (
+                  <div
+                    className="mt-3 grid gap-3"
+                    style={{ gridTemplateColumns: `repeat(${[m7Enabled, m2Enabled, m3Enabled, m4Enabled].filter(Boolean).length}, minmax(0, 1fr))` }}
+                  >
+                    {m7Enabled && (
+                      <KpiCard title="Potential OCS Overuse" value={kpis.ocsOveruse}
+                        caption="Patients meeting composite overuse criteria" badge={`${kpis.ocsOveruseRate}%`}
+                        variant="purple" icon={<BarChart2 className="h-4 w-4" />} />
+                    )}
+                    {m2Enabled && (
+                      <KpiCard title="Chronic OCS Exposure" value={kpis.chronicOcs}
+                        caption=">90 cumulative OCS days within look forward period" badge={`${kpis.chronicOcsRate}%`}
+                        variant="green" icon={<Clock className="h-4 w-4" />} />
+                    )}
+                    {m3Enabled && (
+                      <KpiCard title="High-Dose OCS Exposure" value={kpis.highDose}
+                        caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
+                        variant="orange" icon={<FlaskConical className="h-4 w-4" />} />
+                    )}
+                    {m4Enabled && (
+                      <KpiCard title="Recurrent OCS Courses" value={kpis.repeatCourse}
+                        caption="≥2 distinct OCS courses within the look forward period" badge={`${kpis.repeatCourseRate}%`}
+                        variant="blue" icon={<Repeat2 className="h-4 w-4" />} />
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs italic text-gray-400">All OCS metrics are disabled.</p>
+                )}
               </div>
 
             </div>

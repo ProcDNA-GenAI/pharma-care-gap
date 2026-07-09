@@ -38,11 +38,15 @@ export function buildMetricsViewSQL(p: ParameterValues): string[] {
   const rel  = p.relapseWindowMonths
   const ibd  = p.ibdMinClaims
 
-  const m2f = `CASE WHEN Chronic_OCS_Days >= ${ocs}  THEN 1 ELSE 0 END`
-  const m3f = `CASE WHEN High_Dose_Days >= ${hdur} THEN 1 ELSE 0 END`
-  const m4f = `CASE WHEN M4 > 1        THEN 1 ELSE 0 END`
+  const ibdFlag  = p.m1Enabled ? `CASE WHEN IBD_Claims >= ${ibd} THEN 1 ELSE 0 END` : `0`
+  const m2f = p.m2Enabled ? `CASE WHEN Chronic_OCS_Days >= ${ocs}  THEN 1 ELSE 0 END` : `0`
+  const m3f = p.m3Enabled ? `CASE WHEN High_Dose_Days >= ${hdur} THEN 1 ELSE 0 END` : `0`
+  const m4f = p.m4Enabled ? `CASE WHEN M4 > 1        THEN 1 ELSE 0 END` : `0`
   const m5f = `CASE WHEN M5 > ${tap}   THEN 1 ELSE 0 END`
   const m6f = `CASE WHEN M6 > 0 AND M6 <= ${rel} THEN 1 ELSE 0 END`
+  const compositeExpr = p.m7Enabled
+    ? `CASE WHEN ${m2f} = 1 OR ${m3f} = 1 OR ${m4f} = 1 OR ${m5f} = 1 OR ${m6f} = 1 THEN 1 ELSE 0 END`
+    : `0`
 
   return [
     `DROP VIEW IF EXISTS patient_metrics`,
@@ -50,16 +54,13 @@ export function buildMetricsViewSQL(p: ParameterValues): string[] {
       SELECT
         Pat_ID, NPI, Specialty, Account, Territory, Region, Pat_Age, Pat_Gender,
         IBD_Claims, Chronic_OCS_Days, High_Dose_Days, M4, M5, M6, Composite_Overuse,
-        CASE WHEN IBD_Claims >= ${ibd} THEN 1 ELSE 0 END  AS IBD_Claims_flag,
+        ${ibdFlag}  AS IBD_Claims_flag,
         ${m2f} AS Chronic_OCS_Days_flag,
         ${m3f} AS High_Dose_Days_flag,
         ${m4f} AS M4_flag,
         ${m5f} AS M5_flag,
         ${m6f} AS M6_flag,
-        CASE WHEN
-          ${m2f} = 1 OR ${m3f} = 1 OR
-          ${m4f} = 1 OR ${m5f} = 1 OR ${m6f} = 1
-        THEN 1 ELSE 0 END AS Composite_Overuse_flag
+        ${compositeExpr} AS Composite_Overuse_flag
       FROM patient_fact
       WHERE Pat_Age >= 18`,
   ]

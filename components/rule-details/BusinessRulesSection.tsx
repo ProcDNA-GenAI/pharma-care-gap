@@ -24,6 +24,7 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
           description="Patients are eligible for care gap analysis if they:"
           sourceLabel="Govani et al."
           sourceUrl="https://pubmed.ncbi.nlm.nih.gov/26521118/"
+          enabled={parameters.m1Enabled}
           items={[
             <>Have ≥ <strong className="font-semibold text-[#1D3F8F]">{parameters.ibdMinClaims}</strong> medical claims with an IBD diagnosis (ICD-10 K50.x or K51.x)</>,
             <>Have a minimum of <strong className="font-semibold text-[#1D3F8F]">{parameters.ibdGapDays}</strong> days between the first and last IBD diagnosis claim</>,
@@ -51,6 +52,7 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
             ruleType="Duration-Based"
             sources={['Zhdanova et al.']}
             sourceUrl="https://www.jmcp.org/"
+            enabled={parameters.m2Enabled}
           />
           <MetricRecommendationCard
             icon={BarChart2}
@@ -64,6 +66,7 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
             ruleType="Dose-Based"
             sources={['AGA / CMS MIPS Quality ID #271']}
             sourceUrl="https://mdinteractive.com/mips_quality_measure/2025-mips-quality-measure-271"
+            enabled={parameters.m3Enabled}
           />
           <MetricRecommendationCard
             icon={RefreshCw}
@@ -77,6 +80,7 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
             ruleType="Treatment Pattern"
             sources={['DICE Study Methodology']}
             sourceUrl="https://pmc.ncbi.nlm.nih.gov/articles/PMC11084465/"
+            enabled={parameters.m4Enabled}
           />
           <MetricRecommendationCard
             icon={Puzzle}
@@ -91,6 +95,7 @@ export function BusinessRulesSection({ parameters }: BusinessRulesSectionProps) 
             ruleType="Composite Assessment"
             sources={['Damasceno et al.']}
             sourceUrl="https://pubmed.ncbi.nlm.nih.gov/41825519/"
+            enabled={parameters.m7Enabled}
           />
         </div>
       </section>

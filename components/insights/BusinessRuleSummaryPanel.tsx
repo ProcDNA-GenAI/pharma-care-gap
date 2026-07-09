@@ -39,11 +39,18 @@ function ReadRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({ title, enabled = true, children }: { title: string; enabled?: boolean; children: React.ReactNode }) {
   return (
-    <div className="border-t border-gray-100 pt-3 first:border-t-0 first:pt-0">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">{title}</p>
-      <div className="divide-y divide-gray-100">{children}</div>
+    <div className={`border-t border-gray-100 pt-3 first:border-t-0 first:pt-0 transition-opacity duration-200${!enabled ? ' opacity-50' : ''}`}>
+      <div className="mb-1 flex items-center gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">{title}</p>
+        {!enabled && (
+          <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+            Disabled
+          </span>
+        )}
+      </div>
+      <div className={`divide-y divide-gray-100${!enabled ? ' pointer-events-none' : ''}`}>{children}</div>
     </div>
   )
 }
@@ -56,7 +63,7 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
       <h3 className="mb-3 text-sm font-semibold text-[#1D3F8F]">Care Gap Business Rule Configuration</h3>
 
       <div className="space-y-3">
-        <Group title="IBD Cohort Definition">
+        <Group title="IBD Cohort Definition" enabled={parameters.m1Enabled}>
           {editing ? (
             <>
               <ParameterField label="Look Forward Period" tooltip="Rolling look forward period for OCS accumulation"
@@ -78,7 +85,7 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
           )}
         </Group>
 
-        <Group title="Chronic OCS Exposure">
+        <Group title="Chronic OCS Exposure" enabled={parameters.m2Enabled}>
           {editing ? (
             <ParameterField label="Minimum Cumulative OCS Days" tooltip="Cumulative non-overlapping OCS days in the measurement window"
               value={parameters.ocsDurationThreshold} onChange={(v) => onParameterChange('ocsDurationThreshold', v)}
@@ -88,7 +95,7 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
           )}
         </Group>
 
-        <Group title="High-Dose OCS Exposure">
+        <Group title="High-Dose OCS Exposure" enabled={parameters.m3Enabled}>
           {editing ? (
             <>
               <ParameterField label="Consecutive Days at High Dose" tooltip="Consecutive days at or above the prednisone-equivalent threshold"
@@ -110,7 +117,7 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
           )}
         </Group>
 
-        <Group title="Recurrent OCS Courses">
+        <Group title="Recurrent OCS Courses" enabled={parameters.m4Enabled}>
           {editing ? (
             <ParameterField label="Minimum Gap Between OCS Courses" tooltip="Minimum gap between last fill end date and next fill start to define a new course"
               value={parameters.courseGapDays} onChange={(v) => onParameterChange('courseGapDays', v)}
@@ -120,7 +127,7 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
           )}
         </Group>
 
-        <Group title="Composite Care Gap Rule">
+        <Group title="Composite Care Gap Rule" enabled={parameters.m7Enabled}>
           {editing ? (
             <div className="flex items-center gap-2 py-1.5">
               <div className="flex flex-1 min-w-0 items-center gap-1">

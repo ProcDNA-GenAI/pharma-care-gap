@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { Info } from 'lucide-react'
 import { ParameterField } from './ParameterField'
+import { Toggle } from '@/components/ui/Toggle'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { Select } from '@/components/ui/Select'
+import { cn } from '@/lib/utils/cn'
 import type { SelectOption } from '@/components/ui/Select'
 import type { ParameterValues } from '@/lib/types'
 
@@ -28,11 +30,34 @@ const COMPOSITE_OPTIONS: SelectOption[] = [
   { label: 'All Criteria', value: 'All_3' },
 ]
 
-function ConfigCard({ title, children }: { title: string; children: React.ReactNode }) {
+interface ConfigCardProps {
+  title: string
+  children: React.ReactNode
+  enabled?: boolean
+  onToggle?: (enabled: boolean) => void
+}
+
+function ConfigCard({ title, children, enabled = true, onToggle }: ConfigCardProps) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <h3 className="mb-2 text-sm font-semibold text-[#1D3F8F]">{title}</h3>
-      <div className="divide-y divide-gray-100">{children}</div>
+    <div className={cn(
+      'rounded-xl border p-4 shadow-sm transition-all duration-200',
+      enabled ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50',
+    )}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className={cn('text-sm font-semibold text-[#1D3F8F] transition-opacity duration-200', !enabled && 'opacity-40')}>
+          {title}
+        </h3>
+        {onToggle && (
+          <Toggle
+            checked={enabled}
+            onChange={onToggle}
+            ariaLabel={enabled ? `Disable ${title}` : `Enable ${title}`}
+          />
+        )}
+      </div>
+      <div className={cn('divide-y divide-gray-100 transition-opacity duration-200', !enabled && 'pointer-events-none opacity-40')}>
+        {children}
+      </div>
     </div>
   )
 }
@@ -51,7 +76,11 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
 
       <div className="space-y-4">
 
-      <ConfigCard title="Patient Cohort Definition">
+      <ConfigCard
+        title="Patient Cohort Definition"
+        enabled={parameters.m1Enabled}
+        onToggle={(v) => onParameterChange('m1Enabled', v)}
+      >
         <ParameterField
           label="Look Forward Period"
           tooltip="Rolling look forward period for OCS accumulation"
@@ -77,7 +106,11 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
         />
       </ConfigCard>
 
-      <ConfigCard title="Chronic OCS Exposure">
+      <ConfigCard
+        title="Chronic OCS Exposure"
+        enabled={parameters.m2Enabled}
+        onToggle={(v) => onParameterChange('m2Enabled', v)}
+      >
         <ParameterField
           label="Minimum Cumulative OCS Days"
           tooltip="Cumulative non-overlapping OCS days in the measurement window"
@@ -88,7 +121,11 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
         />
       </ConfigCard>
 
-      <ConfigCard title="High-Dose OCS Exposure">
+      <ConfigCard
+        title="High-Dose OCS Exposure"
+        enabled={parameters.m3Enabled}
+        onToggle={(v) => onParameterChange('m3Enabled', v)}
+      >
         <ParameterField
           label="Consecutive Days at High Dose"
           tooltip="Consecutive days at or above the prednisone-equivalent threshold"
@@ -115,7 +152,11 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
         />
       </ConfigCard>
 
-      <ConfigCard title="Recurrent OCS Courses">
+      <ConfigCard
+        title="Recurrent OCS Courses"
+        enabled={parameters.m4Enabled}
+        onToggle={(v) => onParameterChange('m4Enabled', v)}
+      >
         <ParameterField
           label="Minimum Gap Between OCS Courses"
           tooltip="Minimum gap between last fill end date and next fill start to define a new course"
@@ -126,7 +167,11 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
         />
       </ConfigCard>
 
-      <ConfigCard title="Composite Care Gap Rule">
+      <ConfigCard
+        title="Composite Care Gap Rule"
+        enabled={parameters.m7Enabled}
+        onToggle={(v) => onParameterChange('m7Enabled', v)}
+      >
         <div className="flex items-center gap-2 py-1.5">
           <div className="flex flex-1 min-w-0 items-center gap-1">
             <span className="text-xs text-[#4B5563]">Minimum Number of Care Gap Criteria Met</span>
