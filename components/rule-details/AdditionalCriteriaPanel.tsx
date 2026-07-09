@@ -51,6 +51,7 @@ function ConfigCard({ title, children, enabled = true, onToggle }: ConfigCardPro
           <Toggle
             checked={enabled}
             onChange={onToggle}
+            showLabel
             ariaLabel={enabled ? `Disable ${title}` : `Enable ${title}`}
           />
         )}
