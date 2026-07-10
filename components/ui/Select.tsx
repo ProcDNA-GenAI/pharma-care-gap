@@ -13,12 +13,13 @@ interface SelectProps {
   value: string | number
   onChange: (value: string | number) => void
   className?: string
+  selectClassName?: string
   ariaLabel?: string
   /** Stretches the select to fill its container instead of the compact 64px default */
   fullWidth?: boolean
 }
 
-export function Select({ options, value, onChange, className, ariaLabel, fullWidth }: SelectProps) {
+export function Select({ options, value, onChange, className, selectClassName, ariaLabel, fullWidth }: SelectProps) {
   return (
     <div className={cn('relative inline-flex items-center', fullWidth && 'flex w-full', className)}>
       <select
@@ -32,6 +33,7 @@ export function Select({ options, value, onChange, className, ariaLabel, fullWid
         className={cn(
           'appearance-none rounded-lg border border-gray-300 bg-white py-1 pl-2.5 pr-7 text-xs text-[#374151] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer',
           fullWidth ? 'w-full' : 'w-16',
+          selectClassName,
         )}
       >
         {options.map((opt) => (

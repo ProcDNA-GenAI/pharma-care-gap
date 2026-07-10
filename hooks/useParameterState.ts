@@ -33,6 +33,7 @@ export const DEFAULT_PARAMETERS: ParameterValues = {
 
   // M7 — Composite
   m7Enabled:              true,
+  compositeLogic:         'Any_1',
 
   // M8/M9 — Hidden
   transitionWindowDays:   90,
@@ -56,6 +57,7 @@ const PARAMETER_LABELS: Record<keyof ParameterValues, string> = {
   taperDoseThresholdMg:   'Taper Dose Threshold',
   relapseWindowMonths:    'Relapse Window',
   m7Enabled:              'Composite OCS Assessment',
+  compositeLogic:         'Minimum Number of Care Gap Criteria Met',
   transitionWindowDays:   'Transition Window',
   boneAssessYears:        'Bone Assessment Lookback',
 }

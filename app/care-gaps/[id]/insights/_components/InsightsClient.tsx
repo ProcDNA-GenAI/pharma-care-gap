@@ -4,11 +4,12 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Users, Activity, BarChart2, RefreshCw,
   Clock, FlaskConical, Repeat2, Download, Upload, SlidersHorizontal,
-  Database, AlertCircle, Info, ArrowRight,
+  Database, AlertCircle, Info, ArrowRight, X, Check,
 } from 'lucide-react'
 import { KpiCard } from '@/components/insights/KpiCard'
 import { CommercialSummaryPanel } from '@/components/insights/CommercialSummaryPanel'
 import { BusinessRuleSummaryPanel } from '@/components/insights/BusinessRuleSummaryPanel'
+import { ViewConfigurationPanel } from '@/components/insights/ViewConfigurationPanel'
 import { DistributionTable } from '@/components/insights/DistributionTable'
 import type { DistributionColumn } from '@/components/insights/DistributionTable'
 import { InsightsSideNav } from '@/components/insights/InsightsSideNav'
@@ -16,9 +17,12 @@ import type { InsightsView } from '@/components/insights/InsightsSideNav'
 import { FilterBar } from '@/components/insights/FilterBar'
 import { InsightsTable, RiskBadge } from '@/components/insights/InsightsTable'
 import type { Column } from '@/components/insights/InsightsTable'
-import { Button } from '@/components/ui/Button'
 import { usePatientDb } from '@/hooks/usePatientDb'
 import { DEFAULT_PARAMETERS } from '@/hooks/useParameterState'
+import { useScenarios } from '@/hooks/useScenarios'
+import { ScenarioDropdown } from '@/components/insights/ScenarioDropdown'
+import { Select } from '@/components/ui/Select'
+import { Button } from '@/components/ui/Button'
 import type { ParameterValues } from '@/lib/types'
 import type {
   HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg,
@@ -26,8 +30,18 @@ import type {
   InsightsTab, InsightsFilters,
 } from '@/lib/types/insights'
 
-const PAGE_SIZE = 10
+// Dynamic page size is managed inside the component based on window height.
 
+// ─── Detailed View tabs ───────────────────────────────────────────────────────
+type DetailedTab = 'npi' | 'account' | 'territory'
+
+const DETAILED_TABS: { key: DetailedTab; label: string }[] = [
+  { key: 'npi',       label: 'NPI-Level View'         },
+  { key: 'account',   label: 'Account-Level View'     },
+  { key: 'territory', label: 'Territory-Region View'  },
+]
+
+// Legacy TABS kept for Overview view's filter logic
 const TABS = [
   { key: 'hcp',         label: 'HCP Level'        },
   { key: 'account',     label: 'Account Level'     },
@@ -37,6 +51,7 @@ const TABS = [
   { key: 'temporal',    label: 'Temporal Trend'    },
 ]
 const UNAVAILABLE_TABS = new Set(['payer', 'temporal'])
+
 
 // ─── Granular Care Gap Distribution (column headers; rows come from live SQL) ─
 
@@ -67,6 +82,29 @@ function withTotalRate(totalPatients: number, overusers: number): (string | numb
 
 // ─── Column definitions (base — filtered dynamically per enabled metrics) ─────
 
+// Detailed View: NPI-Level columns (match screenshot exactly)
+const NPI_COLUMNS_BASE: Column<HcpAgg>[] = [
+  { key: 'npi',           label: 'NPI',                                              sortable: true,  render: (r) => <span className="font-mono text-xs text-gray-700">{r.npi}</span> },
+  { key: 'name',          label: 'HCP Name',                                         sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.name}</span> },
+  { key: 'specialty',     label: 'Specialty',                                        sortable: true,  render: (r) => <span className="block truncate max-w-[160px]" title={r.specialty}>{r.specialty}</span> },
+  { key: 'totalPatients', label: 'Eligible IBD Patients',                            sortable: true,  align: 'right', render: (r) => r.totalPatients.toLocaleString() },
+  { key: 'ocsOveruse',    label: 'Patients with Potential OCS Overuse (≥ 1 Criterion)', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate (%)',                                 sortable: true,  align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'chronicOcsRate',    label: 'Chronic OCS Exposure (Duration-Based) (%)',        sortable: true,  align: 'right', render: (r) => {
+    const rate = r.totalPatients > 0 ? Math.round((r.chronicOcs / r.totalPatients) * 1000) / 10 : 0
+    return `${rate}%`
+  }},
+  { key: 'highDoseRate',      label: 'High-Dose OCS Exposure (Dose-Based) (%)',         sortable: true,  align: 'right', render: (r) => {
+    const rate = r.totalPatients > 0 ? Math.round((r.highDose / r.totalPatients) * 1000) / 10 : 0
+    return `${rate}%`
+  }},
+  { key: 'repeatCourseRate',  label: 'Recurrent OCS Courses (Treatment Pattern) (%)',   sortable: true,  align: 'right', render: (r) => {
+    const rate = r.totalPatients > 0 ? Math.round((r.repeatCourse / r.totalPatients) * 1000) / 10 : 0
+    return `${rate}%`
+  }},
+]
+
+// Overview/fallback HCP columns (kept for overview tab logic)
 const HCP_COLUMNS_BASE: Column<HcpAgg>[] = [
   { key: 'rank',          label: '#',             align: 'center',  render: (_, i) => <span className="text-gray-400">{i + 1}</span> },
   { key: 'name',          label: 'NPI',           sortable: true,   render: (r) => (
@@ -79,10 +117,24 @@ const HCP_COLUMNS_BASE: Column<HcpAgg>[] = [
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
   { key: 'ocsOveruse',    label: '# Patient with OCS use',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
   { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
-  { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
-  { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
-  { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
+  { key: 'chronicOcsRate',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
+  { key: 'highDoseRate',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
+  { key: 'repeatCourseRate',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
+]
+
+// Detailed View: Account-Level columns
+const ACCOUNT_COLUMNS_DETAILED: Column<AccountAgg>[] = [
+  { key: 'account',       label: 'Account Name',                                      sortable: true,  render: (r) => <span className="block truncate max-w-[180px]" title={r.account}>{r.account}</span> },
+  { key: 'territory',     label: 'HCPs',                                              sortable: true,  render: (r) => r.territory },
+  { key: 'totalPatients', label: 'Eligible IBD Patients',                             sortable: true,  align: 'right', render: (r) => r.totalPatients.toLocaleString() },
+  { key: 'ocsOveruse',    label: 'Patients with Potential OCS Overuse (≥ 1 Criterion)', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate (%)',                                  sortable: true,  align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'chronicOcsRate',    label: 'Chronic OCS Exposure (Duration-Based) (%)',         sortable: true,  align: 'right', render: (r) => {
+    const rate = r.totalPatients > 0 ? Math.round((r.ocsOveruse / r.totalPatients) * 1000) / 10 : 0
+    return `${rate}%`
+  }},
+  { key: 'risk',          label: 'Recurrent OCS Courses (Treatment Pattern) (%)',    align: 'right',  render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
 const ACCOUNT_COLUMNS_BASE: Column<AccountAgg>[] = [
@@ -94,6 +146,25 @@ const ACCOUNT_COLUMNS_BASE: Column<AccountAgg>[] = [
   { key: 'ocsOveruse',    label: '# Patient with OCS use',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
   { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
+]
+
+// Detailed View: Territory-Region columns
+const TERRITORY_COLUMNS_DETAILED: Column<TerritoryAgg>[] = [
+  { key: 'territory',     label: 'Territory',                                         sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.territory}</span> },
+  { key: 'region',        label: 'Region',                                            sortable: true,  render: (r) => r.region },
+  { key: 'hcpCount',      label: 'HCPs',                                              sortable: true,  align: 'right', render: (r) => r.hcpCount.toLocaleString() },
+  { key: 'totalPatients', label: 'Eligible IBD Patients',                             sortable: true,  align: 'right', render: (r) => r.totalPatients.toLocaleString() },
+  { key: 'ocsOveruse',    label: 'Patients with Potential OCS Overuse (≥ 1 Criterion)', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',        label: 'Overuse Rate (%)',                                  sortable: true,  align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'chronicOcsRate',    label: 'Chronic OCS Exposure (Duration-Based) (%)',         sortable: true,  align: 'right', render: (r) => {
+    const rate = r.totalPatients > 0 ? Math.round((r.ocsOveruse / r.totalPatients) * 1000) / 10 : 0
+    return `${rate}%`
+  }},
+  { key: 'highDoseRate',      label: 'High-Dose OCS Exposure (Dose-Based) (%)',          sortable: true,  align: 'right', render: (r) => {
+    const rate = r.totalPatients > 0 ? Math.round((r.ocsOveruse / r.totalPatients) * 1000) / 10 : 0
+    return `${rate}%`
+  }},
+  { key: 'risk',          label: 'Recurrent OCS Courses (Treatment Pattern) (%)',    align: 'right',  render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
 
 const TERRITORY_COLUMNS_BASE: Column<TerritoryAgg>[] = [
@@ -113,11 +184,12 @@ const DEMOGRAPHIC_COLUMNS_BASE: Column<DemographicAgg>[] = [
   { key: 'totalPatients', label: 'Total Pts',     sortable: true, align: 'right', render: (r) => r.totalPatients.toLocaleString() },
   { key: 'ocsOveruse',    label: '# Patient with OCS use',    sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
   { key: 'm7Rate',        label: 'Overuse Rate',       sortable: true, align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
-  { key: 'chronicOcs',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
-  { key: 'highDose',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
-  { key: 'repeatCourse',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
+  { key: 'chronicOcsRate',    label: 'Chronic OCS',   sortable: true, align: 'right', render: (r) => r.chronicOcs.toLocaleString() },
+  { key: 'highDoseRate',      label: 'High-Dose OCS', sortable: true, align: 'right', render: (r) => r.highDose.toLocaleString() },
+  { key: 'repeatCourseRate',  label: 'Repeat Course', sortable: true, align: 'right', render: (r) => r.repeatCourse.toLocaleString() },
   { key: 'risk',          label: 'Risk',          align: 'center', render: (r) => <RiskBadge rate={r.m7Rate} /> },
 ]
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -164,12 +236,48 @@ function StatusPill({ status, label }: { status: string; label: string }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function InsightsClient() {
+interface InsightsClientProps {
+  careGapId: string
+}
+
+export function InsightsClient({ careGapId }: InsightsClientProps) {
   // ── Parameter state (starts at defaults to match SSR, synced from localStorage after mount) ───
   const [parameters, setParameters] = useState<ParameterValues>(DEFAULT_PARAMETERS)
+  // Draft = pending edits in ViewConfigurationPanel before user clicks Apply
+  const [draftParams, setDraftParams] = useState<ParameterValues>(DEFAULT_PARAMETERS)
+  const { scenarios, saveScenario, deleteScenario } = useScenarios(careGapId)
+  const [activeScenarioId, setActiveScenarioId] = useState<string>('')
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
-    setParameters(loadStoredParams())
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  useEffect(() => {
+    const stored = loadStoredParams()
+    setParameters(stored)
+    setDraftParams(stored)
+  }, [])
+
+  const [pageSize, setPageSize] = useState(10)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleResize = () => {
+      const windowHeight = window.innerHeight
+      // Increase reserved height to account for all headers, tabs, footer, and paddings safely
+      const reservedHeight = 650
+      const availableHeight = windowHeight - reservedHeight
+      // Average row height is around 45px
+      const calculatedRows = Math.floor(availableHeight / 45)
+      // Display at least 5 rows and at most 50 rows dynamically to fit on one page
+      setPageSize(Math.max(5, Math.min(50, calculatedRows)))
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   const handleParameterChange = useCallback(
@@ -184,6 +292,27 @@ export function InsightsClient() {
     }, [],
   )
 
+  const handleDraftChange = useCallback(
+    (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => {
+      setDraftParams((prev) => ({ ...prev, [key]: value }))
+    }, [],
+  )
+
+  const handleApplyConfiguration = useCallback((draft: ParameterValues) => {
+    setParameters(draft)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ruleParameters', JSON.stringify(draft))
+    }
+  }, [])
+
+  const handleResetToDefault = useCallback(() => {
+    setParameters(DEFAULT_PARAMETERS)
+    setDraftParams(DEFAULT_PARAMETERS)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ruleParameters', JSON.stringify(DEFAULT_PARAMETERS))
+    }
+  }, [])
+
   // ── SQLite + reactive query engine ───────────────────────────────────────
   const {
     status, statusLabel, hasRealData, rowCount, loadFile,
@@ -194,6 +323,7 @@ export function InsightsClient() {
   // ── UI state ─────────────────────────────────────────────────────────────
   const [activeView, setActiveView]   = useState<InsightsView>('overview')
   const [activeTab, setActiveTab]     = useState<InsightsTab>('hcp')
+  const [detailedTab, setDetailedTab] = useState<DetailedTab>('npi')
   const [filters, setFilters]         = useState<InsightsFilters>({ search: '', territory: 'All', specialty: 'All' })
   const [sortKey, setSortKey]         = useState('m7Rate')
   const [sortDir, setSortDir]         = useState<'asc' | 'desc'>('desc')
@@ -284,8 +414,8 @@ export function InsightsClient() {
 
   const pagedRows = useMemo(() => {
     const all = activeRows[activeTab] as unknown[]
-    return all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  }, [activeRows, activeTab, page])
+    return all.slice((page - 1) * pageSize, page * pageSize)
+  }, [activeRows, activeTab, page, pageSize])
 
   const totalRows = activeRows[activeTab].length
 
@@ -330,9 +460,9 @@ export function InsightsClient() {
   const hcpColumns = useMemo(() =>
     HCP_COLUMNS_BASE.filter((col) => {
       if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk') && !m7Enabled) return false
-      if (col.key === 'chronicOcs'   && !m2Enabled) return false
-      if (col.key === 'highDose'     && !m3Enabled) return false
-      if (col.key === 'repeatCourse' && !m4Enabled) return false
+      if (col.key === 'chronicOcsRate'   && !m2Enabled) return false
+      if (col.key === 'highDoseRate'     && !m3Enabled) return false
+      if (col.key === 'repeatCourseRate' && !m4Enabled) return false
       return true
     }),
     [m2Enabled, m3Enabled, m4Enabled, m7Enabled],
@@ -357,15 +487,15 @@ export function InsightsClient() {
   const demographicColumns = useMemo(() =>
     DEMOGRAPHIC_COLUMNS_BASE.filter((col) => {
       if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk') && !m7Enabled) return false
-      if (col.key === 'chronicOcs'   && !m2Enabled) return false
-      if (col.key === 'highDose'     && !m3Enabled) return false
-      if (col.key === 'repeatCourse' && !m4Enabled) return false
+      if (col.key === 'chronicOcsRate'   && !m2Enabled) return false
+      if (col.key === 'highDoseRate'     && !m3Enabled) return false
+      if (col.key === 'repeatCourseRate' && !m4Enabled) return false
       return true
     }),
     [m2Enabled, m3Enabled, m4Enabled, m7Enabled],
   )
 
-  // ── Column + rowKey for active tab ────────────────────────────────────────
+  // ── Column + rowKey for active tab (overview) ─────────────────────────────
   type AnyRow = HcpAgg | AccountAgg | TerritoryAgg | DemographicAgg
   const tableProps = useMemo(() => {
     if (activeTab === 'hcp')         return { columns: hcpColumns         as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as HcpAgg).npi }
@@ -373,6 +503,97 @@ export function InsightsClient() {
     if (activeTab === 'geography')   return { columns: territoryColumns   as Column<AnyRow>[], rowKey: (r: AnyRow) => (r as TerritoryAgg).territory }
     return                                  { columns: demographicColumns as Column<AnyRow>[], rowKey: (r: AnyRow) => `${(r as DemographicAgg).ageBand}-${(r as DemographicAgg).gender}` }
   }, [activeTab, hcpColumns, accountColumns, territoryColumns, demographicColumns])
+
+  // ── Detailed View table props ──────────────────────────────────────────────
+  const detailedTableProps = useMemo(() => {
+    if (detailedTab === 'npi') {
+      const totPts   = hcpRows.reduce((s, r) => s + r.totalPatients, 0)
+      const totOver  = hcpRows.reduce((s, r) => s + r.ocsOveruse, 0)
+      const totChr   = hcpRows.reduce((s, r) => s + r.chronicOcs, 0)
+      const totHigh  = hcpRows.reduce((s, r) => s + r.highDose, 0)
+      const totRep   = hcpRows.reduce((s, r) => s + r.repeatCourse, 0)
+      const overRate = totPts > 0 ? `${(Math.round((totOver / totPts) * 1000) / 10)}%` : '—'
+      const chrRate  = totPts > 0 ? `${(Math.round((totChr  / totPts) * 1000) / 10)}%` : '—'
+      const highRate = totPts > 0 ? `${(Math.round((totHigh / totPts) * 1000) / 10)}%` : '—'
+      const repRate  = totPts > 0 ? `${(Math.round((totRep  / totPts) * 1000) / 10)}%` : '—'
+      const columns = NPI_COLUMNS_BASE.filter((col) => {
+        if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk') && !m7Enabled) return false
+        if (col.key === 'chronicOcsRate'   && !m2Enabled) return false
+        if (col.key === 'highDoseRate'     && !m3Enabled) return false
+        if (col.key === 'repeatCourseRate' && !m4Enabled) return false
+        return true
+      })
+      return {
+        columns: columns as Column<AnyRow>[],
+        rows: sortRows(filteredHcp, sortKey, sortDir) as unknown as AnyRow[],
+        rowKey: (r: AnyRow) => (r as HcpAgg).npi,
+        totalRow: {
+          totalPatients: totPts.toLocaleString(),
+          ocsOveruse: totOver.toLocaleString(),
+          m7Rate: overRate,
+          chronicOcsRate: chrRate,
+          highDoseRate: highRate,
+          repeatCourseRate: repRate,
+        },
+        totalRowLabel: 'Total (All NPIs)',
+      }
+    }
+    if (detailedTab === 'account') {
+      const totPts  = accountRows.reduce((s, r) => s + r.totalPatients, 0)
+      const totOver = accountRows.reduce((s, r) => s + r.ocsOveruse, 0)
+      const overRate = totPts > 0 ? `${(Math.round((totOver / totPts) * 1000) / 10)}%` : '—'
+      const columns = ACCOUNT_COLUMNS_DETAILED.filter((col) => {
+        if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk' || col.key === 'chronicOcsRate') && !m7Enabled) return false
+        return true
+      })
+      return {
+        columns: columns as Column<AnyRow>[],
+        rows: sortRows(filteredAccount, sortKey, sortDir) as unknown as AnyRow[],
+        rowKey: (r: AnyRow) => (r as AccountAgg).account,
+        totalRow: {
+          totalPatients: totPts.toLocaleString(),
+          ocsOveruse: totOver.toLocaleString(),
+          m7Rate: overRate,
+          chronicOcsRate: overRate,
+        },
+        totalRowLabel: 'Total (All Accounts)',
+      }
+    }
+    // territory
+    const totPts  = territoryRows.reduce((s, r) => s + r.totalPatients, 0)
+    const totOver = territoryRows.reduce((s, r) => s + r.ocsOveruse, 0)
+    const hcpCount = territoryRows.reduce((s, r) => s + r.hcpCount, 0)
+    const overRate = totPts > 0 ? `${(Math.round((totOver / totPts) * 1000) / 10)}%` : '—'
+    const columns = TERRITORY_COLUMNS_DETAILED.filter((col) => {
+      if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk' || col.key === 'chronicOcsRate' || col.key === 'highDoseRate') && !m7Enabled) return false
+      return true
+    })
+    return {
+      columns: columns as Column<AnyRow>[],
+      rows: sortRows(filteredTerritory, sortKey, sortDir) as unknown as AnyRow[],
+      rowKey: (r: AnyRow) => (r as TerritoryAgg).territory,
+      totalRow: {
+        hcpCount: hcpCount.toLocaleString(),
+        totalPatients: totPts.toLocaleString(),
+        ocsOveruse: totOver.toLocaleString(),
+        m7Rate: overRate,
+        chronicOcsRate: overRate,
+        highDoseRate: overRate,
+      },
+      totalRowLabel: 'Total (All Territories)',
+    }
+  }, [detailedTab, hcpRows, accountRows, territoryRows, filteredHcp, filteredAccount, filteredTerritory, sortKey, sortDir])
+
+  // ── Tab header for the Detailed View ─────────────────────────────────────
+  const detailedViewTitle =
+    detailedTab === 'npi'       ? 'NPI-Level Overview'           :
+    detailedTab === 'account'   ? 'Account-Level Overview'       :
+                                  'Territory-Region Overview'
+  const detailedViewSubtitle =
+    detailedTab === 'npi'       ? 'Top performing NPIs by patient volume and care gap overuse.' :
+    detailedTab === 'account'   ? 'Care gap overuse across consumer accounts.'                  :
+                                  'Care gap overuse across territories and regions.'
+
 
   // ─────────────────────────────────────────────────────────────────────────
   const mainContent = (
@@ -484,59 +705,81 @@ export function InsightsClient() {
           </div>
         </>
       ) : (
-        /* ── Detailed View: Tabs + Filter + Table ── */
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        /* ── Detailed View: Pill Tabs + Table ── */
+        <div className="space-y-4">
 
-          {/* Tab bar */}
-          <div className="border-b border-gray-200">
-            <div className="flex overflow-x-auto scrollbar-hide">
-              {TABS.map((tab) => {
-                const unavailable = UNAVAILABLE_TABS.has(tab.key)
-                const isActive    = activeTab === tab.key
+          {/* Pill tab strip + action buttons */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+              {DETAILED_TABS.map((tab) => {
+                const isActive = detailedTab === tab.key
                 return (
                   <button
                     key={tab.key}
-                    onClick={() => handleTabChange(tab.key)}
-                    disabled={unavailable}
-                    title={unavailable ? 'Source data does not contain payer/date columns' : undefined}
+                    onClick={() => { setDetailedTab(tab.key); setSortKey('m7Rate'); setSortDir('desc'); setPage(1) }}
                     className={[
-                      'relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none shrink-0',
-                      unavailable
-                        ? 'cursor-not-allowed text-gray-300'
-                        : isActive
-                          ? 'border-b-2 border-[#004FBA] text-[#004FBA]'
-                          : 'text-gray-500 hover:text-gray-700',
+                      'rounded-md px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none',
+                      isActive
+                        ? 'bg-[#1D3F8F] text-white shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50',
                     ].join(' ')}
                   >
                     {tab.label}
-                    {unavailable && (
-                      <span className="ml-1.5 rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-gray-400">
-                        N/A
-                      </span>
-                    )}
                   </button>
                 )
               })}
             </div>
+
+            {/* Load Data + Export — moved here in Detailed View per design */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || status === 'initializing'}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                {uploading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploading ? 'Loading…' : 'Load Data'}
+              </button>
+              <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors">
+                <Download className="h-4 w-4" />
+                Export
+              </button>
+            </div>
           </div>
 
-          {/* Filter bar */}
-          <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-2.5">
-            <FilterBar filters={filters} territories={territories} specialties={specialties}
-              activeTab={activeTab} onChange={handleFiltersChange} />
-            <span className="shrink-0 text-[10px] text-gray-400">
-              {totalRows} result{totalRows !== 1 ? 's' : ''}
-            </span>
-          </div>
+          {/* Table card */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
-          {/* Table */}
-          <InsightsTable
-            columns={tableProps.columns}
-            rows={pagedRows as AnyRow[]}
-            rowKey={tableProps.rowKey}
-            sortKey={sortKey} sortDir={sortDir} onSort={handleSort}
-            page={page} pageSize={PAGE_SIZE} totalRows={totalRows} onPage={setPage}
-          />
+            {/* Section header */}
+            <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF3FF]">
+                <Users className="h-5 w-5 text-[#004FBA]" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-[#1D3F8F]">{detailedViewTitle}</h2>
+                <p className="text-xs text-[#6B7280]">{detailedViewSubtitle}</p>
+              </div>
+            </div>
+
+            {/* Table */}
+            <InsightsTable
+              columns={detailedTableProps.columns}
+              rows={detailedTableProps.rows.slice((page - 1) * pageSize, page * pageSize) as AnyRow[]}
+              rowKey={detailedTableProps.rowKey}
+              sortKey={sortKey} sortDir={sortDir} onSort={handleSort}
+              page={page} pageSize={pageSize} totalRows={detailedTableProps.rows.length} onPage={setPage}
+              totalRow={detailedTableProps.totalRow}
+              totalRowLabel={detailedTableProps.totalRowLabel}
+            />
+
+            {/* Bottom note */}
+            <div className="flex items-center gap-2 border-t border-gray-100 bg-gray-50 px-5 py-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 text-[#6B7280]" />
+              <p className="text-[11px] text-[#6B7280]">
+                Use the filters in the configuration panel to refine results. You can export any table for further analysis.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -545,6 +788,9 @@ export function InsightsClient() {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-5">
+
+      {/* Hidden file input — always mounted so the ref works in both Overview and Detailed View */}
+      <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="sr-only" />
 
       {/* ── Header: offset by fixed sidebar width (w-20 = 80px) ── */}
       <div className="flex items-start justify-between gap-4 pl-24">
@@ -563,33 +809,61 @@ export function InsightsClient() {
             {!hasRealData && status !== 'loading' && ' Upload your own CSV/Excel to replace demo data.'}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={() => setShowParameters((v) => !v)}
-            className={[
-              'inline-flex h-9 items-center gap-2 rounded-lg border px-4 text-sm font-medium shadow-sm transition-colors',
-              showParameters
-                ? 'border-[#004FBA] bg-[#EEF3FF] text-[#004FBA]'
-                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
-            ].join(' ')}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Parameters
-          </button>
-          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="sr-only" />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading || status === 'initializing'}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
-          >
-            {uploading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            {uploading ? 'Loading…' : 'Load Data'}
-          </button>
-          <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors">
-            <Download className="h-4 w-4" />
-            Export
-          </button>
-        </div>
+        {/* In Overview mode, keep the Parameters / Load Data / Export buttons here */}
+        {activeView === 'overview' && (
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => setShowParameters((v) => !v)}
+              className={[
+                'inline-flex h-9 items-center gap-2 rounded-lg border px-4 text-sm font-medium shadow-sm transition-colors',
+                showParameters
+                  ? 'border-[#004FBA] bg-[#EEF3FF] text-[#004FBA]'
+                  : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+              ].join(' ')}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Parameters
+            </button>
+            <div
+              className={`shrink-0 transition-all duration-300 ease-in-out ${scenarios.length > 0 ? 'w-[180px] opacity-100 overflow-visible' : 'w-0 opacity-0 overflow-hidden'}`}
+            >
+              <ScenarioDropdown
+                scenarios={scenarios}
+                activeId={activeScenarioId}
+                onSelect={(id) => {
+                  setActiveScenarioId(id)
+                  if (id) {
+                    const scen = scenarios.find(s => s.id === id)
+                    if (scen) {
+                      setParameters(scen.parameters)
+                      setDraftParams(scen.parameters)
+                    }
+                  }
+                }}
+                onDelete={(id) => {
+                  deleteScenario(id)
+                  if (activeScenarioId === id) {
+                    setActiveScenarioId('')
+                    setParameters(DEFAULT_PARAMETERS)
+                    setDraftParams(DEFAULT_PARAMETERS)
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || status === 'initializing'}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {uploading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {uploading ? 'Loading…' : 'Load Data'}
+            </button>
+            <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors">
+              <Download className="h-4 w-4" />
+              Export
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Content row ── */}
@@ -599,24 +873,73 @@ export function InsightsClient() {
 
         {mainContent}
 
-        {/* ── Right sidebar: always present to keep layout stable ── */}
+        {/* ── Right sidebar ── */}
         <div className="w-72 shrink-0 space-y-4 lg:sticky lg:top-5">
-          {showParameters && (
-            <BusinessRuleSummaryPanel
-              parameters={parameters}
-              onParameterChange={handleParameterChange}
-              editing={editingRules}
-              onToggleEditing={() => setEditingRules((v) => !v)}
+          {activeView === 'detailed' ? (
+            /* Detailed View: always show ViewConfigurationPanel */
+            <ViewConfigurationPanel
+              draft={draftParams}
+              onDraftChange={handleDraftChange}
+              onApply={handleApplyConfiguration}
+              onReset={handleResetToDefault}
             />
+          ) : (
+            /* Overview: show BusinessRuleSummaryPanel when Parameters is toggled */
+            <>
+              {showParameters && (
+                <BusinessRuleSummaryPanel
+                  parameters={parameters}
+                  onParameterChange={handleParameterChange}
+                  editing={editingRules}
+                  onToggleEditing={() => setEditingRules((v) => !v)}
+                  onSaveScenario={() => {
+                    const res = saveScenario(parameters)
+                    if (!res.success && res.error) {
+                      setToast({ message: res.error, type: 'error' })
+                    } else {
+                      setToast({ message: 'Scenario saved successfully.', type: 'success' })
+                    }
+                  }}
+                />
+              )}
+              <CommercialSummaryPanel
+                hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
+                territoriesCovered={commercialSummary.territoriesCovered}
+                avgHcpsPerMsl={commercialSummary.avgHcpsPerMsl}
+              />
+            </>
           )}
-          <CommercialSummaryPanel
-            hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
-            territoriesCovered={commercialSummary.territoriesCovered}
-            avgHcpsPerMsl={commercialSummary.avgHcpsPerMsl}
-          />
         </div>
       </div>
 
+      {toast && (
+        <div
+          className={[
+            'fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-lg border p-4 text-xs font-semibold shadow-lg animate-in slide-in-from-bottom-5 duration-300',
+            toast.type === 'error'
+              ? 'border-red-200 bg-red-50 text-red-800'
+              : 'border-green-200 bg-green-50 text-green-800',
+          ].join(' ')}
+        >
+          {toast.type === 'error' ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+          ) : (
+            <Check className="h-4 w-4 shrink-0 text-green-500" />
+          )}
+          <span>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            className={[
+              'ml-3 rounded p-0.5 transition-colors',
+              toast.type === 'error' ? 'text-red-500 hover:bg-red-100' : 'text-green-500 hover:bg-green-100',
+            ].join(' ')}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+
     </div>
   )
-}
+}

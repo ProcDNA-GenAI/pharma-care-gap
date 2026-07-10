@@ -42,6 +42,7 @@ export function RuleDetailsClient({ careGapId }: RuleDetailsClientProps) {
       await new Promise((r) => setTimeout(r, 1500))
       if (typeof window !== 'undefined') {
         localStorage.setItem('ruleParameters', JSON.stringify(parameters))
+        localStorage.removeItem(`ruleScenarios_${careGapId}`)
       }
       router.push(`/care-gaps/${careGapId}/insights`)
     })

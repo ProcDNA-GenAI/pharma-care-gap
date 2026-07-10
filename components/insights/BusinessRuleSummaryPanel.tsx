@@ -13,6 +13,7 @@ interface BusinessRuleSummaryPanelProps {
   onParameterChange: (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => void
   editing: boolean
   onToggleEditing: () => void
+  onSaveScenario?: () => void
 }
 
 const MEASUREMENT_OPTIONS: SelectOption[]  = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
@@ -55,9 +56,7 @@ function Group({ title, enabled = true, children }: { title: string; enabled?: b
   )
 }
 
-export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editing, onToggleEditing }: BusinessRuleSummaryPanelProps) {
-  const [compositeLogic, setCompositeLogic] = useState<string | number>('Any_1')
-
+export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editing, onToggleEditing, onSaveScenario }: BusinessRuleSummaryPanelProps) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       <h3 className="mb-3 text-sm font-semibold text-[#1D3F8F]">Care Gap Business Rule Configuration</h3>
@@ -139,23 +138,37 @@ export function BusinessRuleSummaryPanel({ parameters, onParameterChange, editin
               <div className="w-[110px] shrink-0">
                 <Select
                   options={COMPOSITE_OPTIONS}
-                  value={compositeLogic}
-                  onChange={setCompositeLogic}
+                  value={parameters.compositeLogic}
+                  onChange={(v) => onParameterChange('compositeLogic', v)}
                   ariaLabel="Minimum Number of Care Gap Criteria Met"
                   fullWidth
                 />
               </div>
             </div>
           ) : (
-            <ReadRow label="Minimum Number of Care Gap Criteria Met" value="≥ 1 Criteria" />
+            <ReadRow label="Minimum Number of Care Gap Criteria Met" value={
+              parameters.compositeLogic === 'Any_2' ? '≥ 2 Criteria' :
+              parameters.compositeLogic === 'All_3' ? 'All Criteria' : '≥ 1 Criteria'
+            } />
           )}
         </Group>
       </div>
 
+      {editing && onSaveScenario && (
+        <button
+          type="button"
+          onClick={onSaveScenario}
+          className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Save Scenario
+        </button>
+      )}
+
       <button
         type="button"
         onClick={onToggleEditing}
-        className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-brand-600 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-50"
+        className="mt-2 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-brand-600 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-50"
       >
         {editing ? <Check className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
         {editing ? 'Done' : 'Edit Rules'}

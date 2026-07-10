@@ -1,4 +1,4 @@
-import type { GlobalKpis, HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg } from '@/lib/types/insights'
+import type { GlobalKpis, HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg, AgeBand } from '@/lib/types/insights'
 
 export const MOCK_GLOBAL_KPIS: GlobalKpis = {
   totalPatients:    24567,
@@ -12,7 +12,7 @@ export const MOCK_GLOBAL_KPIS: GlobalKpis = {
   relapse:           2408,  relapseRate:      13.2,
 }
 
-export const MOCK_HCP_ROWS: HcpAgg[] = [
+const RAW_HCP_ROWS = [
   { npi:'1234567890', name:'Dr. Aisha Williams',      specialty:'Gastroenterology', account:'Mass General Hospital',    territory:'Northeast',       region:'East',    totalPatients:142, ocsUse:118, chronicOcs:71, highDose:44, ocsOveruse:97,  repeatCourse:62, taperFailure:31, relapse:24, m7Rate:68.3 },
   { npi:'2345678901', name:'Dr. Robert Chen',          specialty:'Gastroenterology', account:'NYU Langone',             territory:'Mid-Atlantic',    region:'East',    totalPatients:128, ocsUse:104, chronicOcs:58, highDose:36, ocsOveruse:82,  repeatCourse:51, taperFailure:24, relapse:19, m7Rate:64.1 },
   { npi:'3456789012', name:'Dr. Maria Santos',         specialty:'Internal Medicine',account:'Cleveland Clinic',        territory:'Midwest',         region:'Midwest', totalPatients:89,  ocsUse:72,  chronicOcs:41, highDose:25, ocsOveruse:52,  repeatCourse:34, taperFailure:18, relapse:12, m7Rate:58.4 },
@@ -45,7 +45,14 @@ export const MOCK_HCP_ROWS: HcpAgg[] = [
   { npi:'3876543219', name:'Dr. Joseph Wright',        specialty:'Internal Medicine',account:'Banner University',      territory:'Southwest',       region:'South',   totalPatients:47,  ocsUse:31,  chronicOcs:9,  highDose:6,  ocsOveruse:9,   repeatCourse:6,  taperFailure:2,  relapse:2,  m7Rate:19.1 },
 ]
 
-export const MOCK_ACCOUNT_ROWS: AccountAgg[] = [
+export const MOCK_HCP_ROWS: HcpAgg[] = RAW_HCP_ROWS.map(r => ({
+  ...r,
+  chronicOcsRate: r.totalPatients > 0 ? Math.round((r.chronicOcs / r.totalPatients) * 1000) / 10 : 0,
+  highDoseRate: r.totalPatients > 0 ? Math.round((r.highDose / r.totalPatients) * 1000) / 10 : 0,
+  repeatCourseRate: r.totalPatients > 0 ? Math.round((r.repeatCourse / r.totalPatients) * 1000) / 10 : 0,
+}))
+
+const RAW_ACCOUNT_ROWS = [
   { account:'Mass General Hospital',    territory:'Northeast',     region:'East',    totalPatients:612,  ocsUse:453,  chronicOcs:287, highDose:130, ocsOveruse:198, repeatCourse:164, taperFailure:80,  relapse:60,  m7Rate:32.4, topSpecialty:'Gastroenterology' },
   { account:'NYU Langone',              territory:'Mid-Atlantic',  region:'East',    totalPatients:843,  ocsUse:625,  chronicOcs:381, highDose:180, ocsOveruse:261, repeatCourse:214, taperFailure:110, relapse:82,  m7Rate:30.9, topSpecialty:'Gastroenterology' },
   { account:'Cleveland Clinic',         territory:'Midwest',       region:'Midwest', totalPatients:1204, ocsUse:892,  chronicOcs:521, highDose:256, ocsOveruse:354, repeatCourse:291, taperFailure:157, relapse:118, m7Rate:29.4, topSpecialty:'Gastroenterology' },
@@ -58,7 +65,14 @@ export const MOCK_ACCOUNT_ROWS: AccountAgg[] = [
   { account:'Cedars-Sinai',             territory:'Pacific SW',    region:'West',    totalPatients:723,  ocsUse:536,  chronicOcs:298, highDose:154, ocsOveruse:177, repeatCourse:163, taperFailure:94,  relapse:71,  m7Rate:24.5, topSpecialty:'Gastroenterology' },
 ]
 
-export const MOCK_TERRITORY_ROWS: TerritoryAgg[] = [
+export const MOCK_ACCOUNT_ROWS: AccountAgg[] = RAW_ACCOUNT_ROWS.map(r => ({
+  ...r,
+  chronicOcsRate: r.totalPatients > 0 ? Math.round((r.chronicOcs / r.totalPatients) * 1000) / 10 : 0,
+  highDoseRate: r.totalPatients > 0 ? Math.round((r.highDose / r.totalPatients) * 1000) / 10 : 0,
+  repeatCourseRate: r.totalPatients > 0 ? Math.round((r.repeatCourse / r.totalPatients) * 1000) / 10 : 0,
+}))
+
+const RAW_TERRITORY_ROWS = [
   { territory:'Northeast',     region:'East',    totalPatients:3842, ocsUse:2850, chronicOcs:1612, highDose:819, ocsOveruse:1324, repeatCourse:1114, taperFailure:502, relapse:376, m7Rate:34.5, hcpCount:187 },
   { territory:'Mid-Atlantic',  region:'East',    totalPatients:4127, ocsUse:3062, chronicOcs:1724, highDose:879, ocsOveruse:1381, repeatCourse:1197, taperFailure:539, relapse:404, m7Rate:33.5, hcpCount:203 },
   { territory:'Midwest',       region:'Midwest', totalPatients:5213, ocsUse:3868, chronicOcs:2178, highDose:1110, ocsOveruse:1694, repeatCourse:1512, taperFailure:681, relapse:511, m7Rate:32.5, hcpCount:248 },
@@ -69,7 +83,14 @@ export const MOCK_TERRITORY_ROWS: TerritoryAgg[] = [
   { territory:'Pacific NW',    region:'West',    totalPatients:514,  ocsUse:381,  chronicOcs:213,  highDose:110,  ocsOveruse:151,  repeatCourse:149,  taperFailure:67,  relapse:50,  m7Rate:29.4, hcpCount:25  },
 ]
 
-export const MOCK_DEMOGRAPHIC_ROWS: DemographicAgg[] = [
+export const MOCK_TERRITORY_ROWS: TerritoryAgg[] = RAW_TERRITORY_ROWS.map(r => ({
+  ...r,
+  chronicOcsRate: r.totalPatients > 0 ? Math.round((r.chronicOcs / r.totalPatients) * 1000) / 10 : 0,
+  highDoseRate: r.totalPatients > 0 ? Math.round((r.highDose / r.totalPatients) * 1000) / 10 : 0,
+  repeatCourseRate: r.totalPatients > 0 ? Math.round((r.repeatCourse / r.totalPatients) * 1000) / 10 : 0,
+}))
+
+const RAW_DEMOGRAPHIC_ROWS = [
   { ageBand:'18–34', gender:'Female', totalPatients:1821, ocsUse:1350, chronicOcs:674,  highDose:388, ocsOveruse:419,  repeatCourse:492,  taperFailure:238, relapse:178, m7Rate:23.0 },
   { ageBand:'18–34', gender:'Male',   totalPatients:1634, ocsUse:1211, chronicOcs:589,  highDose:348, ocsOveruse:342,  repeatCourse:421,  taperFailure:213, relapse:160, m7Rate:20.9 },
   { ageBand:'35–49', gender:'Female', totalPatients:3912, ocsUse:2901, chronicOcs:1487, highDose:833, ocsOveruse:1017, repeatCourse:1082, taperFailure:511, relapse:383, m7Rate:26.0 },
@@ -79,5 +100,13 @@ export const MOCK_DEMOGRAPHIC_ROWS: DemographicAgg[] = [
   { ageBand:'65+',   gender:'Female', totalPatients:2687, ocsUse:1993, chronicOcs:897,  highDose:572, ocsOveruse:347,  repeatCourse:639,  taperFailure:351, relapse:263, m7Rate:12.9 },
   { ageBand:'65+',   gender:'Male',   totalPatients:2102, ocsUse:1559, chronicOcs:693,  highDose:448, ocsOveruse:254,  repeatCourse:500,  taperFailure:274, relapse:206, m7Rate:12.1 },
 ]
+
+export const MOCK_DEMOGRAPHIC_ROWS: DemographicAgg[] = RAW_DEMOGRAPHIC_ROWS.map(r => ({
+  ...r,
+  ageBand: r.ageBand as AgeBand,
+  chronicOcsRate: r.totalPatients > 0 ? Math.round((r.chronicOcs / r.totalPatients) * 1000) / 10 : 0,
+  highDoseRate: r.totalPatients > 0 ? Math.round((r.highDose / r.totalPatients) * 1000) / 10 : 0,
+  repeatCourseRate: r.totalPatients > 0 ? Math.round((r.repeatCourse / r.totalPatients) * 1000) / 10 : 0,
+}))
 
 export const MOCK_DATA_DATE = 'June 28, 2025'

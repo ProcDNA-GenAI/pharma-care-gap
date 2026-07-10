@@ -22,6 +22,10 @@ interface InsightsTableProps<T> {
   pageSize: number
   totalRows: number
   onPage: (p: number) => void
+  /** Optional totals row rendered below all data rows. Keyed by column key. */
+  totalRow?: Record<string, string | number | React.ReactNode>
+  /** Label for the first cell of the total row (default: 'Total') */
+  totalRowLabel?: string
 }
 
 function RiskBadge({ rate }: { rate: number }) {
@@ -34,6 +38,7 @@ export { RiskBadge }
 
 export function InsightsTable<T>({
   columns, rows, rowKey, sortKey, sortDir, onSort, page, pageSize, totalRows, onPage,
+  totalRow, totalRowLabel = 'Total',
 }: InsightsTableProps<T>) {
   const totalPages = Math.max(1, Math.ceil(totalRows / pageSize))
 
@@ -92,6 +97,25 @@ export function InsightsTable<T>({
                   ))}
                 </tr>
               ))
+            )}
+            {/* Totals row */}
+            {totalRow && (
+              <tr className="border-t-2 border-gray-200 bg-gray-50 font-semibold">
+                {columns.map((col, colIdx) => (
+                  <td
+                    key={col.key}
+                    className={cn(
+                      'px-4 py-2.5 text-xs text-gray-900',
+                      col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                      colIdx === 0 && 'whitespace-nowrap'
+                    )}
+                  >
+                    {colIdx === 0
+                      ? <span className="text-[#004FBA] whitespace-nowrap">{totalRowLabel}</span>
+                      : totalRow[col.key] ?? null}
+                  </td>
+                ))}
+              </tr>
             )}
           </tbody>
         </table>

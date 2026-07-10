@@ -28,6 +28,7 @@ export interface ParameterValues {
 
   // M7 — Composite Assessment
   m7Enabled: boolean
+  compositeLogic: string
 
   // M8/M9 — Hidden (not shown in UI yet)
   transitionWindowDays: number
@@ -37,7 +38,7 @@ export interface ParameterValues {
 export interface ParameterDiff {
   field: keyof ParameterValues
   label: string
-  from: number | boolean
-  to: number | boolean
+  from: string | number | boolean
+  to: string | number | boolean
   unit?: string
 }

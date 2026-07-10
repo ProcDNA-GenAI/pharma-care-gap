@@ -54,9 +54,12 @@ export interface HcpAgg {
   totalPatients: number
   ocsUse: number
   chronicOcs: number
+  chronicOcsRate: number
   highDose: number
+  highDoseRate: number
   ocsOveruse: number
   repeatCourse: number
+  repeatCourseRate: number
   taperFailure: number
   relapse: number
   m7Rate: number
@@ -69,9 +72,12 @@ export interface AccountAgg {
   totalPatients: number
   ocsUse: number
   chronicOcs: number
+  chronicOcsRate: number
   highDose: number
+  highDoseRate: number
   ocsOveruse: number
   repeatCourse: number
+  repeatCourseRate: number
   taperFailure: number
   relapse: number
   m7Rate: number
@@ -84,9 +90,12 @@ export interface TerritoryAgg {
   totalPatients: number
   ocsUse: number
   chronicOcs: number
+  chronicOcsRate: number
   highDose: number
+  highDoseRate: number
   ocsOveruse: number
   repeatCourse: number
+  repeatCourseRate: number
   taperFailure: number
   relapse: number
   m7Rate: number
@@ -99,9 +108,12 @@ export interface DemographicAgg {
   totalPatients: number
   ocsUse: number
   chronicOcs: number
+  chronicOcsRate: number
   highDose: number
+  highDoseRate: number
   ocsOveruse: number
   repeatCourse: number
+  repeatCourseRate: number
   taperFailure: number
   relapse: number
   m7Rate: number

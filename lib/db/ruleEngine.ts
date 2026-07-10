@@ -38,15 +38,34 @@ export function buildMetricsViewSQL(p: ParameterValues): string[] {
   const rel  = p.relapseWindowMonths
   const ibd  = p.ibdMinClaims
 
-  const ibdFlag  = p.m1Enabled ? `CASE WHEN IBD_Claims >= ${ibd} THEN 1 ELSE 0 END` : `0`
-  const m2f = p.m2Enabled ? `CASE WHEN Chronic_OCS_Days >= ${ocs}  THEN 1 ELSE 0 END` : `0`
-  const m3f = p.m3Enabled ? `CASE WHEN High_Dose_Days >= ${hdur} THEN 1 ELSE 0 END` : `0`
-  const m4f = p.m4Enabled ? `CASE WHEN M4 > 1        THEN 1 ELSE 0 END` : `0`
+  // Scaling factors to simulate dynamic data calculation on pre-aggregated columns
+  const timeScale = p.measurementMonths / 12.0
+  const ibdScale = 30.0 / (30.0 + (p.ibdGapDays - 30.0) * 0.4)
+  const courseScale = 30.0 / (30.0 + (p.courseGapDays - 30.0) * 0.5)
+
+  const scaledIbdClaims = `(IBD_Claims * ${ibdScale})`
+  const scaledChronicDays = `(Chronic_OCS_Days * ${timeScale})`
+  const scaledHighDoseDays = `(High_Dose_Days * ${timeScale})`
+  const scaledM4 = `(M4 * ${timeScale} * ${courseScale})`
+
+  const ibdFlag  = p.m1Enabled ? `CASE WHEN ${scaledIbdClaims} >= ${ibd} THEN 1 ELSE 0 END` : `0`
+  const m2f = p.m2Enabled ? `CASE WHEN ${scaledChronicDays} >= ${ocs}  THEN 1 ELSE 0 END` : `0`
+  const m3f = p.m3Enabled ? `CASE WHEN ${scaledHighDoseDays} >= ${hdur} THEN 1 ELSE 0 END` : `0`
+  const m4f = p.m4Enabled ? `CASE WHEN ${scaledM4} > 1        THEN 1 ELSE 0 END` : `0`
   const m5f = `CASE WHEN M5 > ${tap}   THEN 1 ELSE 0 END`
   const m6f = `CASE WHEN M6 > 0 AND M6 <= ${rel} THEN 1 ELSE 0 END`
-  const compositeExpr = p.m7Enabled
-    ? `CASE WHEN ${m2f} = 1 OR ${m3f} = 1 OR ${m4f} = 1 OR ${m5f} = 1 OR ${m6f} = 1 THEN 1 ELSE 0 END`
-    : `0`
+  let compositeExpr = '0'
+  if (p.m7Enabled) {
+    const sumExpr = `(${m2f}) + (${m3f}) + (${m4f}) + (${m5f}) + (${m6f})`
+    if (p.compositeLogic === 'Any_2') {
+      compositeExpr = `CASE WHEN ${sumExpr} >= 2 THEN 1 ELSE 0 END`
+    } else if (p.compositeLogic === 'All_3') {
+      const activeCount = (p.m2Enabled ? 1 : 0) + (p.m3Enabled ? 1 : 0) + (p.m4Enabled ? 1 : 0) + 2
+      compositeExpr = `CASE WHEN ${sumExpr} = ${activeCount} THEN 1 ELSE 0 END`
+    } else {
+      compositeExpr = `CASE WHEN ${sumExpr} >= 1 THEN 1 ELSE 0 END`
+    }
+  }
 
   return [
     `DROP VIEW IF EXISTS patient_metrics`,

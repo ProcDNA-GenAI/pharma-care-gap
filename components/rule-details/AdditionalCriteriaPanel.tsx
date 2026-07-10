@@ -15,14 +15,14 @@ interface AdditionalCriteriaPanelProps {
   onParameterChange: (key: keyof ParameterValues, value: ParameterValues[keyof ParameterValues]) => void
 }
 
-const MEASUREMENT_OPTIONS: SelectOption[]  = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
-const IBD_CLAIMS_OPTIONS: SelectOption[]   = [1, 2, 3].map((v) => ({ label: String(v), value: v }))
-const IBD_GAP_OPTIONS: SelectOption[]      = [14, 30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
-const OCS_DAYS_OPTIONS: SelectOption[]     = [60, 75, 90, 120, 180].map((v) => ({ label: String(v), value: v }))
-const CONSEC_DAYS_OPTIONS: SelectOption[]  = [30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
-const PRED_MG_OPTIONS: SelectOption[]      = [5, 7.5, 10, 15, 20].map((v) => ({ label: String(v), value: v }))
-const CUM_MG_OPTIONS: SelectOption[]       = [300, 450, 600, 900].map((v) => ({ label: String(v), value: v }))
-const GAP_OPTIONS: SelectOption[]          = [14, 21, 30, 45, 60].map((v) => ({ label: String(v), value: v }))
+const MEASUREMENT_OPTIONS: SelectOption[] = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
+const IBD_CLAIMS_OPTIONS: SelectOption[] = [1, 2, 3].map((v) => ({ label: String(v), value: v }))
+const IBD_GAP_OPTIONS: SelectOption[] = [14, 30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
+const OCS_DAYS_OPTIONS: SelectOption[] = [60, 75, 90, 120, 180].map((v) => ({ label: String(v), value: v }))
+const CONSEC_DAYS_OPTIONS: SelectOption[] = [30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
+const PRED_MG_OPTIONS: SelectOption[] = [5, 7.5, 10, 15, 20].map((v) => ({ label: String(v), value: v }))
+const CUM_MG_OPTIONS: SelectOption[] = [300, 450, 600, 900].map((v) => ({ label: String(v), value: v }))
+const GAP_OPTIONS: SelectOption[] = [14, 21, 30, 45, 60].map((v) => ({ label: String(v), value: v }))
 
 const COMPOSITE_OPTIONS: SelectOption[] = [
   { label: '≥ 1 Criteria', value: 'Any_1' },
@@ -77,120 +77,122 @@ export function AdditionalCriteriaPanel({ parameters, onParameterChange }: Addit
 
       <div className="space-y-4">
 
-      <ConfigCard
-        title="Patient Cohort Definition"
-        enabled={parameters.m1Enabled}
-        onToggle={(v) => onParameterChange('m1Enabled', v)}
-      >
-        <ParameterField
-          label="Look Forward Period"
-          tooltip="Rolling look forward period for OCS accumulation"
-          value={parameters.measurementMonths}
-          onChange={(v) => onParameterChange('measurementMonths', v)}
-          options={MEASUREMENT_OPTIONS}
-          unit="months"
-        />
-        <ParameterField
-          label="Minimum IBD Diagnosis Claims"
-          tooltip="Minimum number of IBD diagnosis claims required to confirm cohort membership"
-          value={parameters.ibdMinClaims}
-          onChange={(v) => onParameterChange('ibdMinClaims', v)}
-          options={IBD_CLAIMS_OPTIONS}
-        />
-        <ParameterField
-          label="Minimum Days Between IBD Diagnosis Claims"
-          tooltip="Minimum days between IBD claims to count as separate encounters"
-          value={parameters.ibdGapDays}
-          onChange={(v) => onParameterChange('ibdGapDays', v)}
-          options={IBD_GAP_OPTIONS}
-          unit="days"
-        />
-      </ConfigCard>
+        <ConfigCard
+          title="Patient Cohort Definition"
+          enabled={true}
+        // enabled={parameters.m1Enabled}
+        // onToggle={(v) => onParameterChange('m1Enabled', v)}
+        >
+          <ParameterField
+            label="Look Forward Period"
+            tooltip="Rolling look forward period for OCS accumulation"
+            value={parameters.measurementMonths}
+            onChange={(v) => onParameterChange('measurementMonths', v)}
+            options={MEASUREMENT_OPTIONS}
+            unit="months"
+          />
+          <ParameterField
+            label="Minimum IBD Diagnosis Claims"
+            tooltip="Minimum number of IBD diagnosis claims required to confirm cohort membership"
+            value={parameters.ibdMinClaims}
+            onChange={(v) => onParameterChange('ibdMinClaims', v)}
+            options={IBD_CLAIMS_OPTIONS}
+          />
+          <ParameterField
+            label="Minimum Days Between IBD Diagnosis Claims"
+            tooltip="Minimum days between IBD claims to count as separate encounters"
+            value={parameters.ibdGapDays}
+            onChange={(v) => onParameterChange('ibdGapDays', v)}
+            options={IBD_GAP_OPTIONS}
+            unit="days"
+          />
+        </ConfigCard>
 
-      <ConfigCard
-        title="Chronic OCS Exposure"
-        enabled={parameters.m2Enabled}
-        onToggle={(v) => onParameterChange('m2Enabled', v)}
-      >
-        <ParameterField
-          label="Minimum Cumulative OCS Days"
-          tooltip="Cumulative non-overlapping OCS days in the measurement window"
-          value={parameters.ocsDurationThreshold}
-          onChange={(v) => onParameterChange('ocsDurationThreshold', v)}
-          options={OCS_DAYS_OPTIONS}
-          unit="days"
-        />
-      </ConfigCard>
+        <ConfigCard
+          title="Chronic OCS Exposure"
+          enabled={parameters.m2Enabled}
+          onToggle={(v) => onParameterChange('m2Enabled', v)}
+        >
+          <ParameterField
+            label="Minimum Cumulative OCS Days"
+            tooltip="Cumulative non-overlapping OCS days in the measurement window"
+            value={parameters.ocsDurationThreshold}
+            onChange={(v) => onParameterChange('ocsDurationThreshold', v)}
+            options={OCS_DAYS_OPTIONS}
+            unit="days"
+          />
+        </ConfigCard>
 
-      <ConfigCard
-        title="High-Dose OCS Exposure"
-        enabled={parameters.m3Enabled}
-        onToggle={(v) => onParameterChange('m3Enabled', v)}
-      >
-        <ParameterField
-          label="Consecutive Days at High Dose"
-          tooltip="Consecutive days at or above the prednisone-equivalent threshold"
-          value={parameters.highDoseDurationDays}
-          onChange={(v) => onParameterChange('highDoseDurationDays', v)}
-          options={CONSEC_DAYS_OPTIONS}
-          unit="days"
-        />
-        <ParameterField
-          label="Prednisone-Equivalent Daily Dose"
-          tooltip="Daily prednisone-equivalent dose threshold"
-          value={parameters.highDoseMg}
-          onChange={(v) => onParameterChange('highDoseMg', v)}
-          options={PRED_MG_OPTIONS}
-          unit="mg/day"
-        />
-        <ParameterField
-          label="Cumulative Prednisone-Equivalent Dose"
-          tooltip="Total cumulative prednisone-equivalent mg threshold"
-          value={parameters.highDoseCumulativeMg}
-          onChange={(v) => onParameterChange('highDoseCumulativeMg', v)}
-          options={CUM_MG_OPTIONS}
-          unit="mg"
-        />
-      </ConfigCard>
+        <ConfigCard
+          title="High-Dose OCS Exposure"
+          enabled={parameters.m3Enabled}
+          onToggle={(v) => onParameterChange('m3Enabled', v)}
+        >
+          <ParameterField
+            label="Consecutive Days at High Dose"
+            tooltip="Consecutive days at or above the prednisone-equivalent threshold"
+            value={parameters.highDoseDurationDays}
+            onChange={(v) => onParameterChange('highDoseDurationDays', v)}
+            options={CONSEC_DAYS_OPTIONS}
+            unit="days"
+          />
+          <ParameterField
+            label="Prednisone-Equivalent Daily Dose"
+            tooltip="Daily prednisone-equivalent dose threshold"
+            value={parameters.highDoseMg}
+            onChange={(v) => onParameterChange('highDoseMg', v)}
+            options={PRED_MG_OPTIONS}
+            unit="mg/day"
+          />
+          <ParameterField
+            label="Cumulative Prednisone-Equivalent Dose"
+            tooltip="Total cumulative prednisone-equivalent mg threshold"
+            value={parameters.highDoseCumulativeMg}
+            onChange={(v) => onParameterChange('highDoseCumulativeMg', v)}
+            options={CUM_MG_OPTIONS}
+            unit="mg"
+          />
+        </ConfigCard>
 
-      <ConfigCard
-        title="Recurrent OCS Courses"
-        enabled={parameters.m4Enabled}
-        onToggle={(v) => onParameterChange('m4Enabled', v)}
-      >
-        <ParameterField
-          label="Minimum Gap Between OCS Courses"
-          tooltip="Minimum gap between last fill end date and next fill start to define a new course"
-          value={parameters.courseGapDays}
-          onChange={(v) => onParameterChange('courseGapDays', v)}
-          options={GAP_OPTIONS}
-          unit="days"
-        />
-      </ConfigCard>
+        <ConfigCard
+          title="Recurrent OCS Courses"
+          enabled={parameters.m4Enabled}
+          onToggle={(v) => onParameterChange('m4Enabled', v)}
+        >
+          <ParameterField
+            label="Minimum Gap Between OCS Courses"
+            tooltip="Minimum gap between last fill end date and next fill start to define a new course"
+            value={parameters.courseGapDays}
+            onChange={(v) => onParameterChange('courseGapDays', v)}
+            options={GAP_OPTIONS}
+            unit="days"
+          />
+        </ConfigCard>
 
-      <ConfigCard
-        title="Composite Care Gap Rule"
-        enabled={parameters.m7Enabled}
-        onToggle={(v) => onParameterChange('m7Enabled', v)}
-      >
-        <div className="flex items-center gap-2 py-1.5">
-          <div className="flex flex-1 min-w-0 items-center gap-1">
-            <span className="text-xs text-[#4B5563]">Minimum Number of Care Gap Criteria Met</span>
-            <Tooltip content="Patients who meet the IBD cohort eligibility criteria are evaluated against the selected OCS care gap measures.">
-              <Info className="h-3 w-3 shrink-0 cursor-help text-gray-400" />
-            </Tooltip>
+        <ConfigCard
+          title="Composite Care Gap Rule"
+          enabled={true}
+        // enabled={parameters.m7Enabled}
+        // onToggle={(v) => onParameterChange('m7Enabled', v)}
+        >
+          <div className="flex items-center gap-2 py-1.5">
+            <div className="flex flex-1 min-w-0 items-center gap-1">
+              <span className="text-xs text-[#4B5563]">Minimum Number of Care Gap Criteria Met</span>
+              <Tooltip content="Patients who meet the IBD cohort eligibility criteria are evaluated against the selected OCS care gap measures.">
+                <Info className="h-3 w-3 shrink-0 cursor-help text-gray-400" />
+              </Tooltip>
+            </div>
+            <div className="w-[110px] shrink-0">
+              <Select
+                options={COMPOSITE_OPTIONS}
+                value={compositeLogic}
+                onChange={setCompositeLogic}
+                ariaLabel="Minimum Number of Care Gap Criteria Met"
+                fullWidth
+              />
+            </div>
           </div>
-          <div className="w-[110px] shrink-0">
-            <Select
-              options={COMPOSITE_OPTIONS}
-              value={compositeLogic}
-              onChange={setCompositeLogic}
-              ariaLabel="Minimum Number of Care Gap Criteria Met"
-              fullWidth
-            />
-          </div>
-        </div>
-      </ConfigCard>
+        </ConfigCard>
 
       </div>
     </div>

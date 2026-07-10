@@ -16,7 +16,7 @@ export default function InsightsPage({ params }: PageProps) {
         ]}
       />
       <main className="flex-1 pl-0 pr-5 py-5 w-full">
-        <InsightsClient />
+        <InsightsClient careGapId={params.id} />
       </main>
     </div>
   )
