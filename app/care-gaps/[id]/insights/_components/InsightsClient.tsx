@@ -14,6 +14,7 @@ import { DistributionTable } from '@/components/insights/DistributionTable'
 import type { DistributionColumn } from '@/components/insights/DistributionTable'
 import { InsightsSideNav } from '@/components/insights/InsightsSideNav'
 import type { InsightsView } from '@/components/insights/InsightsSideNav'
+import { ScenarioComparison } from '@/components/insights/ScenarioComparison'
 import { FilterBar } from '@/components/insights/FilterBar'
 import { InsightsTable, RiskBadge } from '@/components/insights/InsightsTable'
 import type { Column } from '@/components/insights/InsightsTable'
@@ -792,8 +793,8 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
       {/* Hidden file input — always mounted so the ref works in both Overview and Detailed View */}
       <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="sr-only" />
 
-      {/* ── Header: offset by fixed sidebar width (w-20 = 80px) ── */}
-      <div className="flex items-start justify-between gap-4 pl-24">
+      {/* ── Header: offset by fixed sidebar width (w-20 = 80px) — hidden on Scenario Comparison ── */}
+      {activeView !== 'scenario-comparison' && <div className="flex items-start justify-between gap-4 pl-24">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-[#1D3F8F]">Care Gap Insights</h1>
@@ -864,52 +865,60 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
             </button>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* ── Content row ── */}
       <div className="flex items-start gap-5">
-        <InsightsSideNav active={activeView} onChange={setActiveView} />
+        <InsightsSideNav active={activeView} onChange={setActiveView} scenarioCount={scenarios.length} />
         <div className="w-20 shrink-0 -mr-2" aria-hidden="true" />
 
-        {mainContent}
+        {activeView === 'scenario-comparison' ? (
+          <div className="flex-1 min-w-0">
+            <ScenarioComparison scenarios={scenarios} />
+          </div>
+        ) : (
+          mainContent
+        )}
 
-        {/* ── Right sidebar ── */}
-        <div className="w-72 shrink-0 space-y-4 lg:sticky lg:top-5">
-          {activeView === 'detailed' ? (
-            /* Detailed View: always show ViewConfigurationPanel */
-            <ViewConfigurationPanel
-              draft={draftParams}
-              onDraftChange={handleDraftChange}
-              onApply={handleApplyConfiguration}
-              onReset={handleResetToDefault}
-            />
-          ) : (
-            /* Overview: show BusinessRuleSummaryPanel when Parameters is toggled */
-            <>
-              {showParameters && (
-                <BusinessRuleSummaryPanel
-                  parameters={parameters}
-                  onParameterChange={handleParameterChange}
-                  editing={editingRules}
-                  onToggleEditing={() => setEditingRules((v) => !v)}
-                  onSaveScenario={() => {
-                    const res = saveScenario(parameters)
-                    if (!res.success && res.error) {
-                      setToast({ message: res.error, type: 'error' })
-                    } else {
-                      setToast({ message: 'Scenario saved successfully.', type: 'success' })
-                    }
-                  }}
-                />
-              )}
-              <CommercialSummaryPanel
-                hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
-                territoriesCovered={commercialSummary.territoriesCovered}
-                avgHcpsPerMsl={commercialSummary.avgHcpsPerMsl}
+        {/* ── Right sidebar — hidden on Scenario Comparison view ── */}
+        {activeView !== 'scenario-comparison' && (
+          <div className="w-72 shrink-0 space-y-4 lg:sticky lg:top-5">
+            {activeView === 'detailed' ? (
+              /* Detailed View: always show ViewConfigurationPanel */
+              <ViewConfigurationPanel
+                draft={draftParams}
+                onDraftChange={handleDraftChange}
+                onApply={handleApplyConfiguration}
+                onReset={handleResetToDefault}
               />
-            </>
-          )}
-        </div>
+            ) : (
+              /* Overview: show BusinessRuleSummaryPanel when Parameters is toggled */
+              <>
+                {showParameters && (
+                  <BusinessRuleSummaryPanel
+                    parameters={parameters}
+                    onParameterChange={handleParameterChange}
+                    editing={editingRules}
+                    onToggleEditing={() => setEditingRules((v) => !v)}
+                    onSaveScenario={() => {
+                      const res = saveScenario(parameters)
+                      if (!res.success && res.error) {
+                        setToast({ message: res.error, type: 'error' })
+                      } else {
+                        setToast({ message: 'Scenario saved successfully.', type: 'success' })
+                      }
+                    }}
+                  />
+                )}
+                <CommercialSummaryPanel
+                  hcpsWithOveruse={commercialSummary.hcpsWithOveruse}
+                  territoriesCovered={commercialSummary.territoriesCovered}
+                  avgHcpsPerMsl={commercialSummary.avgHcpsPerMsl}
+                />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {toast && (
