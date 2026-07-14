@@ -69,6 +69,7 @@ export interface AccountAgg {
   account: string
   territory: string
   region: string
+  hcpCount: number
   totalPatients: number
   ocsUse: number
   chronicOcs: number

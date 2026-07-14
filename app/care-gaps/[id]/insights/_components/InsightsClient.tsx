@@ -125,16 +125,13 @@ const HCP_COLUMNS_BASE: Column<HcpAgg>[] = [
 
 // Detailed View: Account-Level columns
 const ACCOUNT_COLUMNS_DETAILED: Column<AccountAgg>[] = [
-  { key: 'account',       label: 'Account Name',                                      sortable: true,  render: (r) => <span className="block truncate max-w-[180px]" title={r.account}>{r.account}</span> },
-  { key: 'territory',     label: 'HCPs',                                              sortable: true,  render: (r) => r.territory },
-  { key: 'totalPatients', label: 'Eligible IBD Patients',                             sortable: true,  align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'Patients with Potential OCS Overuse (≥ 1 Criterion)', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'Overuse Rate (%)',                                  sortable: true,  align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
-  { key: 'chronicOcsRate',    label: 'Chronic OCS Exposure (Duration-Based) (%)',         sortable: true,  align: 'right', render: (r) => {
-    const rate = r.totalPatients > 0 ? Math.round((r.ocsOveruse / r.totalPatients) * 1000) / 10 : 0
-    return `${rate}%`
-  }},
-  { key: 'risk',          label: 'Recurrent OCS Courses (Treatment Pattern) (%)',    align: 'right',  render: (r) => <RiskBadge rate={r.m7Rate} /> },
+  { key: 'account',           label: 'Account Name',                                        sortable: true,  render: (r) => <span className="block truncate max-w-[180px]" title={r.account}>{r.account}</span> },
+  { key: 'hcpCount',          label: '# of HCPs',                                          sortable: true,  align: 'right', render: (r) => r.hcpCount.toLocaleString() },
+  { key: 'totalPatients',     label: 'Eligible IBD Patients',                               sortable: true,  align: 'right', render: (r) => r.totalPatients.toLocaleString() },
+  { key: 'ocsOveruse',        label: 'Patients with Potential OCS Overuse (≥ 1 Criterion)', sortable: true,  align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',            label: 'Overuse Rate (%)',                                     sortable: true,  align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'chronicOcsRate',    label: 'Chronic OCS Exposure (Duration-Based) (%)',            sortable: true,  align: 'right', render: (r) => `${r.chronicOcsRate}%` },
+  { key: 'repeatCourseRate',  label: 'Recurrent OCS Courses (Treatment Pattern) (%)',        sortable: true,  align: 'right', render: (r) => `${r.repeatCourseRate}%` },
 ]
 
 const ACCOUNT_COLUMNS_BASE: Column<AccountAgg>[] = [
@@ -150,21 +147,15 @@ const ACCOUNT_COLUMNS_BASE: Column<AccountAgg>[] = [
 
 // Detailed View: Territory-Region columns
 const TERRITORY_COLUMNS_DETAILED: Column<TerritoryAgg>[] = [
-  { key: 'territory',     label: 'Territory',                                         sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.territory}</span> },
-  { key: 'region',        label: 'Region',                                            sortable: true,  render: (r) => r.region },
-  { key: 'hcpCount',      label: 'HCPs',                                              sortable: true,  align: 'right', render: (r) => r.hcpCount.toLocaleString() },
-  { key: 'totalPatients', label: 'Eligible IBD Patients',                             sortable: true,  align: 'right', render: (r) => r.totalPatients.toLocaleString() },
-  { key: 'ocsOveruse',    label: 'Patients with Potential OCS Overuse (≥ 1 Criterion)', sortable: true, align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
-  { key: 'm7Rate',        label: 'Overuse Rate (%)',                                  sortable: true,  align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
-  { key: 'chronicOcsRate',    label: 'Chronic OCS Exposure (Duration-Based) (%)',         sortable: true,  align: 'right', render: (r) => {
-    const rate = r.totalPatients > 0 ? Math.round((r.ocsOveruse / r.totalPatients) * 1000) / 10 : 0
-    return `${rate}%`
-  }},
-  { key: 'highDoseRate',      label: 'High-Dose OCS Exposure (Dose-Based) (%)',          sortable: true,  align: 'right', render: (r) => {
-    const rate = r.totalPatients > 0 ? Math.round((r.ocsOveruse / r.totalPatients) * 1000) / 10 : 0
-    return `${rate}%`
-  }},
-  { key: 'risk',          label: 'Recurrent OCS Courses (Treatment Pattern) (%)',    align: 'right',  render: (r) => <RiskBadge rate={r.m7Rate} /> },
+  { key: 'territory',         label: 'Territory',                                           sortable: true,  render: (r) => <span className="font-semibold text-gray-900">{r.territory}</span> },
+  { key: 'region',            label: 'Region',                                              sortable: true,  render: (r) => r.region },
+  { key: 'hcpCount',          label: '# of HCPs',                                          sortable: true,  align: 'right', render: (r) => r.hcpCount.toLocaleString() },
+  { key: 'totalPatients',     label: 'Eligible IBD Patients',                               sortable: true,  align: 'right', render: (r) => r.totalPatients.toLocaleString() },
+  { key: 'ocsOveruse',        label: 'Patients with Potential OCS Overuse (≥ 1 Criterion)', sortable: true,  align: 'right', render: (r) => r.ocsOveruse.toLocaleString() },
+  { key: 'm7Rate',            label: 'Overuse Rate (%)',                                     sortable: true,  align: 'right', render: (r) => <span className="font-semibold">{r.m7Rate}%</span> },
+  { key: 'chronicOcsRate',    label: 'Chronic OCS Exposure (Duration-Based) (%)',            sortable: true,  align: 'right', render: (r) => `${r.chronicOcsRate}%` },
+  { key: 'highDoseRate',      label: 'High-Dose OCS Exposure (Dose-Based) (%)',              sortable: true,  align: 'right', render: (r) => `${r.highDoseRate}%` },
+  { key: 'repeatCourseRate',  label: 'Recurrent OCS Courses (Treatment Pattern) (%)',        sortable: true,  align: 'right', render: (r) => `${r.repeatCourseRate}%` },
 ]
 
 const TERRITORY_COLUMNS_BASE: Column<TerritoryAgg>[] = [
@@ -541,9 +532,14 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
     if (detailedTab === 'account') {
       const totPts  = accountRows.reduce((s, r) => s + r.totalPatients, 0)
       const totOver = accountRows.reduce((s, r) => s + r.ocsOveruse, 0)
+      const totChr  = accountRows.reduce((s, r) => s + r.chronicOcs, 0)
+      const totRep  = accountRows.reduce((s, r) => s + r.repeatCourse, 0)
+      const totHcp  = accountRows.reduce((s, r) => s + r.hcpCount, 0)
       const overRate = totPts > 0 ? `${(Math.round((totOver / totPts) * 1000) / 10)}%` : '—'
+      const chrRate  = totPts > 0 ? `${(Math.round((totChr  / totPts) * 1000) / 10)}%` : '—'
+      const repRate  = totPts > 0 ? `${(Math.round((totRep  / totPts) * 1000) / 10)}%` : '—'
       const columns = ACCOUNT_COLUMNS_DETAILED.filter((col) => {
-        if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk' || col.key === 'chronicOcsRate') && !m7Enabled) return false
+        if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'chronicOcsRate' || col.key === 'repeatCourseRate') && !m7Enabled) return false
         return true
       })
       return {
@@ -551,21 +547,29 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
         rows: sortRows(filteredAccount, sortKey, sortDir) as unknown as AnyRow[],
         rowKey: (r: AnyRow) => (r as AccountAgg).account,
         totalRow: {
+          hcpCount: totHcp.toLocaleString(),
           totalPatients: totPts.toLocaleString(),
           ocsOveruse: totOver.toLocaleString(),
           m7Rate: overRate,
-          chronicOcsRate: overRate,
+          chronicOcsRate: chrRate,
+          repeatCourseRate: repRate,
         },
         totalRowLabel: 'Total (All Accounts)',
       }
     }
     // territory
-    const totPts  = territoryRows.reduce((s, r) => s + r.totalPatients, 0)
-    const totOver = territoryRows.reduce((s, r) => s + r.ocsOveruse, 0)
+    const totPts   = territoryRows.reduce((s, r) => s + r.totalPatients, 0)
+    const totOver  = territoryRows.reduce((s, r) => s + r.ocsOveruse, 0)
+    const totChr   = territoryRows.reduce((s, r) => s + r.chronicOcs, 0)
+    const totHigh  = territoryRows.reduce((s, r) => s + r.highDose, 0)
+    const totRep   = territoryRows.reduce((s, r) => s + r.repeatCourse, 0)
     const hcpCount = territoryRows.reduce((s, r) => s + r.hcpCount, 0)
-    const overRate = totPts > 0 ? `${(Math.round((totOver / totPts) * 1000) / 10)}%` : '—'
+    const overRate  = totPts > 0 ? `${(Math.round((totOver  / totPts) * 1000) / 10)}%` : '—'
+    const chrRate   = totPts > 0 ? `${(Math.round((totChr   / totPts) * 1000) / 10)}%` : '—'
+    const highRate  = totPts > 0 ? `${(Math.round((totHigh  / totPts) * 1000) / 10)}%` : '—'
+    const repRate   = totPts > 0 ? `${(Math.round((totRep   / totPts) * 1000) / 10)}%` : '—'
     const columns = TERRITORY_COLUMNS_DETAILED.filter((col) => {
-      if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'risk' || col.key === 'chronicOcsRate' || col.key === 'highDoseRate') && !m7Enabled) return false
+      if ((col.key === 'ocsOveruse' || col.key === 'm7Rate' || col.key === 'chronicOcsRate' || col.key === 'highDoseRate' || col.key === 'repeatCourseRate') && !m7Enabled) return false
       return true
     })
     return {
@@ -577,8 +581,9 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
         totalPatients: totPts.toLocaleString(),
         ocsOveruse: totOver.toLocaleString(),
         m7Rate: overRate,
-        chronicOcsRate: overRate,
-        highDoseRate: overRate,
+        chronicOcsRate: chrRate,
+        highDoseRate: highRate,
+        repeatCourseRate: repRate,
       },
       totalRowLabel: 'Total (All Territories)',
     }

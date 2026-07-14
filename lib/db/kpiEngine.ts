@@ -46,6 +46,7 @@ export const ACCOUNT_AGG_SQL = `
     Account AS account,
     MIN(Territory) AS territory,
     MIN(Region)    AS region,
+    COUNT(DISTINCT NPI) AS hcp_count,
     SUM(IBD_Claims_flag)   AS total_patients,
     SUM(CASE WHEN IBD_Claims_flag=1 AND (Chronic_OCS_Days_flag=1 OR High_Dose_Days_flag=1 OR M4_flag=1 OR M5_flag=1 OR M6_flag=1) THEN 1 ELSE 0 END) AS ocs_use,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,

@@ -148,6 +148,7 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
             account:      s(r.account),
             territory:    s(r.territory),
             region:       s(r.region),
+            hcpCount:     n(r.hcp_count),
             totalPatients: n(r.total_patients),
             ocsUse:       n(r.ocs_use),
             chronicOcs:   n(r.chronic_ocs),
