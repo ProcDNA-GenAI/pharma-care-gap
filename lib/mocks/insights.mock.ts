@@ -67,6 +67,7 @@ const RAW_ACCOUNT_ROWS = [
 
 export const MOCK_ACCOUNT_ROWS: AccountAgg[] = RAW_ACCOUNT_ROWS.map(r => ({
   ...r,
+  hcpCount: RAW_HCP_ROWS.filter(h => h.account === r.account).length || 1,
   chronicOcsRate: r.totalPatients > 0 ? Math.round((r.chronicOcs / r.totalPatients) * 1000) / 10 : 0,
   highDoseRate: r.totalPatients > 0 ? Math.round((r.highDose / r.totalPatients) * 1000) / 10 : 0,
   repeatCourseRate: r.totalPatients > 0 ? Math.round((r.repeatCourse / r.totalPatients) * 1000) / 10 : 0,
