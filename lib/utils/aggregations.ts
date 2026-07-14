@@ -85,6 +85,7 @@ export function aggregateByAccount(rows: PatientRow[]): AccountAgg[] {
     const topSpecialty = [...specCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
     return {
       account, territory: pts[0].Territory, region: pts[0].Region,
+      hcpCount:      new Set(pts.map((p) => p.NPI)).size,
       totalPatients: total,
       ocsUse:        pts.filter((p) => p.High_Dose_Days > 0).length,
       chronicOcs:    pts.filter((p) => p.High_Dose_Days > M3_THRESHOLD).length,
