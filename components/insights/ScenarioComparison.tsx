@@ -37,7 +37,7 @@ const KPI_CONFIG = [
 ]
 
 // Deterministic but varied fake KPIs per scenario so numbers look real
-function deriveKpis(scenario: Scenario, index: number) {
+function deriveKpis(_scenario: Scenario, index: number) {
   const base = {
     eligibleIbd:  16032,
     potentialOcs: 8787,
@@ -60,14 +60,29 @@ function deriveKpis(scenario: Scenario, index: number) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionLabel({ children, primary }: { children: React.ReactNode; primary?: boolean }) {
-  if (primary) {
+const BOX_STYLE = {
+  primary: { outer: '#2563EB', inner: '#93C5FD', headerBg: '#DBEAFE', headerText: '#1D3F8F' },
+  secondary: { outer: '#D1D5DB', inner: '#E5E7EB', headerBg: '#F9FAFB', headerText: '#111827' },
+}
+
+function SectionLabel({ children, variant = 'plain', count }: { children: React.ReactNode; variant?: 'primary' | 'secondary' | 'plain'; count: number }) {
+  if (variant !== 'plain') {
+    const s = BOX_STYLE[variant]
     return (
       <tr>
         <td
-          colSpan={100}
-          className="py-2.5 pr-4 text-[10px] font-bold uppercase tracking-widest border-t-2 border-b border-blue-200 bg-blue-50 text-[#1D3F8F]"
-          style={{ paddingLeft: '20px', borderLeft: '3px solid #2563EB' }}
+          colSpan={1 + count}
+          className="py-2.5 text-[10px] font-bold uppercase tracking-widest"
+          style={{
+            paddingLeft: '20px',
+            paddingRight: '16px',
+            background: s.headerBg,
+            color: s.headerText,
+            borderTop: `2px solid ${s.outer}`,
+            borderLeft: `2px solid ${s.outer}`,
+            borderRight: `2px solid ${s.outer}`,
+            borderBottom: `1px solid ${s.inner}`,
+          }}
         >
           {children}
         </td>
@@ -78,7 +93,7 @@ function SectionLabel({ children, primary }: { children: React.ReactNode; primar
     <tr>
       <td
         colSpan={100}
-        className="py-2 pr-4 pl-5 text-[10px] font-semibold uppercase tracking-widest border-t border-b border-gray-200 bg-gray-50 text-[#9CA3AF]"
+        className="py-2 pr-4 pl-5 text-[10px] font-bold uppercase tracking-widest border-t border-b border-gray-200 bg-gray-50 text-[#111827]"
       >
         {children}
       </td>
@@ -91,31 +106,45 @@ function ParamRow({
   values,
   count,
   stripe,
-  primary,
+  variant = 'plain',
+  isLast,
 }: {
   label: string
   values: (string | number)[]
   count: number
   stripe?: boolean
-  primary?: boolean
+  variant?: 'primary' | 'secondary' | 'plain'
+  isLast?: boolean
 }) {
   const allSame = new Set(values.slice(0, count).map(String)).size === 1
-  const baseBg = primary
-    ? stripe ? 'bg-blue-50/60' : 'bg-blue-50/25'
+  const s = variant !== 'plain' ? BOX_STYLE[variant] : null
+  const baseBg = variant === 'primary'
+    ? stripe ? 'bg-blue-50/50' : 'bg-white'
     : stripe ? 'bg-gray-50/60' : 'bg-white'
 
   return (
-    <tr className={cn('border-b border-gray-100 transition-colors hover:bg-blue-50/30', baseBg)}>
-      <td className={cn('py-3 pl-8 pr-4 text-xs', primary ? 'text-[#374151] font-medium' : 'text-[#6B7280]')}>{label}</td>
+    <tr className={cn('transition-colors hover:bg-blue-50/30', baseBg)}>
+      <td
+        className={cn('py-3 pl-8 pr-4 text-xs', variant === 'primary' ? 'text-[#1F2937] font-medium' : 'text-[#374151]')}
+        style={s ? {
+          borderLeft: `2px solid ${s.outer}`,
+          borderBottom: isLast ? `2px solid ${s.outer}` : `1px solid ${s.inner}`,
+        } : { borderBottom: '1px solid #F3F4F6' }}
+      >
+        {label}
+      </td>
       {values.slice(0, count).map((v, i) => (
         <td
           key={i}
           className={cn(
-            'py-3 px-4 text-center text-sm border-l border-gray-200',
-            primary ? 'font-bold' : 'font-semibold',
+            'py-3 px-4 text-center text-sm font-bold border-l-2 border-gray-300',
             ACCENT[i].value,
-            !allSame && 'bg-amber-50/40',
+            !allSame && 'bg-amber-50/50',
           )}
+          style={s ? {
+            borderRight: i === count - 1 ? `2px solid ${s.outer}` : undefined,
+            borderBottom: isLast ? `2px solid ${s.outer}` : `1px solid ${s.inner}`,
+          } : { borderBottom: '1px solid #F3F4F6' }}
         >
           {v}
         </td>
@@ -152,7 +181,7 @@ function KpiRow({
         </div>
       </td>
       {values.slice(0, count).map((v, i) => (
-        <td key={i} className={`py-3.5 px-4 text-center text-sm font-semibold tabular-nums border-l border-gray-200 ${ACCENT[i].value}`}>
+        <td key={i} className={`py-3.5 px-4 text-center text-sm font-bold tabular-nums border-l-2 border-gray-300 ${ACCENT[i].value}`}>
           {v.toLocaleString()}
         </td>
       ))}
@@ -240,8 +269,8 @@ export function ScenarioComparison({ scenarios }: ScenarioComparisonProps) {
       </div>
 
       {/* ── Table 1: Business Rule Configuration ── */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-5 py-3">
+      <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
+        <div className="border-b-2 border-gray-300 px-5 py-3">
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#374151]">
             Care Gap Business Rule Configuration
           </p>
@@ -256,10 +285,10 @@ export function ScenarioComparison({ scenarios }: ScenarioComparisonProps) {
               ))}
             </colgroup>
             <thead>
-              <tr className="bg-[#F8FAFF] border-b-2 border-gray-200">
+              <tr className="bg-[#F8FAFF] border-b-2 border-gray-300">
                 <th className="py-3.5 pl-5 pr-4 text-xs font-semibold text-[#374151]">Parameter</th>
                 {scenarios.slice(0, 3).map((s, i) => (
-                  <th key={s.id} className={`py-3.5 px-4 text-center text-xs font-bold border-l border-gray-200 ${ACCENT[i].header}`}>
+                  <th key={s.id} className={`py-3.5 px-4 text-center text-xs font-bold border-l-2 border-gray-300 ${ACCENT[i].header}`}>
                     <div className="flex flex-col items-center gap-1">
                       <span className={`inline-block h-1 w-10 rounded-full ${['bg-blue-500', 'bg-violet-600', 'bg-cyan-500'][i]}`} />
                       Scenario {LABELS[i]}
@@ -269,29 +298,29 @@ export function ScenarioComparison({ scenarios }: ScenarioComparisonProps) {
               </tr>
             </thead>
             <tbody>
-              <SectionLabel primary>IBD Cohort Definition</SectionLabel>
+              <SectionLabel variant="primary" count={count}>IBD Cohort Definition</SectionLabel>
               {paramRows.ibd.map((r, idx) => (
-                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} primary />
+                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} variant="primary" isLast={idx === paramRows.ibd.length - 1} />
               ))}
 
-              <SectionLabel>Chronic OCS Exposure</SectionLabel>
+              <SectionLabel variant="secondary" count={count}>Chronic OCS Exposure</SectionLabel>
               {paramRows.chronic.map((r, idx) => (
-                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} />
+                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} variant="secondary" isLast={idx === paramRows.chronic.length - 1} />
               ))}
 
-              <SectionLabel>High-Dose OCS Exposure</SectionLabel>
+              <SectionLabel variant="secondary" count={count}>High-Dose OCS Exposure</SectionLabel>
               {paramRows.highDose.map((r, idx) => (
-                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} />
+                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} variant="secondary" isLast={idx === paramRows.highDose.length - 1} />
               ))}
 
-              <SectionLabel>Recurrent OCS Courses</SectionLabel>
+              <SectionLabel variant="secondary" count={count}>Recurrent OCS Courses</SectionLabel>
               {paramRows.recurrent.map((r, idx) => (
-                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} />
+                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} variant="secondary" isLast={idx === paramRows.recurrent.length - 1} />
               ))}
 
-              <SectionLabel primary>Composite Care Gap Rule</SectionLabel>
+              <SectionLabel variant="primary" count={count}>Composite Care Gap Rule</SectionLabel>
               {paramRows.composite.map((r, idx) => (
-                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} primary />
+                <ParamRow key={r.label} label={r.label} values={r.values} count={count} stripe={idx % 2 === 1} variant="primary" isLast={idx === paramRows.composite.length - 1} />
               ))}
             </tbody>
           </table>
@@ -299,8 +328,8 @@ export function ScenarioComparison({ scenarios }: ScenarioComparisonProps) {
       </div>
 
       {/* ── Table 2: KPI Comparison ── */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-5 py-3">
+      <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
+        <div className="border-b-2 border-gray-300 px-5 py-3">
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#374151]">KPI Comparison</p>
         </div>
 
@@ -313,10 +342,10 @@ export function ScenarioComparison({ scenarios }: ScenarioComparisonProps) {
               ))}
             </colgroup>
             <thead>
-              <tr className="bg-[#F8FAFF] border-b-2 border-gray-200">
+              <tr className="bg-[#F8FAFF] border-b-2 border-gray-300">
                 <th className="py-3.5 pl-5 pr-4 text-xs font-semibold text-[#374151]">KPI</th>
                 {scenarios.slice(0, 3).map((s, i) => (
-                  <th key={s.id} className={`py-3.5 px-4 text-center text-xs font-bold border-l border-gray-200 ${ACCENT[i].header}`}>
+                  <th key={s.id} className={`py-3.5 px-4 text-center text-xs font-bold border-l-2 border-gray-300 ${ACCENT[i].header}`}>
                     <div className="flex flex-col items-center gap-1">
                       <span className={`inline-block h-1 w-10 rounded-full ${['bg-blue-500', 'bg-violet-600', 'bg-cyan-500'][i]}`} />
                       Scenario {LABELS[i]}
