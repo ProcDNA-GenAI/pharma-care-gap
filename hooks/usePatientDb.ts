@@ -5,7 +5,7 @@ import type { SqlDatabase } from '@/lib/db/sqlite-singleton'
 import type { ParameterValues } from '@/lib/types'
 import type {
   GlobalKpis, HcpAgg, AccountAgg, TerritoryAgg, DemographicAgg,
-  SpecialtyAgg, AgeDistributionAgg, HcpSegmentAgg,
+  SpecialtyAgg, AgeDistributionAgg, HcpSegmentAgg, PatientRow,
 } from '@/lib/types/insights'
 import { MOCK_GLOBAL_KPIS, MOCK_HCP_ROWS, MOCK_ACCOUNT_ROWS, MOCK_TERRITORY_ROWS, MOCK_DEMOGRAPHIC_ROWS } from '@/lib/mocks/insights.mock'
 import { buildMetricsViewSQL, CREATE_FACT_TABLE_SQL, TRUNCATE_FACT_TABLE_SQL } from '@/lib/db/ruleEngine'
@@ -52,11 +52,45 @@ function pct(num: number, den: number) {
 
 type SqlRow = Record<string, unknown>
 
+const DEFAULT_DATASET_PATH = '/IBD_Care_Gap_Synthetic_50K_Upd.xlsx'
+const INSERT_PATIENT_FACT_SQL = `INSERT INTO patient_fact VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+
 /** Convert sql.js exec() result to plain objects. */
 function toObjects(result: { columns: string[]; values: unknown[][] }[]): SqlRow[] {
   if (!result.length) return []
   const { columns, values } = result[0]
   return values.map((row) => Object.fromEntries(columns.map((col, i) => [col, row[i]])))
+}
+
+function insertRows(db: SqlDatabase, rows: PatientRow[]) {
+  const stmt = db.prepare(INSERT_PATIENT_FACT_SQL)
+  db.run('BEGIN TRANSACTION')
+  for (const r of rows) {
+    stmt.run([
+      r.Patient_ID,
+      r.Age,
+      r.Gender,
+      r.State,
+      r.Region,
+      r.Territory_ID,
+      r.MSL_Territory,
+      r.NPI_ID,
+      r.HCP_Name,
+      r.Specialty,
+      r.Diagnosis,
+      r.Minimum_IBD_Claims,
+      r.Gap_First_Last_IBD_Dx_Claim_Days,
+      r.Chronic_OCS_Days,
+      r.High_Dose_Consecutive_Days,
+      r.No_of_OCS_Episodes,
+      r.Lookforward,
+      r['Prednisone Equivalent'],
+      r['Cumulative Prednisone'],
+      r['Min Gap between OCS courses'],
+    ])
+  }
+  db.run('COMMIT')
+  stmt.free()
 }
 
 // ─── The Hook ────────────────────────────────────────────────────────────────
@@ -261,45 +295,36 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
         // Auto-load demo CSV so parameters are reactive before manual upload
         setStatus('loading')
         let demoLoaded = false
+        let demoLoadError: string | null = null
         try {
-          const res = await fetch('/demo-patients.csv')
-          if (res.ok && !cancelled) {
-            const text = await res.text()
-            const { default: Papa } = await import('papaparse')
-            const parsed = Papa.parse<Record<string, unknown>>(text, {
-              header: true, dynamicTyping: true, skipEmptyLines: true,
-            })
-            const rows = parsed.data.map((r) => ({
-              Pat_ID: s(r.Pat_ID), NPI: s(r.NPI), Specialty: s(r.Specialty),
-              Account: s(r.Account), Territory: s(r.Territory), Region: s(r.Region),
-              Pat_Age: n(r.Pat_Age), Pat_Gender: s(r.Pat_Gender),
-              IBD_Claims: n(r.IBD_Claims), Chronic_OCS_Days: n(r.Chronic_OCS_Days), High_Dose_Days: n(r.High_Dose_Days),
-              M4: n(r.M4), M5: n(r.M5), M6: n(r.M6), Composite_Overuse: n(r.Composite_Overuse),
-            }))
-            if (rows.length && !cancelled) {
-              const stmt = db.prepare(`INSERT INTO patient_fact VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-              db.run('BEGIN TRANSACTION')
-              for (const r of rows) {
-                stmt.run([r.Pat_ID, r.NPI, r.Specialty, r.Account, r.Territory, r.Region,
-                  r.Pat_Age, r.Pat_Gender, r.IBD_Claims, r.Chronic_OCS_Days, r.High_Dose_Days, r.M4, r.M5, r.M6, r.Composite_Overuse])
-              }
-              db.run('COMMIT')
-              stmt.free()
+          const res = await fetch(DEFAULT_DATASET_PATH)
+          if (!res.ok) {
+            throw new Error(`Could not load ${DEFAULT_DATASET_PATH} (HTTP ${res.status})`)
+          }
+          if (!cancelled) {
+            const { parseExcelBuffer } = await import('@/lib/utils/parseExcel')
+            const rows = await parseExcelBuffer(await res.arrayBuffer())
+            if (!rows.length) throw new Error('The bundled dataset contains no patient rows')
+            if (!cancelled) {
+              insertRows(db, rows)
               setRowCount(rows.length)
               setHasRealData(true)
-              setDataDate(`Demo dataset · ${rows.length.toLocaleString()} patients`)
+              setDataDate(`IBD_Care_Gap_Synthetic_50K_Upd · ${rows.length.toLocaleString()} patients`)
               demoLoaded = true
             }
           }
-        } catch {
+        } catch (err) {
           try { db.run('ROLLBACK') } catch { /* no active transaction */ }
+          demoLoadError = err instanceof Error ? err.message : 'Failed to load the bundled dataset'
+          console.error('[SQLite] bundled dataset load failed', err)
         }
 
         if (!cancelled) {
           if (demoLoaded) {
             await runQueries(paramsRef.current)
           } else {
-            setStatus('ready')
+            setError(demoLoadError ?? 'The bundled dataset could not be loaded')
+            setStatus('error')
           }
         }
       } catch (err) {
@@ -342,28 +367,11 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
       const ext = file.name.split('.').pop()?.toLowerCase()
 
       // Parse to rows (CSV → papaparse, Excel → xlsx)
-      let rows: {
-        Pat_ID: string; NPI: string; Specialty: string; Account: string
-        Territory: string; Region: string; Pat_Age: number; Pat_Gender: string
-        IBD_Claims: number; Chronic_OCS_Days: number; High_Dose_Days: number
-        M4: number; M5: number; M6: number; Composite_Overuse: number
-      }[]
+      let rows: PatientRow[]
 
       if (ext === 'csv') {
-        const text = await file.text()
-        const { default: Papa } = await import('papaparse')
-        const result = Papa.parse<Record<string, unknown>>(text, {
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true,
-        })
-        rows = result.data.map((r) => ({
-          Pat_ID: s(r.Pat_ID), NPI: s(r.NPI), Specialty: s(r.Specialty),
-          Account: s(r.Account), Territory: s(r.Territory), Region: s(r.Region),
-          Pat_Age: n(r.Pat_Age), Pat_Gender: s(r.Pat_Gender),
-          IBD_Claims: n(r.IBD_Claims), Chronic_OCS_Days: n(r.Chronic_OCS_Days), High_Dose_Days: n(r.High_Dose_Days),
-          M4: n(r.M4), M5: n(r.M5), M6: n(r.M6), Composite_Overuse: n(r.Composite_Overuse),
-        }))
+        const { parseCsvFile } = await import('@/lib/utils/parseExcel')
+        rows = await parseCsvFile(file)
       } else {
         const { parseExcelFile } = await import('@/lib/utils/parseExcel')
         rows = await parseExcelFile(file)
@@ -375,19 +383,7 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
       db.run(TRUNCATE_FACT_TABLE_SQL)
 
       // Batch insert inside one transaction — critical for performance with 50k rows
-      const stmt = db.prepare(
-        `INSERT INTO patient_fact VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-      )
-      db.run('BEGIN TRANSACTION')
-      for (const r of rows) {
-        stmt.run([
-          r.Pat_ID, r.NPI, r.Specialty, r.Account, r.Territory, r.Region,
-          r.Pat_Age, r.Pat_Gender,
-          r.IBD_Claims, r.Chronic_OCS_Days, r.High_Dose_Days, r.M4, r.M5, r.M6, r.Composite_Overuse,
-        ])
-      }
-      db.run('COMMIT')
-      stmt.free()
+      insertRows(db, rows)
 
       setRowCount(rows.length)
       setHasRealData(true)

@@ -3,15 +3,31 @@
  * Uses SUM(CASE WHEN …) instead of COUNT(*) FILTER (WHERE …) for SQLite compat.
  */
 
+const OCS_CRITERIA_SQL = `
+  Chronic_OCS_Days_threshold_flag=1
+  OR (
+    High_Dose_Consecutive_Days_flag=1
+    AND Prednisone_Equivalent_flag=1
+    AND Cumulative_Prednisone_flag=1
+  )
+  OR Min_Gap_between_OCS_courses_flag=1
+`
+
+const HIGH_DOSE_CRITERIA_SQL = `
+  High_Dose_Consecutive_Days_flag=1
+  AND Prednisone_Equivalent_flag=1
+  AND Cumulative_Prednisone_flag=1
+`
+
 export const GLOBAL_KPIS_SQL = `
   SELECT
     SUM(IBD_Claims_flag) AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days >= 1  THEN 1 ELSE 0 END) AS ocs_use,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND High_Dose_Days_flag=1 THEN 1 ELSE 0 END) AS high_dose,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M4_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M5_flag=1 THEN 1 ELSE 0 END) AS taper_failure,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M6_flag=1 THEN 1 ELSE 0 END) AS relapse,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
+    0 AS taper_failure,
+    0 AS relapse,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Composite_Overuse_flag=1 THEN 1 ELSE 0 END) AS ocs_overuse
   FROM patient_metrics
 `
@@ -24,12 +40,12 @@ export const HCP_AGG_SQL = `
     MIN(Territory)  AS territory,
     MIN(Region)     AS region,
     SUM(IBD_Claims_flag)    AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (Chronic_OCS_Days_flag=1 OR High_Dose_Days_flag=1 OR M4_flag=1 OR M5_flag=1 OR M6_flag=1) THEN 1 ELSE 0 END) AS ocs_use,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND High_Dose_Days_flag=1 THEN 1 ELSE 0 END) AS high_dose,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M4_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M5_flag=1 THEN 1 ELSE 0 END) AS taper_failure,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M6_flag=1 THEN 1 ELSE 0 END) AS relapse,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
+    0 AS taper_failure,
+    0 AS relapse,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Composite_Overuse_flag=1 THEN 1 ELSE 0 END) AS ocs_overuse,
     ROUND(
       100.0 * SUM(CASE WHEN IBD_Claims_flag=1 AND Composite_Overuse_flag=1 THEN 1 ELSE 0 END) /
@@ -48,12 +64,12 @@ export const ACCOUNT_AGG_SQL = `
     MIN(Region)    AS region,
     COUNT(DISTINCT NPI) AS hcp_count,
     SUM(IBD_Claims_flag)   AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (Chronic_OCS_Days_flag=1 OR High_Dose_Days_flag=1 OR M4_flag=1 OR M5_flag=1 OR M6_flag=1) THEN 1 ELSE 0 END) AS ocs_use,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND High_Dose_Days_flag=1 THEN 1 ELSE 0 END) AS high_dose,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M4_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M5_flag=1 THEN 1 ELSE 0 END) AS taper_failure,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M6_flag=1 THEN 1 ELSE 0 END) AS relapse,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
+    0 AS taper_failure,
+    0 AS relapse,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Composite_Overuse_flag=1 THEN 1 ELSE 0 END) AS ocs_overuse,
     MIN(Specialty) AS top_specialty,
     ROUND(
@@ -71,12 +87,12 @@ export const TERRITORY_AGG_SQL = `
     Territory AS territory,
     MIN(Region) AS region,
     SUM(IBD_Claims_flag) AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (Chronic_OCS_Days_flag=1 OR High_Dose_Days_flag=1 OR M4_flag=1 OR M5_flag=1 OR M6_flag=1) THEN 1 ELSE 0 END) AS ocs_use,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND High_Dose_Days_flag=1 THEN 1 ELSE 0 END) AS high_dose,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M4_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M5_flag=1 THEN 1 ELSE 0 END) AS taper_failure,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M6_flag=1 THEN 1 ELSE 0 END) AS relapse,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
+    0 AS taper_failure,
+    0 AS relapse,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Composite_Overuse_flag=1 THEN 1 ELSE 0 END) AS ocs_overuse,
     COUNT(DISTINCT NPI) AS hcp_count,
     ROUND(
@@ -169,12 +185,12 @@ export const DEMOGRAPHIC_AGG_SQL = `
     END AS age_band,
     Pat_Gender AS gender,
     SUM(IBD_Claims_flag)  AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (Chronic_OCS_Days_flag=1 OR High_Dose_Days_flag=1 OR M4_flag=1 OR M5_flag=1 OR M6_flag=1) THEN 1 ELSE 0 END) AS ocs_use,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND High_Dose_Days_flag=1 THEN 1 ELSE 0 END) AS high_dose,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M4_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M5_flag=1 THEN 1 ELSE 0 END) AS taper_failure,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND M6_flag=1 THEN 1 ELSE 0 END) AS relapse,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
+    0 AS taper_failure,
+    0 AS relapse,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Composite_Overuse_flag=1 THEN 1 ELSE 0 END) AS ocs_overuse,
     ROUND(
       100.0 * SUM(CASE WHEN IBD_Claims_flag=1 AND Composite_Overuse_flag=1 THEN 1 ELSE 0 END) /

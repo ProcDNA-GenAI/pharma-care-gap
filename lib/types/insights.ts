@@ -1,19 +1,24 @@
 export interface PatientRow {
-  Pat_ID: string
-  NPI: string
-  Specialty: string
-  Account: string
-  Territory: string
+  Patient_ID: string
+  Age: number
+  Gender: string
+  State: string
   Region: string
-  Pat_Age: number
-  Pat_Gender: string
-  IBD_Claims: number
+  Territory_ID: string
+  MSL_Territory: string
+  NPI_ID: string
+  HCP_Name: string
+  Specialty: string
+  Diagnosis: string
+  Minimum_IBD_Claims: number
+  Gap_First_Last_IBD_Dx_Claim_Days: number
   Chronic_OCS_Days: number
-  High_Dose_Days: number
-  M4: number
-  M5: number
-  M6: number
-  Composite_Overuse: number
+  High_Dose_Consecutive_Days: number
+  No_of_OCS_Episodes: number
+  Lookforward: number
+  'Prednisone Equivalent': number
+  'Cumulative Prednisone': number
+  'Min Gap between OCS courses': number
 }
 
 export type AgeBand = '18–34' | '35–49' | '50–64' | '65+'

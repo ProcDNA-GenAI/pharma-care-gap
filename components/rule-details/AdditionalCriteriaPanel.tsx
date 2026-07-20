@@ -16,7 +16,7 @@ interface AdditionalCriteriaPanelProps {
 }
 
 const MEASUREMENT_OPTIONS: SelectOption[] = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
-const IBD_CLAIMS_OPTIONS: SelectOption[] = [1, 2, 3].map((v) => ({ label: String(v), value: v }))
+const IBD_CLAIMS_OPTIONS: SelectOption[] = [1, 2, 3, 4].map((v) => ({ label: String(v), value: v }))
 const IBD_GAP_OPTIONS: SelectOption[] = [14, 30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
 const OCS_DAYS_OPTIONS: SelectOption[] = [60, 75, 90, 120, 180].map((v) => ({ label: String(v), value: v }))
 const CONSEC_DAYS_OPTIONS: SelectOption[] = [30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))

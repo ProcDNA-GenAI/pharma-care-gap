@@ -630,7 +630,7 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
                       caption="Patients satisfying cohort definition" badge="100%"
                       icon={<Users className="h-4 w-4" />} />
                     <KpiCard title="OCS Users" value={kpis.ocsUse}
-                      caption="Patients with ≥1 OCS claim" badge={`${kpis.ocsUseRate}%`}
+                      caption="Patients meeting at least one enabled OCS criterion" badge={`${kpis.ocsUseRate}%`}
                       icon={<Activity className="h-4 w-4" />} />
                   </div>
                 ) : (
@@ -655,17 +655,17 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
                     )}
                     {m2Enabled && (
                       <KpiCard title="Chronic OCS Exposure" value={kpis.chronicOcs}
-                        caption=">90 cumulative OCS days within look forward period" badge={`${kpis.chronicOcsRate}%`}
+                        caption={`Chronic OCS days >= ${parameters.ocsDurationThreshold}`} badge={`${kpis.chronicOcsRate}%`}
                         variant="green" icon={<Clock className="h-4 w-4" />} />
                     )}
                     {m3Enabled && (
                       <KpiCard title="High-Dose OCS Exposure" value={kpis.highDose}
-                        caption="Prednisone-equivalent ≥10 mg/day for ≥60 days OR cumulative dose threshold" badge={`${kpis.highDoseRate}%`}
+                        caption={`High-dose days >= ${parameters.highDoseDurationDays}, prednisone >= ${parameters.highDoseMg}, cumulative >= ${parameters.highDoseCumulativeMg}`} badge={`${kpis.highDoseRate}%`}
                         variant="orange" icon={<FlaskConical className="h-4 w-4" />} />
                     )}
                     {m4Enabled && (
                       <KpiCard title="Recurrent OCS Courses" value={kpis.repeatCourse}
-                        caption="≥2 distinct OCS courses within the look forward period" badge={`${kpis.repeatCourseRate}%`}
+                        caption={`Min gap between OCS courses >= ${parameters.courseGapDays} days`} badge={`${kpis.repeatCourseRate}%`}
                         variant="blue" icon={<Repeat2 className="h-4 w-4" />} />
                     )}
                   </div>
@@ -956,4 +956,4 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
 
     </div>
   )
-}
+}

@@ -25,7 +25,7 @@ interface ConfigurableParametersPanelProps {
 
 // M1 — IBD Cohort
 const MEASUREMENT_OPTIONS: SelectOption[]  = [6, 12, 18, 24, 36].map((v) => ({ label: String(v), value: v }))
-const IBD_CLAIMS_OPTIONS: SelectOption[]   = [1, 2, 3].map((v) => ({ label: String(v), value: v }))
+const IBD_CLAIMS_OPTIONS: SelectOption[]   = [1, 2, 3, 4].map((v) => ({ label: String(v), value: v }))
 const IBD_GAP_OPTIONS: SelectOption[]      = [14, 30, 45, 60, 90].map((v) => ({ label: String(v), value: v }))
 
 // M2 — Chronic OCS
