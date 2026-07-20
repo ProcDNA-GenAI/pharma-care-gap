@@ -51,17 +51,38 @@ export function buildMetricsViewSQL(p: ParameterValues): string[] {
           AND Gap_First_Last_IBD_Dx_Claim_Days >= ${p.ibdGapDays}
         THEN 1 ELSE 0 END`
     : `0`
-  const chronicOcsFlag = p.m2Enabled ? `CASE WHEN Chronic_OCS_Days >= ${ocs} THEN 1 ELSE 0 END` : `0`
-  const highDoseDaysFlag = p.m3Enabled ? `CASE WHEN High_Dose_Consecutive_Days >= ${hdur} THEN 1 ELSE 0 END` : `0`
-  const prednisoneEquivalentFlag = p.m3Enabled ? `CASE WHEN "Prednisone Equivalent" >= ${p.highDoseMg} THEN 1 ELSE 0 END` : `0`
-  const cumulativePrednisoneFlag = p.m3Enabled ? `CASE WHEN "Cumulative Prednisone" >= ${p.highDoseCumulativeMg} THEN 1 ELSE 0 END` : `0`
+  const chronicOcsFlag = p.m2Enabled
+    ? `CASE WHEN No_of_OCS_Episodes > 0
+          AND Chronic_OCS_Days >= ${ocs}
+        THEN 1 ELSE 0 END`
+    : `0`
+  const highDoseDaysFlag = p.m3Enabled
+    ? `CASE WHEN No_of_OCS_Episodes > 0
+          AND High_Dose_Consecutive_Days >= ${hdur}
+        THEN 1 ELSE 0 END`
+    : `0`
+  const prednisoneEquivalentFlag = p.m3Enabled
+    ? `CASE WHEN No_of_OCS_Episodes > 0
+          AND "Prednisone Equivalent" >= ${p.highDoseMg}
+        THEN 1 ELSE 0 END`
+    : `0`
+  const cumulativePrednisoneFlag = p.m3Enabled
+    ? `CASE WHEN No_of_OCS_Episodes > 0
+          AND "Cumulative Prednisone" >= ${p.highDoseCumulativeMg}
+        THEN 1 ELSE 0 END`
+    : `0`
   const m3f = p.m3Enabled
-    ? `CASE WHEN High_Dose_Consecutive_Days >= ${hdur}
+    ? `CASE WHEN No_of_OCS_Episodes > 0
+          AND High_Dose_Consecutive_Days >= ${hdur}
           AND "Prednisone Equivalent" >= ${p.highDoseMg}
           AND "Cumulative Prednisone" >= ${p.highDoseCumulativeMg}
         THEN 1 ELSE 0 END`
     : `0`
-  const minOcsCourseGapFlag = p.m4Enabled ? `CASE WHEN "Min Gap between OCS courses" >= ${p.courseGapDays} THEN 1 ELSE 0 END` : `0`
+  const minOcsCourseGapFlag = p.m4Enabled
+    ? `CASE WHEN No_of_OCS_Episodes > 0
+          AND "Min Gap between OCS courses" >= ${p.courseGapDays}
+          THEN 1 ELSE 0 END`
+    : `0`
   const m5f = `0`
   const m6f = `0`
   let compositeExpr = '0'
@@ -92,6 +113,7 @@ export function buildMetricsViewSQL(p: ParameterValues): string[] {
         Minimum_IBD_Claims AS IBD_Claims,
         Chronic_OCS_Days,
         High_Dose_Consecutive_Days AS High_Dose_Days,
+        No_of_OCS_Episodes,
         No_of_OCS_Episodes AS M4,
         0 AS M5,
         0 AS M6,

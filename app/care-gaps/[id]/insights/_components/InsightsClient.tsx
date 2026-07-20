@@ -70,6 +70,18 @@ const AGE_COLUMNS: DistributionColumn[] = [
   { label: 'Overuse Rate', align: 'right' },
 ]
 
+function getCompositeCriterionLabel(logic: ParameterValues['compositeLogic']): string {
+  if (logic === 'Any_2') return '>= 2 Criteria'
+  if (logic === 'All_3') return 'All Criteria'
+  return '>= 1 Criterion'
+}
+
+function withCompositeCriterionLabel(columns: DistributionColumn[], criterionLabel: string): DistributionColumn[] {
+  return columns.map((column, index) =>
+    index === 2 ? { ...column, label: `Overuse Patients (${criterionLabel})` } : column,
+  )
+}
+
 const HCP_SEGMENT_COLUMNS: DistributionColumn[] = [
   { label: 'Overuse Rate Band' },
   { label: 'HCP Count', align: 'right' },
@@ -311,6 +323,7 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
     kpis, hcpRows, accountRows, territoryRows, demographicRows, error,
     specialtyRows, ageDistributionRows, hcpSegmentRows,
   } = usePatientDb(parameters)
+  const compositeCriterionLabel = getCompositeCriterionLabel(parameters.compositeLogic)
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [activeView, setActiveView]   = useState<InsightsView>('overview')
@@ -630,7 +643,7 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
                       caption="Patients satisfying cohort definition" badge="100%"
                       icon={<Users className="h-4 w-4" />} />
                     <KpiCard title="OCS Users" value={kpis.ocsUse}
-                      caption="Patients meeting at least one enabled OCS criterion" badge={`${kpis.ocsUseRate}%`}
+                      caption="Eligible patients with more than 0 OCS episodes" badge={`${kpis.ocsUseRate}%`}
                       icon={<Activity className="h-4 w-4" />} />
                   </div>
                 ) : (
@@ -683,8 +696,8 @@ export function InsightsClient({ careGapId }: InsightsClientProps) {
             <p className="mt-0.5 text-xs text-[#6B7280]">Explore the distribution of OCS overuse across provider, patient, and geographic dimensions to identify the highest-priority opportunities for medical engagement.</p>
 
             <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <DistributionTable title="A. By HCP Specialty" columns={SPECIALTY_COLUMNS} rows={specialtyTableRows} totalRow={specialtyTotalRow} />
-              <DistributionTable title="B. By Patient Age Group" columns={AGE_COLUMNS} rows={ageTableRows} totalRow={ageTotalRow} />
+              <DistributionTable title="A. By HCP Specialty" columns={withCompositeCriterionLabel(SPECIALTY_COLUMNS, compositeCriterionLabel)} rows={specialtyTableRows} totalRow={specialtyTotalRow} />
+              <DistributionTable title="B. By Patient Age Group" columns={withCompositeCriterionLabel(AGE_COLUMNS, compositeCriterionLabel)} rows={ageTableRows} totalRow={ageTotalRow} />
               <DistributionTable title="C. Top HCP Segments by Overuse Rate" columns={HCP_SEGMENT_COLUMNS} rows={hcpSegmentTableRows} totalRow={hcpSegmentTotalRow} />
             </div>
           </div>

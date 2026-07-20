@@ -3,15 +3,7 @@
  * Uses SUM(CASE WHEN …) instead of COUNT(*) FILTER (WHERE …) for SQLite compat.
  */
 
-const OCS_CRITERIA_SQL = `
-  Chronic_OCS_Days_threshold_flag=1
-  OR (
-    High_Dose_Consecutive_Days_flag=1
-    AND Prednisone_Equivalent_flag=1
-    AND Cumulative_Prednisone_flag=1
-  )
-  OR Min_Gap_between_OCS_courses_flag=1
-`
+const OCS_USER_SQL = `No_of_OCS_Episodes > 0`
 
 const HIGH_DOSE_CRITERIA_SQL = `
   High_Dose_Consecutive_Days_flag=1
@@ -22,7 +14,7 @@ const HIGH_DOSE_CRITERIA_SQL = `
 export const GLOBAL_KPIS_SQL = `
   SELECT
     SUM(IBD_Claims_flag) AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_USER_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
     SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
@@ -40,7 +32,7 @@ export const HCP_AGG_SQL = `
     MIN(Territory)  AS territory,
     MIN(Region)     AS region,
     SUM(IBD_Claims_flag)    AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_USER_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
     SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
@@ -64,7 +56,7 @@ export const ACCOUNT_AGG_SQL = `
     MIN(Region)    AS region,
     COUNT(DISTINCT NPI) AS hcp_count,
     SUM(IBD_Claims_flag)   AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_USER_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
     SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
@@ -87,7 +79,7 @@ export const TERRITORY_AGG_SQL = `
     Territory AS territory,
     MIN(Region) AS region,
     SUM(IBD_Claims_flag) AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_USER_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
     SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,
@@ -185,7 +177,7 @@ export const DEMOGRAPHIC_AGG_SQL = `
     END AS age_band,
     Pat_Gender AS gender,
     SUM(IBD_Claims_flag)  AS total_patients,
-    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
+    SUM(CASE WHEN IBD_Claims_flag=1 AND (${OCS_USER_SQL}) THEN 1 ELSE 0 END) AS ocs_use,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Chronic_OCS_Days_threshold_flag=1 THEN 1 ELSE 0 END) AS chronic_ocs,
     SUM(CASE WHEN IBD_Claims_flag=1 AND (${HIGH_DOSE_CRITERIA_SQL}) THEN 1 ELSE 0 END) AS high_dose,
     SUM(CASE WHEN IBD_Claims_flag=1 AND Min_Gap_between_OCS_courses_flag=1 THEN 1 ELSE 0 END) AS repeat_course,

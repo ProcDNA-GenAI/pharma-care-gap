@@ -52,7 +52,7 @@ function pct(num: number, den: number) {
 
 type SqlRow = Record<string, unknown>
 
-const DEFAULT_DATASET_PATH = '/IBD_Care_Gap_Synthetic_50K_Upd.xlsx'
+const DEFAULT_DATASET_PATH = '/IBD_Care_Gap_Synthetic_50K_Upd_v2.xlsx'
 const INSERT_PATIENT_FACT_SQL = `INSERT INTO patient_fact VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
 
 /** Convert sql.js exec() result to plain objects. */
@@ -309,7 +309,7 @@ export function usePatientDb(parameters: ParameterValues): UsePatientDbResult {
               insertRows(db, rows)
               setRowCount(rows.length)
               setHasRealData(true)
-              setDataDate(`IBD_Care_Gap_Synthetic_50K_Upd · ${rows.length.toLocaleString()} patients`)
+              setDataDate(`IBD_Care_Gap_Synthetic_50K_Upd_v2 · ${rows.length.toLocaleString()} patients`)
               demoLoaded = true
             }
           }
